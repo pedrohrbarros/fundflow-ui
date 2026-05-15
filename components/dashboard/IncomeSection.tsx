@@ -8,14 +8,7 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { useCategories } from '@/hooks/use-categories'
-
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(n)
-}
+import { fmtMoney } from '@/lib/format'
 
 interface RowForm {
   name: string
