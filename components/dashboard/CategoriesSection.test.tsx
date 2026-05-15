@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import { CategoriesSection } from './CategoriesSection'
 
-const mockMutate = vi.fn()
+const { mockMutate } = vi.hoisted(() => ({
+  mockMutate: vi.fn(),
+}))
 
 vi.mock('@/hooks/use-categories', () => ({
   useCategories: () => ({
