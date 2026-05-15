@@ -8,7 +8,7 @@ import { IncomeSection } from '@/components/dashboard/IncomeSection'
 import { ExpensesSection } from '@/components/dashboard/ExpensesSection'
 
 export function DashboardClient() {
-  const { data: expensesData } = useExpenses({ limit: 100 })
+  const { data: expensesData } = useExpenses()
   const { data: incomeData } = useSourcesOfIncome()
 
   const totalIncome = (incomeData?.sources_of_income ?? []).reduce(
