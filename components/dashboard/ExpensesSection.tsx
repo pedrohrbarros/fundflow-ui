@@ -26,7 +26,7 @@ interface RowForm {
 const emptyForm: RowForm = { name: '', amount: '', is_paid: false, is_saved: false }
 
 export function ExpensesSection() {
-  const { data, isLoading } = useExpenses({ limit: 100 })
+  const { data, isLoading } = useExpenses()
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
