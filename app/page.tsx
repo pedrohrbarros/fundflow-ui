@@ -8,17 +8,17 @@ import Image from 'next/image'
 import { SignIn } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { colors } from '@/src/constants/colors'
 
-function SignInSkeleton({ isDark }: { isDark: boolean }) {
-  const cardBg = isDark ? '#000000' : '#ffffff'
-  const pulse = isDark ? '#1f2937' : '#e5e7eb'
+function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
+  const theme = is_dark ? colors.dark : colors.light
 
   return (
-    <div className="w-100 rounded-2xl p-8 flex flex-col gap-4" style={{ backgroundColor: cardBg }}>
-      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: pulse }} />
-      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: pulse }} />
-      <div className="h-10 w-full rounded-lg animate-pulse mt-1" style={{ backgroundColor: pulse }} />
-      <div className="h-4 w-48 rounded-md animate-pulse mx-auto mt-2" style={{ backgroundColor: pulse }} />
+    <div className="w-100 rounded-2xl p-8 flex flex-col gap-4" style={{ backgroundColor: theme.card_bg }}>
+      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: theme.pulse }} />
+      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: theme.pulse }} />
+      <div className="h-10 w-full rounded-lg animate-pulse mt-1" style={{ backgroundColor: theme.pulse }} />
+      <div className="h-4 w-48 rounded-md animate-pulse mx-auto mt-2" style={{ backgroundColor: theme.pulse }} />
     </div>
   )
 }
@@ -38,7 +38,8 @@ export default function Home() {
 
   if (userId) return null
 
-  const isDark = !mounted || resolvedTheme === 'dark'
+  const is_dark = !mounted || resolvedTheme === 'dark'
+  const theme = is_dark ? colors.dark : colors.light
 
   return (
     <main className="flex h-screen relative">
@@ -48,26 +49,26 @@ export default function Home() {
 
       <div
         className="w-1/2 flex items-center justify-center"
-        style={{ backgroundColor: isDark ? '#030712' : '#f0fdf4' }}
+        style={{ backgroundColor: theme.page_bg }}
       >
-        <Image src="/logo.png" alt="FundFlow" width={500} height={334} priority />
+        <Image src="/logo.png" alt="FundFlow" width={500} height={334} priority style={{ height: 'auto' }} />
       </div>
 
       <div
         className="w-1/2 flex items-center justify-center"
-        style={{ backgroundColor: isDark ? '#ffffff' : '#030712' }}
+        style={{ backgroundColor: theme.auth_col_bg }}
       >
         {!loaded ? (
-          <SignInSkeleton isDark={isDark} />
+          <SignInSkeleton is_dark={is_dark} />
         ) : (
           <SignIn
             routing="hash"
             appearance={{
-              baseTheme: isDark ? dark : undefined,
+              baseTheme: is_dark ? dark : undefined,
               variables: {
-                colorPrimary: '#16a34a',
-                colorBackground: isDark ? '#000000' : '#ffffff',
-                colorText: isDark ? '#ffffff' : '#000000',
+                colorPrimary: colors.brand.primary,
+                colorBackground: theme.color_background,
+                colorText: theme.color_text,
               },
               elements: {
                 header: { display: 'none' },
