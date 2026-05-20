@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { SignIn } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { colors } from '@/src/constants/colors'
+import { colors } from '@/constants/colors'
 
 function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
   const theme = is_dark ? colors.dark : colors.light

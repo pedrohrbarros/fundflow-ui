@@ -24,6 +24,7 @@ export function useCategories() {
 export function useCreateCategory() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (body: CreateCategoryBody) => {
       const res = await fetch('/api/categories', {
         method: 'POST',
@@ -40,6 +41,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async ({ id, ...body }: UpdateCategoryBody & { id: string }) => {
       const res = await fetch(`/api/categories/${id}`, {
         method: 'PATCH',
@@ -56,6 +58,7 @@ export function useUpdateCategory() {
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())
