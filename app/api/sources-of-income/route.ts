@@ -1,9 +1,13 @@
 import { type NextRequest } from 'next/server'
 import { apiRequest } from '@/lib/api'
-import type { CreateSourceOfIncomeBody, SourceOfIncome, SourcesOfIncomeResponse } from '@/types'
+import type {
+  CreateSourceOfIncomeBody,
+  SourceOfIncome,
+  SourcesOfIncomeByCategoryResponse,
+} from '@/types'
 
 export async function GET() {
-  const result = await apiRequest<SourcesOfIncomeResponse>('/sources_of_income')
+  const result = await apiRequest<SourcesOfIncomeByCategoryResponse>('/sources_of_income')
   return Response.json(result.parsedData, { status: result.status })
 }
 
