@@ -1,6 +1,9 @@
 export interface ExpensePaymentMethod {
   payment_method_id: string
   partial_amount: number
+  name: string
+  bank: string | null
+  receiver: string | null
 }
 
 export interface Expense {
@@ -66,8 +69,8 @@ export interface SourceOfIncome {
   updated_at: string
 }
 
-export interface SourcesOfIncomeResponse {
-  sources_of_income: SourceOfIncome[]
+export type SourcesOfIncomeByCategoryResponse = {
+  [category_name: string]: SourceOfIncome[]
 }
 
 export interface CreateSourceOfIncomeBody {

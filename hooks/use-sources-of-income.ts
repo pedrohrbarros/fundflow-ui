@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type {
   CreateSourceOfIncomeBody,
   SourceOfIncome,
-  SourcesOfIncomeResponse,
+  SourcesOfIncomeByCategoryResponse,
   UpdateSourceOfIncomeBody,
 } from '@/types'
 
@@ -17,7 +17,7 @@ export function useSourcesOfIncome() {
     queryFn: async () => {
       const res = await fetch('/api/sources-of-income')
       if (!res.ok) throw new Error(await res.text())
-      return res.json() as Promise<SourcesOfIncomeResponse>
+      return res.json() as Promise<SourcesOfIncomeByCategoryResponse>
     },
   })
 }
