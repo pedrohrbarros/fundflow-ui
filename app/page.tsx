@@ -8,17 +8,18 @@ import Image from 'next/image'
 import { SignIn } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { colors } from '@/constants/colors'
+import { themes } from '@/constants/themes'
 
 function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
-  const theme = is_dark ? colors.dark : colors.light
+  const theme = is_dark ? themes.dark : themes.light
+  const pulse = is_dark ? '#1f2937' : '#d1fae5'
 
   return (
-    <div className="w-100 rounded-2xl p-8 flex flex-col gap-4" style={{ backgroundColor: theme.card_bg }}>
-      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: theme.pulse }} />
-      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: theme.pulse }} />
-      <div className="h-10 w-full rounded-lg animate-pulse mt-1" style={{ backgroundColor: theme.pulse }} />
-      <div className="h-4 w-48 rounded-md animate-pulse mx-auto mt-2" style={{ backgroundColor: theme.pulse }} />
+    <div className="w-100 rounded-2xl p-8 flex flex-col gap-4" style={{ backgroundColor: theme.container_color }}>
+      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: pulse }} />
+      <div className="h-10 w-full rounded-lg animate-pulse" style={{ backgroundColor: pulse }} />
+      <div className="h-10 w-full rounded-lg animate-pulse mt-1" style={{ backgroundColor: pulse }} />
+      <div className="h-4 w-48 rounded-md animate-pulse mx-auto mt-2" style={{ backgroundColor: pulse }} />
     </div>
   )
 }
@@ -29,8 +30,16 @@ export default function Home() {
   const router = useRouter()
   const { resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const [is_desktop, setIsDesktop] = useState(false)
 
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+    const media_query = window.matchMedia('(min-width: 1024px)')
+    setIsDesktop(media_query.matches)
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    media_query.addEventListener('change', handler)
+    return () => media_query.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     if (userId) router.replace('/dashboard')
@@ -39,7 +48,7 @@ export default function Home() {
   if (userId) return null
 
   const is_dark = !mounted || resolvedTheme === 'dark'
-  const theme = is_dark ? colors.dark : colors.light
+  const theme = is_dark ? themes.dark : themes.light
 
   return (
     <main className="flex h-screen relative">
@@ -48,15 +57,15 @@ export default function Home() {
       </div>
 
       <div
-        className="w-1/2 flex items-center justify-center"
-        style={{ backgroundColor: theme.page_bg }}
+        className="hidden lg:flex w-1/2 items-center justify-center"
+        style={{ backgroundColor: theme.background_color }}
       >
-        <Image src="/logo.png" alt="FundFlow" width={500} height={334} priority style={{ height: 'auto' }} />
+        <Image src="/logo.png" alt="FundFlow" width={500} height={334} priority style={{ width: '100%', maxWidth: '350px', height: 'auto' }} />
       </div>
 
       <div
-        className="w-1/2 flex items-center justify-center"
-        style={{ backgroundColor: theme.auth_col_bg }}
+        className="w-full lg:w-1/2 flex items-center justify-center"
+        style={{ backgroundColor: theme.background_color_switched }}
       >
         {!loaded || !isLoaded ? (
           <SignInSkeleton is_dark={is_dark} />
@@ -64,14 +73,21 @@ export default function Home() {
           <SignIn
             routing="hash"
             appearance={{
-              baseTheme: is_dark ? dark : undefined,
+              baseTheme: is_dark ? undefined : dark,
               variables: {
-                colorPrimary: colors.brand.primary,
-                colorBackground: theme.color_background,
-                colorText: theme.color_text,
+                colorPrimary: themes.brand.primary,
+                colorBackground: theme.container_color,
+                colorText: theme.text_color,
               },
               elements: {
-                header: { display: 'none' },
+                rootBox: { backgroundColor: 'transparent' },
+                logoImage: { height: '40px', width: 'auto' },
+                ...(is_desktop ? {
+                  logoBox: { display: 'none' },
+                  headerSubtitle: { display: 'none' },
+                } : {
+                  headerTitle: { display: 'none' },
+                }),
               },
             }}
           />
