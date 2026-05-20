@@ -13,6 +13,7 @@ const KEY = ['payment-methods'] as const
 export function usePaymentMethods() {
   return useQuery({
     queryKey: KEY,
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/payment-methods')
       if (!res.ok) throw new Error(await res.text())
@@ -24,6 +25,7 @@ export function usePaymentMethods() {
 export function useCreatePaymentMethod() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (body: CreatePaymentMethodBody) => {
       const res = await fetch('/api/payment-methods', {
         method: 'POST',
@@ -40,6 +42,7 @@ export function useCreatePaymentMethod() {
 export function useUpdatePaymentMethod() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async ({ id, ...body }: UpdatePaymentMethodBody & { id: string }) => {
       const res = await fetch(`/api/payment-methods/${id}`, {
         method: 'PATCH',
@@ -56,6 +59,7 @@ export function useUpdatePaymentMethod() {
 export function useDeletePaymentMethod() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/payment-methods/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())

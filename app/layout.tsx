@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { News_Cycle, Amiko, Rubik } from 'next/font/google'
 import { QueryProvider } from '@/providers/query-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
+import { Toaster } from 'sonner'
 import '@/lib/suppress-warnings'
 import './globals.css'
 
@@ -27,6 +28,9 @@ const rubik = Rubik({
 export const metadata: Metadata = {
   title: 'FundFlow',
   description: 'Monthly budget tracker',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
@@ -41,6 +45,7 @@ export default function RootLayout({
           <ClerkProvider>
             <QueryProvider>
               {children}
+              <Toaster richColors position="bottom-right" />
             </QueryProvider>
           </ClerkProvider>
         </ThemeProvider>

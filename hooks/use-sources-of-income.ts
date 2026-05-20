@@ -13,6 +13,7 @@ const KEY = ['sources-of-income'] as const
 export function useSourcesOfIncome() {
   return useQuery({
     queryKey: KEY,
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/sources-of-income')
       if (!res.ok) throw new Error(await res.text())
@@ -24,6 +25,7 @@ export function useSourcesOfIncome() {
 export function useCreateSourceOfIncome() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (body: CreateSourceOfIncomeBody) => {
       const res = await fetch('/api/sources-of-income', {
         method: 'POST',
@@ -40,6 +42,7 @@ export function useCreateSourceOfIncome() {
 export function useUpdateSourceOfIncome() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async ({ id, ...body }: UpdateSourceOfIncomeBody & { id: string }) => {
       const res = await fetch(`/api/sources-of-income/${id}`, {
         method: 'PATCH',
@@ -56,6 +59,7 @@ export function useUpdateSourceOfIncome() {
 export function useDeleteSourceOfIncome() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/sources-of-income/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error(await res.text())
