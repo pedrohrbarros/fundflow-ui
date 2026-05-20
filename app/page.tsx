@@ -24,7 +24,7 @@ function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
 }
 
 export default function Home() {
-  const { userId } = useAuth()
+  const { userId, isLoaded } = useAuth()
   const { loaded } = useClerk()
   const router = useRouter()
   const { resolvedTheme } = useTheme()
@@ -58,7 +58,7 @@ export default function Home() {
         className="w-1/2 flex items-center justify-center"
         style={{ backgroundColor: theme.auth_col_bg }}
       >
-        {!loaded ? (
+        {!loaded || !isLoaded ? (
           <SignInSkeleton is_dark={is_dark} />
         ) : (
           <SignIn
