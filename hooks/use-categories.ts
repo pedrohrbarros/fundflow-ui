@@ -13,6 +13,7 @@ const KEY = ['categories'] as const
 export function useCategories() {
   return useQuery({
     queryKey: KEY,
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/categories')
       if (!res.ok) throw new Error(await res.text())

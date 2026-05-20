@@ -13,6 +13,7 @@ const KEY = ['expenses'] as const
 export function useExpenses(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: [...KEY, params],
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const qs = new URLSearchParams()
       if (params?.page) qs.set('page', String(params.page))

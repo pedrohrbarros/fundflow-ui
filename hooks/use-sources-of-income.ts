@@ -13,6 +13,7 @@ const KEY = ['sources-of-income'] as const
 export function useSourcesOfIncome() {
   return useQuery({
     queryKey: KEY,
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/sources-of-income')
       if (!res.ok) throw new Error(await res.text())

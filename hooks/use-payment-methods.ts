@@ -13,6 +13,7 @@ const KEY = ['payment-methods'] as const
 export function usePaymentMethods() {
   return useQuery({
     queryKey: KEY,
+    meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/payment-methods')
       if (!res.ok) throw new Error(await res.text())
