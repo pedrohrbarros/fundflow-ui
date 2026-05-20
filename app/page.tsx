@@ -36,9 +36,26 @@ export default function Home() {
     setMounted(true)
     const media_query = window.matchMedia('(min-width: 1024px)')
     setIsDesktop(media_query.matches)
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
-    media_query.addEventListener('change', handler)
-    return () => media_query.removeEventListener('change', handler)
+
+    const handler = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches)
+    }
+
+    if (typeof media_query.addEventListener === 'function') {
+      media_query.addEventListener('change', handler)
+      return () => {
+        media_query.removeEventListener('change', handler)
+      }
+    }
+
+    if (typeof media_query.addListener === 'function') {
+      media_query.addListener(handler)
+      return () => {
+        media_query.removeListener(handler)
+      }
+    }
+
+    return
   }, [])
 
   useEffect(() => {
