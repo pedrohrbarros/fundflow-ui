@@ -1,5 +1,5 @@
 export interface paths {
-    "/v1/webhooks/clerk/register": {
+    "/api/v1/webhooks/clerk/register": {
         parameters: {
             query?: never;
             header?: never;
@@ -8,30 +8,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["postV1WebhooksClerkRegister"];
+        post: operations["postApiV1WebhooksClerkRegister"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getV1Categories"];
-        put?: never;
-        post: operations["postV1Categories"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/categories/{id}": {
+    "/api/v1/webhooks/clerk/delete": {
         parameters: {
             query?: never;
             header?: never;
@@ -40,30 +24,30 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        delete: operations["deleteV1CategoriesById"];
-        options?: never;
-        head?: never;
-        patch: operations["patchV1CategoriesById"];
-        trace?: never;
-    };
-    "/v1/sources_of_income": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getV1Sources_of_income"];
-        put?: never;
-        post: operations["postV1Sources_of_income"];
+        post: operations["postApiV1WebhooksClerkDelete"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/sources_of_income/{id}": {
+    "/api/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiV1Categories"];
+        put?: never;
+        post: operations["postApiV1Categories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -73,29 +57,29 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["deleteV1Sources_of_incomeById"];
+        delete: operations["deleteApiV1CategoriesById"];
         options?: never;
         head?: never;
-        patch: operations["patchV1Sources_of_incomeById"];
+        patch: operations["patchApiV1CategoriesById"];
         trace?: never;
     };
-    "/v1/payment_methods": {
+    "/api/v1/sources_of_income": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getV1Payment_methods"];
+        get: operations["getApiV1Sources_of_income"];
         put?: never;
-        post: operations["postV1Payment_methods"];
+        post: operations["postApiV1Sources_of_income"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/payment_methods/{id}": {
+    "/api/v1/sources_of_income/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -105,29 +89,29 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["deleteV1Payment_methodsById"];
+        delete: operations["deleteApiV1Sources_of_incomeById"];
         options?: never;
         head?: never;
-        patch: operations["patchV1Payment_methodsById"];
+        patch: operations["patchApiV1Sources_of_incomeById"];
         trace?: never;
     };
-    "/v1/expenses": {
+    "/api/v1/payment_methods": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getV1Expenses"];
+        get: operations["getApiV1Payment_methods"];
         put?: never;
-        post: operations["postV1Expenses"];
+        post: operations["postApiV1Payment_methods"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/v1/expenses/{id}": {
+    "/api/v1/payment_methods/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -137,10 +121,42 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete: operations["deleteV1ExpensesById"];
+        delete: operations["deleteApiV1Payment_methodsById"];
         options?: never;
         head?: never;
-        patch: operations["patchV1ExpensesById"];
+        patch: operations["patchApiV1Payment_methodsById"];
+        trace?: never;
+    };
+    "/api/v1/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getApiV1Expenses"];
+        put?: never;
+        post: operations["postApiV1Expenses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteApiV1ExpensesById"];
+        options?: never;
+        head?: never;
+        patch: operations["patchApiV1ExpensesById"];
         trace?: never;
     };
     "/": {
@@ -187,7 +203,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    postV1WebhooksClerkRegister: {
+    postApiV1WebhooksClerkRegister: {
         parameters: {
             query?: never;
             header: {
@@ -277,7 +293,53 @@ export interface operations {
             };
         };
     };
-    getV1Categories: {
+    postApiV1WebhooksClerkDelete: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique message identifier for the webhook payload */
+                "svix-id": string;
+                /** @description Unix timestamp (seconds) when the webhook was sent */
+                "svix-timestamp": string;
+                /** @description Space-delimited list of signatures (e.g. v1,<base64>) */
+                "svix-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    data: {
+                        deleted: boolean;
+                        id: string;
+                        /** @constant */
+                        object: "user";
+                    };
+                    event_attributes: {
+                        http_request: {
+                            client_ip: string;
+                            user_agent: string;
+                        };
+                    };
+                    /** @constant */
+                    object: "event";
+                    timestamp: number;
+                    /** @constant */
+                    type: "user.deleted";
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getApiV1Categories: {
         parameters: {
             query?: never;
             header?: never;
@@ -294,7 +356,7 @@ export interface operations {
             };
         };
     };
-    postV1Categories: {
+    postApiV1Categories: {
         parameters: {
             query?: never;
             header?: never;
@@ -317,7 +379,7 @@ export interface operations {
             };
         };
     };
-    deleteV1CategoriesById: {
+    deleteApiV1CategoriesById: {
         parameters: {
             query?: never;
             header?: never;
@@ -336,7 +398,7 @@ export interface operations {
             };
         };
     };
-    patchV1CategoriesById: {
+    patchApiV1CategoriesById: {
         parameters: {
             query?: never;
             header?: never;
@@ -361,7 +423,7 @@ export interface operations {
             };
         };
     };
-    getV1Sources_of_income: {
+    getApiV1Sources_of_income: {
         parameters: {
             query?: never;
             header?: never;
@@ -378,7 +440,7 @@ export interface operations {
             };
         };
     };
-    postV1Sources_of_income: {
+    postApiV1Sources_of_income: {
         parameters: {
             query?: never;
             header?: never;
@@ -403,7 +465,7 @@ export interface operations {
             };
         };
     };
-    deleteV1Sources_of_incomeById: {
+    deleteApiV1Sources_of_incomeById: {
         parameters: {
             query?: never;
             header?: never;
@@ -422,7 +484,7 @@ export interface operations {
             };
         };
     };
-    patchV1Sources_of_incomeById: {
+    patchApiV1Sources_of_incomeById: {
         parameters: {
             query?: never;
             header?: never;
@@ -449,7 +511,7 @@ export interface operations {
             };
         };
     };
-    getV1Payment_methods: {
+    getApiV1Payment_methods: {
         parameters: {
             query?: never;
             header?: never;
@@ -466,7 +528,7 @@ export interface operations {
             };
         };
     };
-    postV1Payment_methods: {
+    postApiV1Payment_methods: {
         parameters: {
             query?: never;
             header?: never;
@@ -491,7 +553,7 @@ export interface operations {
             };
         };
     };
-    deleteV1Payment_methodsById: {
+    deleteApiV1Payment_methodsById: {
         parameters: {
             query?: never;
             header?: never;
@@ -510,7 +572,7 @@ export interface operations {
             };
         };
     };
-    patchV1Payment_methodsById: {
+    patchApiV1Payment_methodsById: {
         parameters: {
             query?: never;
             header?: never;
@@ -537,7 +599,7 @@ export interface operations {
             };
         };
     };
-    getV1Expenses: {
+    getApiV1Expenses: {
         parameters: {
             query?: never;
             header?: never;
@@ -554,7 +616,7 @@ export interface operations {
             };
         };
     };
-    postV1Expenses: {
+    postApiV1Expenses: {
         parameters: {
             query?: never;
             header?: never;
@@ -585,7 +647,7 @@ export interface operations {
             };
         };
     };
-    deleteV1ExpensesById: {
+    deleteApiV1ExpensesById: {
         parameters: {
             query?: never;
             header?: never;
@@ -604,7 +666,7 @@ export interface operations {
             };
         };
     };
-    patchV1ExpensesById: {
+    patchApiV1ExpensesById: {
         parameters: {
             query?: never;
             header?: never;
