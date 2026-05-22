@@ -16,7 +16,7 @@ export async function apiRequest<T>(
   const { getToken } = await auth()
   const token = await getToken()
 
-  const url = new URL(`${API_URL}/v1${path}`)
+  const url = new URL(`${API_URL}/api/v1${path}`)
   if (options.searchParams) {
     for (const [key, value] of Object.entries(options.searchParams)) {
       url.searchParams.set(key, value)
