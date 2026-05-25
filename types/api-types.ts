@@ -539,7 +539,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
-                    bank?: string;
+                    origin: string;
                     receiver?: string;
                 };
             };
@@ -585,7 +585,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name?: string;
-                    bank?: string | null;
+                    origin?: string;
                     receiver?: string | null;
                 };
             };

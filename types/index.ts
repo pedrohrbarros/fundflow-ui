@@ -2,7 +2,7 @@ export interface ExpensePaymentMethod {
   payment_method_id: string
   partial_amount: number
   name: string
-  bank: string | null
+  origin: string
   receiver: string | null
 }
 
@@ -88,7 +88,7 @@ export interface UpdateSourceOfIncomeBody {
 export interface PaymentMethod {
   id: string
   name: string
-  bank: string | null
+  origin: string
   receiver: string | null
   user_id: string
   created_at: string
@@ -101,13 +101,13 @@ export interface PaymentMethodsResponse {
 
 export interface CreatePaymentMethodBody {
   name: string
-  bank?: string
+  origin: string
   receiver?: string
 }
 
 export interface UpdatePaymentMethodBody {
   name?: string
-  bank?: string | null
+  origin?: string
   receiver?: string | null
 }
 
