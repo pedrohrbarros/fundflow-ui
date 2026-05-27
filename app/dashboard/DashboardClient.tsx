@@ -20,15 +20,8 @@ export function DashboardClient() {
   )
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-green-50 dark:bg-gray-950">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-green-900 dark:text-green-400">Monthly Budget</h1>
-          <p className="text-green-600 dark:text-green-500 text-sm mt-1">
-            {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-          </p>
-        </div>
-
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950">
+      <div className="w-full px-[10vw] py-8">
         <BalanceSummary totalIncome={totalIncome} totalExpenses={totalExpenses} />
         <CategoriesSection />
         <IncomeSection />
