@@ -30,7 +30,7 @@ export function IncomeSection() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<RowForm>(emptyForm)
 
-  const sources = data ? Object.values(data).flat() : []
+  const sources = data ? Object.values(data.sources_of_income).flat() : []
   const categories = catData?.categories ?? []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
 

@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <>
       <header className="flex justify-between items-center p-4 gap-3 h-16 border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950">
-        <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority />
+        <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <Show when="signed-out">

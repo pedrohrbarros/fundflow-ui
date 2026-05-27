@@ -75,7 +75,7 @@ export type SourcesOfIncomeByCategoryResponse = {
 }
 
 export interface SourcesOfIncomeResponse {
-  sources_of_income: SourceOfIncome[]
+  sources_of_income: { [category: string]: SourceOfIncome[] }
   pagination: { page: number; limit: number; total: number }
 }
 

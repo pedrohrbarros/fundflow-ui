@@ -12,7 +12,7 @@ export function DashboardClient() {
   const { data: incomeData } = useSourcesOfIncome()
 
   const totalIncome = incomeData
-    ? Object.values(incomeData).flat().reduce((sum, s) => sum + s.income, 0)
+    ? Object.values(incomeData.sources_of_income).flat().reduce((sum, s) => sum + s.income, 0)
     : 0
   const totalExpenses = (expensesData?.expenses ?? []).reduce(
     (sum, e) => sum + e.amount,
