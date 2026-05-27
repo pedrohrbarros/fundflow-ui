@@ -3,7 +3,10 @@ import { apiRequest } from '@/lib/api'
 import type { CategoriesResponse, Category, CreateCategoryBody } from '@/types'
 
 export async function GET() {
-  const result = await apiRequest<CategoriesResponse>('/categories')
+  const result = await apiRequest<CategoriesResponse>('/categories/search', {
+    method: 'POST',
+    body: {},
+  })
   return Response.json(result.parsedData, { status: result.status })
 }
 

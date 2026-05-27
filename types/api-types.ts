@@ -38,9 +38,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiV1Categories"];
+        get?: never;
         put?: never;
         post: operations["postApiV1Categories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/categories/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1CategoriesSearch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -70,9 +86,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiV1Sources_of_income"];
+        get?: never;
         put?: never;
         post: operations["postApiV1Sources_of_income"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sources_of_income/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1Sources_of_incomeSearch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -102,9 +134,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiV1Payment_methods"];
+        get?: never;
         put?: never;
         post: operations["postApiV1Payment_methods"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payment_methods/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1Payment_methodsSearch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -134,9 +182,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getApiV1Expenses"];
+        get?: never;
         put?: never;
         post: operations["postApiV1Expenses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1ExpensesSearch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -339,23 +403,6 @@ export interface operations {
             };
         };
     };
-    getApiV1Categories: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postApiV1Categories: {
         parameters: {
             query?: never;
@@ -370,6 +417,23 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiV1CategoriesSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -423,23 +487,6 @@ export interface operations {
             };
         };
     };
-    getApiV1Sources_of_income: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postApiV1Sources_of_income: {
         parameters: {
             query?: never;
@@ -456,6 +503,23 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiV1Sources_of_incomeSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -511,23 +575,6 @@ export interface operations {
             };
         };
     };
-    getApiV1Payment_methods: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postApiV1Payment_methods: {
         parameters: {
             query?: never;
@@ -544,6 +591,23 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiV1Payment_methodsSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -599,23 +663,6 @@ export interface operations {
             };
         };
     };
-    getApiV1Expenses: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postApiV1Expenses: {
         parameters: {
             query?: never;
@@ -638,6 +685,23 @@ export interface operations {
                 };
             };
         };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    postApiV1ExpensesSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {

@@ -3,7 +3,10 @@ import { apiRequest } from '@/lib/api'
 import type { CreatePaymentMethodBody, PaymentMethod, PaymentMethodsResponse } from '@/types'
 
 export async function GET() {
-  const result = await apiRequest<PaymentMethodsResponse>('/payment_methods')
+  const result = await apiRequest<PaymentMethodsResponse>('/payment_methods/search', {
+    method: 'POST',
+    body: {},
+  })
   return Response.json(result.parsedData, { status: result.status })
 }
 
