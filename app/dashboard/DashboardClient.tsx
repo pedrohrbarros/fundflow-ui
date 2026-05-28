@@ -23,7 +23,7 @@ export function DashboardClient() {
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950">
-      <div className="w-full px-[10vw] py-8">
+      <div className="w-full px-6 md:px-10 py-8">
         <BalanceSummary
           totalIncome={totalIncome}
           totalExpenses={totalExpenses}

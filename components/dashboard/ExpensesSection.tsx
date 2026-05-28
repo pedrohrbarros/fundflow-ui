@@ -100,7 +100,6 @@ export function ExpensesSection() {
         <table className="sheet-table">
           <thead>
             <tr>
-              <th className="w-10">#</th>
               <th>Name</th>
               <th className="w-32 text-right">Amount</th>
               <th className="w-16 text-center">Paid</th>
@@ -111,14 +110,13 @@ export function ExpensesSection() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={6} className="text-center text-green-600 py-4">
+                <td colSpan={5} className="text-center text-green-600 py-4">
                   Loading…
                 </td>
               </tr>
             )}
-            {expenses.map((expense, index) => (
+            {expenses.map((expense) => (
               <tr key={expense.id}>
-                <td className="text-green-600 text-center">{index + 1}</td>
                 <td>
                   {editingId === expense.id ? (
                     <input
@@ -216,7 +214,6 @@ export function ExpensesSection() {
             ))}
             {isAdding && (
               <tr className="add-row">
-                <td className="text-green-400 text-center">*</td>
                 <td>
                   <input
                     className="sheet-input"
@@ -286,9 +283,8 @@ export function ExpensesSection() {
             )}
             {expenses.length > 0 && (
               <tr className="total-row">
-                <td />
-                <td className="text-green-800 font-semibold">TOTAL</td>
-                <td className="text-right font-mono font-semibold text-green-800">
+                <td className="text-green-800 dark:text-green-300 font-semibold">TOTAL</td>
+                <td className="text-right font-mono font-semibold text-green-800 dark:text-green-300">
                   {fmtMoney(total)}
                 </td>
                 <td colSpan={3} />
@@ -296,7 +292,7 @@ export function ExpensesSection() {
             )}
             {!isLoading && !expenses.length && !isAdding && (
               <tr>
-                <td colSpan={6} className="text-center text-green-600 py-4 italic">
+                <td colSpan={5} className="text-center text-green-600 py-4 italic">
                   No expenses yet — add one above.
                 </td>
               </tr>

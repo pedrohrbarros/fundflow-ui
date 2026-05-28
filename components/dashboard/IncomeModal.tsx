@@ -107,29 +107,31 @@ export function IncomeModal({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[80vh]">
+      {/* Card — always dark green regardless of OS theme */}
+      <div className="income-modal-dark bg-[#0f1a0f] border border-[#166534] rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[80vh]">
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-green-200 dark:border-green-800">
-          <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
+        <div className="flex items-center justify-between px-5 py-3 bg-[#166534] rounded-t-xl">
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest">
             Income Sources
           </h2>
           <div className="flex items-center gap-2">
             <button
-              className="btn-green"
+              className="btn-green text-xs"
               onClick={() => setIsAdding(true)}
               aria-label="Add income"
             >
               + Add Income
             </button>
             <button
-              className="btn-ghost"
               onClick={onClose}
               aria-label="Close modal"
+              className="text-[#86efac] hover:text-white hover:bg-[#14532d] rounded px-2 py-1 text-base leading-none transition-colors"
             >
               ✕
             </button>
@@ -138,11 +140,9 @@ export function IncomeModal({ open, onClose }: Props) {
 
         {/* Scrollable table area */}
         <div className="overflow-auto flex-1">
-          <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
           <table className="sheet-table">
             <thead>
               <tr>
-                <th className="w-10">#</th>
                 <th>Name</th>
                 <th>Category</th>
                 <th className="w-32 text-right">Amount</th>
@@ -152,17 +152,16 @@ export function IncomeModal({ open, onClose }: Props) {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td colSpan={5} className="text-center text-green-600 py-4">
+                  <td colSpan={4} className="text-center py-6 text-[#86efac]">
                     Loading…
                   </td>
                 </tr>
               )}
-              {sources.map((source, index) => {
+              {sources.map((source) => {
                 const categoryName =
                   categories.find((c) => c.id === source.category_id)?.name ?? '—'
                 return (
                   <tr key={source.id}>
-                    <td className="text-green-600 text-center">{index + 1}</td>
                     <td>
                       {editingId === source.id ? (
                         <input
@@ -204,7 +203,7 @@ export function IncomeModal({ open, onClose }: Props) {
                         categoryName
                       )}
                     </td>
-                    <td className="text-right">
+                    <td className="text-right amount-col">
                       {editingId === source.id ? (
                         <input
                           className="sheet-input text-right"
@@ -266,7 +265,6 @@ export function IncomeModal({ open, onClose }: Props) {
               })}
               {isAdding && (
                 <tr className="add-row">
-                  <td className="text-green-400 text-center">*</td>
                   <td>
                     <input
                       className="sheet-input"
@@ -302,7 +300,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ))}
                     </select>
                   </td>
-                  <td>
+                  <td className="amount-col">
                     <input
                       className="sheet-input text-right"
                       type="number"
@@ -343,11 +341,8 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {sources.length > 0 && (
                 <tr className="total-row">
-                  <td />
-                  <td colSpan={2} className="text-green-800 font-semibold">
-                    TOTAL
-                  </td>
-                  <td className="text-right font-mono font-semibold text-green-800">
+                  <td colSpan={2} className="font-semibold">TOTAL</td>
+                  <td className="text-right font-mono font-semibold amount-col">
                     {fmtMoney(total)}
                   </td>
                   <td />
@@ -355,14 +350,13 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {!isLoading && !sources.length && !isAdding && (
                 <tr>
-                  <td colSpan={5} className="text-center text-green-600 py-4 italic">
+                  <td colSpan={4} className="text-center py-6 italic text-[#4ade80]/60">
                     No income sources yet — add one above.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
-          </div>
         </div>
       </div>
     </div>

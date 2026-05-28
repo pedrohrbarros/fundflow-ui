@@ -55,19 +55,83 @@ h2 {
   padding: 0.5rem 0.75rem;
   text-align: left;
   font-weight: 600;
-  border: 1px solid #14532d;
 }
 
 .sheet-table td {
   padding: 0.375rem 0.75rem;
-  border: 1px solid #86efac;
+  border: none;
+  border-bottom: 1px solid #dcfce7;
   vertical-align: middle;
 }
 
+.sheet-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .dark .sheet-table td {
-  border-color: #166534;
+  border-bottom-color: #1a2e1a;
   color: #d1fae5;
   background-color: #0f1a0f;
+}
+
+/* ─── Income modal dark overrides ─── */
+
+.income-modal-dark .sheet-table th {
+  color: #86efac;
+}
+
+.income-modal-dark .sheet-table td {
+  color: #d1fae5;
+  background-color: #0f1a0f;
+  border-bottom-color: #1a2e1a;
+}
+
+.income-modal-dark .sheet-table .amount-col {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.income-modal-dark .sheet-table tbody tr:hover {
+  background-color: #1e3a1e;
+}
+
+.income-modal-dark .sheet-table tbody tr.total-row {
+  background-color: #14532d;
+}
+
+.income-modal-dark .sheet-table tbody tr.total-row td {
+  color: #bbf7d0;
+  background-color: #14532d;
+  border-bottom: none;
+}
+
+.income-modal-dark .sheet-table tbody tr.add-row td {
+  background-color: #0d1f0d;
+  border-bottom-color: #1a2e1a;
+}
+
+.income-modal-dark .sheet-input {
+  background: #1a2e1a;
+  border-color: #166534;
+  color: #d1fae5;
+}
+
+.income-modal-dark .btn-ghost {
+  color: #4ade80;
+  border-color: #166534;
+}
+
+.income-modal-dark .btn-ghost:hover {
+  background-color: #14532d;
+}
+
+.income-modal-dark .btn-danger {
+  color: #f87171;
+  border-color: #991b1b;
+}
+
+.income-modal-dark .btn-danger:hover {
+  background-color: #1f0a0a;
 }
 
 .sheet-table tbody tr:hover {
