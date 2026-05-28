@@ -28,7 +28,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const { data: catData } = useCategories()
   const create = useCreateSourceOfIncome()
   const update = useUpdateSourceOfIncome()
-  const del = useDeleteSourceOfIncome()
+  const deleteSource = useDeleteSourceOfIncome()
 
   const [isAdding, setIsAdding] = useState(false)
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
@@ -38,6 +38,15 @@ export function IncomeModal({ open, onClose }: Props) {
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const categories = catData?.categories ?? []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
+
+  useEffect(() => {
+    if (!open) {
+      setIsAdding(false)
+      setAddForm(emptyForm)
+      setEditingId(null)
+      setEditForm(emptyForm)
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -103,7 +112,7 @@ export function IncomeModal({ open, onClose }: Props) {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-2xl mx-4 flex flex-col max-h-[80vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-green-200 dark:border-green-800">
           <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
@@ -129,6 +138,7 @@ export function IncomeModal({ open, onClose }: Props) {
 
         {/* Scrollable table area */}
         <div className="overflow-auto flex-1">
+          <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
           <table className="sheet-table">
             <thead>
               <tr>
@@ -163,7 +173,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleUpdate(source.id)
-                            if (e.key === 'Escape') setEditingId(null)
+                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
                           }}
                           autoFocus
                         />
@@ -180,7 +190,7 @@ export function IncomeModal({ open, onClose }: Props) {
                             setEditForm((f) => ({ ...f, category_id: e.target.value }))
                           }
                           onKeyDown={(e) => {
-                            if (e.key === 'Escape') setEditingId(null)
+                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
                           }}
                         >
                           <option value="">Select…</option>
@@ -207,7 +217,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleUpdate(source.id)
-                            if (e.key === 'Escape') setEditingId(null)
+                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
                           }}
                         />
                       ) : (
@@ -221,12 +231,13 @@ export function IncomeModal({ open, onClose }: Props) {
                             <button
                               className="btn-green"
                               onClick={() => handleUpdate(source.id)}
+                              disabled={update.isPending}
                             >
                               Save
                             </button>
                             <button
                               className="btn-ghost"
-                              onClick={() => setEditingId(null)}
+                              onClick={() => { setEditingId(null); setEditForm(emptyForm) }}
                             >
                               Cancel
                             </button>
@@ -241,7 +252,7 @@ export function IncomeModal({ open, onClose }: Props) {
                             </button>
                             <button
                               className="btn-danger"
-                              onClick={() => del.mutate(source.id)}
+                              onClick={() => deleteSource.mutate(source.id)}
                             >
                               Delete
                             </button>
@@ -311,7 +322,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   </td>
                   <td>
                     <div className="flex gap-1">
-                      <button className="btn-green" onClick={handleAdd}>
+                      <button className="btn-green" onClick={handleAdd} disabled={create.isPending}>
                         Save
                       </button>
                       <button
@@ -348,6 +359,7 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
