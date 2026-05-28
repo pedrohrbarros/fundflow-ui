@@ -66,6 +66,7 @@ export interface SourceOfIncome {
   name: string
   category_id: string
   income: number
+  currency: string
   created_at: string
   updated_at: string
 }
@@ -83,12 +84,14 @@ export interface CreateSourceOfIncomeBody {
   name: string
   category_id: number
   income?: number
+  currency?: string
 }
 
 export interface UpdateSourceOfIncomeBody {
   name?: string
   category_id?: number
   income?: number
+  currency?: string
 }
 
 export interface PaymentMethod {
@@ -120,4 +123,15 @@ export interface UpdatePaymentMethodBody {
 
 export interface ApiError {
   error: string
+}
+
+export interface User {
+  id: string
+  country: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UpdateUserCountryBody {
+  country: string
 }
