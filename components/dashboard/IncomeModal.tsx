@@ -23,9 +23,12 @@ interface RowForm {
   name: string
   category_id: string
   income: string
+  currency: string
 }
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '' }
+const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'] as const
+
+const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD' }
 
 export function IncomeModal({ open, onClose }: Props) {
   const { data, isLoading } = useSourcesOfIncome()
@@ -40,6 +43,8 @@ export function IncomeModal({ open, onClose }: Props) {
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
+  const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
+  const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
 
   useEffect(() => {
     if (!open) {
@@ -57,6 +62,7 @@ export function IncomeModal({ open, onClose }: Props) {
         name: addForm.name.trim(),
         category_id: parseInt(addForm.category_id, 10),
         income: parseFloat(addForm.income) || 0,
+        currency: addForm.currency || 'USD',
       },
       {
         onSuccess: () => {
@@ -75,6 +81,7 @@ export function IncomeModal({ open, onClose }: Props) {
       name: source.name,
       category_id: source.category_id,
       income: String(source.income),
+      currency: source.currency ?? 'USD',
     })
   }
 
@@ -86,6 +93,7 @@ export function IncomeModal({ open, onClose }: Props) {
         name: editForm.name.trim(),
         category_id: parseInt(editForm.category_id, 10),
         income: parseFloat(editForm.income) || 0,
+        currency: editForm.currency || 'USD',
       },
       {
         onSuccess: () => {
@@ -125,13 +133,14 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableHead className="py-2 px-3 h-auto">Name</TableHead>
                 <TableHead className="py-2 px-3 h-auto">Category</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-24">Currency</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow className="border-0">
-                  <TableCell colSpan={4} className="py-6 px-3 text-center text-[#86efac]">
+                  <TableCell colSpan={5} className="py-6 px-3 text-center text-[#86efac]">
                     Loading…
                   </TableCell>
                 </TableRow>
@@ -186,6 +195,21 @@ export function IncomeModal({ open, onClose }: Props) {
                       />
                     ) : (
                       <span className="font-mono">{fmtMoney(source.income)}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-1 px-3">
+                    {editingId === source.id ? (
+                      <select
+                        className="h-7 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-1 w-20"
+                        value={editForm.currency}
+                        onChange={(e) => setEditForm((f) => ({ ...f, currency: e.target.value }))}
+                      >
+                        {COMMON_CURRENCIES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="text-xs font-mono text-[#86efac]">{source.currency ?? 'USD'}</span>
                     )}
                   </TableCell>
                   <TableCell className="py-1 px-3">
@@ -283,6 +307,17 @@ export function IncomeModal({ open, onClose }: Props) {
                     />
                   </TableCell>
                   <TableCell className="py-1 px-3">
+                    <select
+                      className="h-7 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-1 w-20"
+                      value={addForm.currency}
+                      onChange={(e) => setAddForm((f) => ({ ...f, currency: e.target.value }))}
+                    >
+                      {COMMON_CURRENCIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </TableCell>
+                  <TableCell className="py-1 px-3">
                     <div className="flex gap-1">
                       <Button size="xs" onClick={handleAdd} disabled={create.isPending}>
                         Save
@@ -304,16 +339,18 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {sources.length > 0 && (
                 <TableRow className="total-row border-0">
-                  <TableCell colSpan={2} className="py-1 px-3 font-semibold">TOTAL</TableCell>
-                  <TableCell className="py-1 px-3 text-right font-mono font-semibold amount-col">
-                    {fmtMoney(total)}
+                  <TableCell colSpan={2} className="py-1 px-3 font-semibold">
+                    {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
                   </TableCell>
-                  <TableCell className="py-1 px-3" />
+                  <TableCell className="py-1 px-3 text-right font-mono font-semibold amount-col">
+                    {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
+                  </TableCell>
+                  <TableCell colSpan={2} className="py-1 px-3" />
                 </TableRow>
               )}
               {!isLoading && !sources.length && !isAdding && (
                 <TableRow className="border-0">
-                  <TableCell colSpan={4} className="py-6 px-3 text-center italic text-[#4ade80]/60">
+                  <TableCell colSpan={5} className="py-6 px-3 text-center italic text-[#4ade80]/60">
                     No income sources yet — add one above.
                   </TableCell>
                 </TableRow>

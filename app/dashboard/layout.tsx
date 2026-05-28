@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
+import { CountryPicker } from '@/components/dashboard/CountryPicker'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </SignUpButton>
           </Show>
           <Show when="signed-in">
+            <CountryPicker />
             <UserButton />
           </Show>
         </div>
