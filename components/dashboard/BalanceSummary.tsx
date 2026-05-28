@@ -3,18 +3,18 @@
 interface Props {
   totalIncome: number
   totalExpenses: number
+  userCurrency: string
   onManageIncome?: () => void
 }
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-  }).format(Math.abs(n))
-}
-
-export function BalanceSummary({ totalIncome, totalExpenses, onManageIncome }: Props) {
+export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onManageIncome }: Props) {
+  function fmt(n: number) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: userCurrency,
+      minimumFractionDigits: 2,
+    }).format(Math.abs(n))
+  }
   const remaining = totalIncome - totalExpenses
   const isNegative = remaining < 0
 

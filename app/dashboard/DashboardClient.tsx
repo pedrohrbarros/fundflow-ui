@@ -3,14 +3,22 @@
 import { useState } from 'react'
 import { useExpenses } from '@/hooks/use-expenses'
 import { useSourcesOfIncome } from '@/hooks/use-sources-of-income'
+import { useCurrentUser } from '@/hooks/use-user'
+import { useExchangeRates } from '@/hooks/use-exchange-rates'
 import { BalanceSummary } from '@/components/dashboard/BalanceSummary'
 import { ExpensesSection } from '@/components/dashboard/ExpensesSection'
 import { IncomeModal } from '@/components/dashboard/IncomeModal'
+import { getCountryCurrency } from '@/lib/countries'
+import { convertCurrency } from '@/lib/currency'
 
 export function DashboardClient() {
   const { data: expensesData } = useExpenses()
   const { data: incomeData } = useSourcesOfIncome()
+  const { data: user } = useCurrentUser()
+  const { data: rates } = useExchangeRates()
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false)
+
+  const userCurrency = getCountryCurrency(user?.country ?? 'BR')
 
   const totalExpenses = (expensesData?.expenses ?? []).reduce(
     (sum, e) => sum + e.amount,
@@ -19,7 +27,10 @@ export function DashboardClient() {
 
   const totalIncome = Object.values(incomeData?.sources_of_income ?? {})
     .flat()
-    .reduce((sum, s) => sum + s.income, 0)
+    .reduce((sum, s) => {
+      if (!rates) return sum + s.income
+      return sum + convertCurrency(s.income, s.currency ?? 'USD', userCurrency, rates)
+    }, 0)
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950">
@@ -27,6 +38,7 @@ export function DashboardClient() {
         <BalanceSummary
           totalIncome={totalIncome}
           totalExpenses={totalExpenses}
+          userCurrency={userCurrency}
           onManageIncome={() => setIsIncomeModalOpen(true)}
         />
         <ExpensesSection />
