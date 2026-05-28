@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { Button } from '@/components/ui/button'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,9 +13,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Show when="signed-out">
             <SignInButton />
             <SignUpButton>
-              <button className="bg-[#6c47ff] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+              <Button
+                className="bg-[#6c47ff] hover:bg-[#5a3adb] text-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
+                size="default"
+              >
                 Sign Up
-              </button>
+              </Button>
             </SignUpButton>
           </Show>
           <Show when="signed-in">

@@ -8,6 +8,10 @@ import {
   useDeleteExpense,
 } from '@/hooks/use-expenses'
 import { fmtMoney } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface RowForm {
   name: string
@@ -87,40 +91,40 @@ export function ExpensesSection() {
         <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
           Expenses
         </h2>
-        <button
-          className="btn-green"
+        <Button
+          size="sm"
           onClick={() => setIsAdding(true)}
           aria-label="Add expense"
         >
           + Add Expense
-        </button>
+        </Button>
       </div>
 
       <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
-        <table className="sheet-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th className="w-32 text-right">Amount</th>
-              <th className="w-16 text-center">Paid</th>
-              <th className="w-16 text-center">Saved</th>
-              <th className="w-36">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="sheet-table">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-0">
+              <TableHead className="py-2 px-3 h-auto">Name</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-16 text-center">Paid</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-16 text-center">Saved</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {isLoading && (
-              <tr>
-                <td colSpan={5} className="text-center text-green-600 py-4">
+              <TableRow className="border-0">
+                <TableCell colSpan={5} className="py-4 px-3 text-center text-green-600">
                   Loading…
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {expenses.map((expense) => (
-              <tr key={expense.id}>
-                <td>
+              <TableRow key={expense.id} className="border-0">
+                <TableCell className="py-1 px-3">
                   {editingId === expense.id ? (
-                    <input
-                      className="sheet-input"
+                    <Input
+                      className="h-7 text-sm min-w-0"
                       value={editForm.name}
                       onChange={(e) =>
                         setEditForm((f) => ({ ...f, name: e.target.value }))
@@ -130,12 +134,12 @@ export function ExpensesSection() {
                   ) : (
                     expense.name
                   )}
-                </td>
-                <td className="text-right">
+                </TableCell>
+                <TableCell className="py-1 px-3 text-right">
                   {editingId === expense.id ? (
-                    <input
-                      className="sheet-input text-right"
+                    <Input
                       type="number"
+                      className="h-7 text-sm min-w-0 text-right"
                       min="0"
                       step="0.01"
                       value={editForm.amount}
@@ -146,77 +150,76 @@ export function ExpensesSection() {
                   ) : (
                     <span className="font-mono">{fmtMoney(expense.amount)}</span>
                   )}
-                </td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  <Checkbox
                     checked={editingId === expense.id ? editForm.is_paid : expense.is_paid}
-                    onChange={(e) => {
+                    onCheckedChange={(checked) => {
                       if (editingId === expense.id) {
-                        setEditForm((f) => ({ ...f, is_paid: e.target.checked }))
+                        setEditForm((f) => ({ ...f, is_paid: Boolean(checked) }))
                       } else {
-                        update.mutate({ id: expense.id, is_paid: e.target.checked })
+                        update.mutate({ id: expense.id, is_paid: Boolean(checked) })
                       }
                     }}
-                    className="accent-green-600 w-4 h-4 cursor-pointer"
                   />
-                </td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  <Checkbox
                     checked={editingId === expense.id ? editForm.is_saved : expense.is_saved}
-                    onChange={(e) => {
+                    onCheckedChange={(checked) => {
                       if (editingId === expense.id) {
-                        setEditForm((f) => ({ ...f, is_saved: e.target.checked }))
+                        setEditForm((f) => ({ ...f, is_saved: Boolean(checked) }))
                       } else {
-                        update.mutate({ id: expense.id, is_saved: e.target.checked })
+                        update.mutate({ id: expense.id, is_saved: Boolean(checked) })
                       }
                     }}
-                    className="accent-green-600 w-4 h-4 cursor-pointer"
                   />
-                </td>
-                <td>
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
                     {editingId === expense.id ? (
                       <>
-                        <button
-                          className="btn-green"
+                        <Button
+                          size="xs"
                           onClick={() => handleUpdate(expense.id)}
                         >
                           Save
-                        </button>
-                        <button
-                          className="btn-ghost"
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => setEditingId(null)}
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </>
                     ) : (
                       <>
-                        <button
-                          className="btn-ghost"
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => startEdit(expense.id)}
                         >
                           Edit
-                        </button>
-                        <button
-                          className="btn-danger"
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="xs"
                           onClick={() => del.mutate(expense.id)}
                         >
                           Delete
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {isAdding && (
-              <tr className="add-row">
-                <td>
-                  <input
-                    className="sheet-input"
+              <TableRow className="add-row border-0">
+                <TableCell className="py-1 px-3">
+                  <Input
+                    className="h-7 text-sm min-w-0"
                     placeholder="Expense name"
                     value={addForm.name}
                     onChange={(e) =>
@@ -228,11 +231,11 @@ export function ExpensesSection() {
                     }}
                     autoFocus
                   />
-                </td>
-                <td>
-                  <input
-                    className="sheet-input text-right"
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  <Input
                     type="number"
+                    className="h-7 text-sm min-w-0 text-right"
                     min="0"
                     step="0.01"
                     placeholder="0.00"
@@ -242,63 +245,60 @@ export function ExpensesSection() {
                     }
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   />
-                </td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  <Checkbox
                     checked={addForm.is_paid}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, is_paid: e.target.checked }))
+                    onCheckedChange={(checked) =>
+                      setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))
                     }
-                    className="accent-green-600 w-4 h-4 cursor-pointer"
                   />
-                </td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  <Checkbox
                     checked={addForm.is_saved}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, is_saved: e.target.checked }))
+                    onCheckedChange={(checked) =>
+                      setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))
                     }
-                    className="accent-green-600 w-4 h-4 cursor-pointer"
                   />
-                </td>
-                <td>
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
-                    <button className="btn-green" onClick={handleAdd}>
+                    <Button size="xs" onClick={handleAdd}>
                       Save
-                    </button>
-                    <button
-                      className="btn-ghost"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
                       onClick={() => {
                         setIsAdding(false)
                         setAddForm(emptyForm)
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {expenses.length > 0 && (
-              <tr className="total-row">
-                <td className="text-green-800 dark:text-green-300 font-semibold">TOTAL</td>
-                <td className="text-right font-mono font-semibold text-green-800 dark:text-green-300">
+              <TableRow className="total-row border-0">
+                <TableCell className="py-1 px-3 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
+                <TableCell className="py-1 px-3 text-right font-mono font-semibold text-green-800 dark:text-green-300">
                   {fmtMoney(total)}
-                </td>
-                <td colSpan={3} />
-              </tr>
+                </TableCell>
+                <TableCell colSpan={3} className="py-1 px-3" />
+              </TableRow>
             )}
             {!isLoading && !expenses.length && !isAdding && (
-              <tr>
-                <td colSpan={5} className="text-center text-green-600 py-4 italic">
+              <TableRow className="border-0">
+                <TableCell colSpan={5} className="py-4 px-3 text-center text-green-600 italic">
                   No expenses yet — add one above.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   )
