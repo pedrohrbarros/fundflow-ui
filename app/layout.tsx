@@ -8,7 +8,7 @@ import '@/lib/suppress-warnings'
 import './globals.css'
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-family-sans' })
 
 const newsCycle = News_Cycle({
   weight: '700',
