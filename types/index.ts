@@ -50,6 +50,7 @@ export interface Category {
 
 export interface CategoriesResponse {
   categories: Category[]
+  pagination: { page: number; limit: number; total: number }
 }
 
 export interface CreateCategoryBody {
@@ -71,6 +72,11 @@ export interface SourceOfIncome {
 
 export type SourcesOfIncomeByCategoryResponse = {
   [category_name: string]: SourceOfIncome[]
+}
+
+export interface SourcesOfIncomeResponse {
+  sources_of_income: { [category: string]: SourceOfIncome[] }
+  pagination: { page: number; limit: number; total: number }
 }
 
 export interface CreateSourceOfIncomeBody {
@@ -97,6 +103,7 @@ export interface PaymentMethod {
 
 export interface PaymentMethodsResponse {
   payment_methods: PaymentMethod[]
+  pagination: { page: number; limit: number; total: number }
 }
 
 export interface CreatePaymentMethodBody {

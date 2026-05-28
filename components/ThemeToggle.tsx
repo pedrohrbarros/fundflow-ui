@@ -2,6 +2,7 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 interface ThemeToggleProps {
   inverted?: boolean
@@ -21,15 +22,17 @@ export function ThemeToggle({ inverted = false, disabled = false }: ThemeToggleP
   const isDark = resolvedTheme === 'dark'
 
   const colors = inverted
-    ? 'border-green-400 dark:border-green-700 text-green-400 dark:text-green-700 hover:bg-green-900 dark:hover:bg-green-100'
-    : 'border-green-700 dark:border-green-400 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900'
+    ? 'border border-green-400 dark:border-green-700 text-green-400 dark:text-green-700 hover:bg-green-900 dark:hover:bg-green-100'
+    : 'border border-green-700 dark:border-green-400 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900'
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={() => !disabled && setTheme(isDark ? 'light' : 'dark')}
       aria-label="Toggle theme"
       disabled={disabled}
-      className={`w-9 h-9 flex items-center justify-center rounded-full border transition-colors ${colors} ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+      className={`size-9 rounded-full ${colors}`}
     >
       {isDark ? (
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -41,6 +44,6 @@ export function ThemeToggle({ inverted = false, disabled = false }: ThemeToggleP
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
         </svg>
       )}
-    </button>
+    </Button>
   )
 }

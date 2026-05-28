@@ -7,6 +7,9 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from '@/hooks/use-categories'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export function CategoriesSection() {
   const { data, isLoading } = useCategories()
@@ -58,39 +61,37 @@ export function CategoriesSection() {
         <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
           Categories
         </h2>
-        <button
-          className="btn-green"
+        <Button
+          size="sm"
           onClick={() => setIsAdding(true)}
           aria-label="Add category"
         >
           + Add Category
-        </button>
+        </Button>
       </div>
 
       <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
-        <table className="sheet-table">
-          <thead>
-            <tr>
-              <th className="w-10">#</th>
-              <th>Name</th>
-              <th className="w-36">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="sheet-table">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-0">
+              <TableHead className="py-2 px-3 h-auto">Name</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {isLoading && (
-              <tr>
-                <td colSpan={3} className="text-center text-green-600 py-4">
+              <TableRow className="border-0">
+                <TableCell colSpan={2} className="py-4 px-3 text-center text-green-600">
                   Loading…
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-            {data?.categories.map((category, index) => (
-              <tr key={category.id}>
-                <td className="text-green-600 text-center">{index + 1}</td>
-                <td>
+            {data?.categories.map((category) => (
+              <TableRow key={category.id} className="border-0">
+                <TableCell className="py-1 px-3">
                   {editingId === category.id ? (
-                    <input
-                      className="sheet-input"
+                    <Input
+                      className="h-7 text-sm min-w-0"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => {
@@ -102,51 +103,53 @@ export function CategoriesSection() {
                   ) : (
                     category.name
                   )}
-                </td>
-                <td>
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
                     {editingId === category.id ? (
                       <>
-                        <button
-                          className="btn-green"
+                        <Button
+                          size="xs"
                           onClick={() => handleUpdate(category.id)}
                           aria-label="save"
                         >
                           Save
-                        </button>
-                        <button
-                          className="btn-ghost"
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => setEditingId(null)}
                         >
                           Cancel
-                        </button>
+                        </Button>
                       </>
                     ) : (
                       <>
-                        <button
-                          className="btn-ghost"
+                        <Button
+                          variant="outline"
+                          size="xs"
                           onClick={() => startEdit(category.id)}
                         >
                           Edit
-                        </button>
-                        <button
-                          className="btn-danger"
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="xs"
                           onClick={() => deleteCategory.mutate(category.id)}
                         >
                           Delete
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {isAdding && (
-              <tr className="add-row">
-                <td className="text-green-400 text-center">*</td>
-                <td>
-                  <input
-                    className="sheet-input"
+              <TableRow className="add-row border-0">
+                <TableCell className="py-1 px-3">
+                  <Input
+                    className="h-7 text-sm min-w-0"
                     placeholder="Category name"
                     value={addName}
                     onChange={(e) => setAddName(e.target.value)}
@@ -159,34 +162,35 @@ export function CategoriesSection() {
                     }}
                     autoFocus
                   />
-                </td>
-                <td>
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
-                    <button className="btn-green" onClick={handleAdd} aria-label="save">
+                    <Button size="xs" onClick={handleAdd} aria-label="save">
                       Save
-                    </button>
-                    <button
-                      className="btn-ghost"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
                       onClick={() => {
                         setIsAdding(false)
                         setAddName('')
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {!isLoading && !data?.categories.length && !isAdding && (
-              <tr>
-                <td colSpan={3} className="text-center text-green-600 py-4 italic">
+              <TableRow className="border-0">
+                <TableCell colSpan={2} className="py-4 px-3 text-center text-green-600 italic">
                   No categories yet — add one above.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   )

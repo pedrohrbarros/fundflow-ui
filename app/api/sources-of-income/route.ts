@@ -3,11 +3,14 @@ import { apiRequest } from '@/lib/api'
 import type {
   CreateSourceOfIncomeBody,
   SourceOfIncome,
-  SourcesOfIncomeByCategoryResponse,
+  SourcesOfIncomeResponse,
 } from '@/types'
 
 export async function GET() {
-  const result = await apiRequest<SourcesOfIncomeByCategoryResponse>('/sources_of_income')
+  const result = await apiRequest<SourcesOfIncomeResponse>('/sources_of_income/search', {
+    method: 'POST',
+    body: {},
+  })
   return Response.json(result.parsedData, { status: result.status })
 }
 

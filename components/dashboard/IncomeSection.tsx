@@ -7,8 +7,11 @@ import {
   useUpdateSourceOfIncome,
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
-import { useCategories } from '@/hooks/use-categories'
 import { fmtMoney } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
 
 interface RowForm {
   name: string
@@ -20,7 +23,6 @@ const emptyForm: RowForm = { name: '', category_id: '', income: '' }
 
 export function IncomeSection() {
   const { data, isLoading } = useSourcesOfIncome()
-  const { data: catData } = useCategories()
   const create = useCreateSourceOfIncome()
   const update = useUpdateSourceOfIncome()
   const del = useDeleteSourceOfIncome()
@@ -30,8 +32,7 @@ export function IncomeSection() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<RowForm>(emptyForm)
 
-  const sources = data ? Object.values(data).flat() : []
-  const categories = catData?.categories ?? []
+  const sources = data ? Object.values(data.sources_of_income).flat() : []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
 
   function handleAdd() {
@@ -86,134 +87,122 @@ export function IncomeSection() {
         <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
           Income Sources
         </h2>
-        <button
-          className="btn-green"
+        <Button
+          size="sm"
           onClick={() => setIsAdding(true)}
           aria-label="Add income"
         >
           + Add Income
-        </button>
+        </Button>
       </div>
 
       <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
-        <table className="sheet-table">
-          <thead>
-            <tr>
-              <th className="w-10">#</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th className="w-32 text-right">Amount</th>
-              <th className="w-36">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="sheet-table">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-0">
+              <TableHead className="py-2 px-3 h-auto">Name</TableHead>
+              <TableHead className="py-2 px-3 h-auto">Category</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {isLoading && (
-              <tr>
-                <td colSpan={5} className="text-center text-green-600 py-4">
+              <TableRow className="border-0">
+                <TableCell colSpan={4} className="py-4 px-3 text-center text-green-600">
                   Loading…
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-            {sources.map((source, index) => {
-              const categoryName =
-                categories.find((c) => c.id === source.category_id)?.name ?? '—'
-              return (
-                <tr key={source.id}>
-                  <td className="text-green-600 text-center">{index + 1}</td>
-                  <td>
+            {sources.map((source) => (
+              <TableRow key={source.id} className="border-0">
+                <TableCell className="py-1 px-3">
+                  {editingId === source.id ? (
+                    <Input
+                      className="h-7 text-sm min-w-0"
+                      value={editForm.name}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      autoFocus
+                    />
+                  ) : (
+                    source.name
+                  )}
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  {editingId === source.id ? (
+                    <CategoryCombobox
+                      value={editForm.category_id}
+                      onChange={(id) =>
+                        setEditForm((f) => ({ ...f, category_id: id }))
+                      }
+                    />
+                  ) : (
+                    source.category_id
+                  )}
+                </TableCell>
+                <TableCell className="py-1 px-3 text-right">
+                  {editingId === source.id ? (
+                    <Input
+                      type="number"
+                      className="h-7 text-sm min-w-0 text-right"
+                      min="0"
+                      step="0.01"
+                      value={editForm.income}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, income: e.target.value }))
+                      }
+                    />
+                  ) : (
+                    <span className="font-mono">{fmtMoney(source.income)}</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  <div className="flex gap-1">
                     {editingId === source.id ? (
-                      <input
-                        className="sheet-input"
-                        value={editForm.name}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, name: e.target.value }))
-                        }
-                        autoFocus
-                      />
+                      <>
+                        <Button
+                          size="xs"
+                          onClick={() => handleUpdate(source.id)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          onClick={() => setEditingId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </>
                     ) : (
-                      source.name
+                      <>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          onClick={() => startEdit(source.id)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="xs"
+                          onClick={() => del.mutate(source.id)}
+                        >
+                          Delete
+                        </Button>
+                      </>
                     )}
-                  </td>
-                  <td>
-                    {editingId === source.id ? (
-                      <select
-                        className="sheet-input"
-                        value={editForm.category_id}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, category_id: e.target.value }))
-                        }
-                      >
-                        <option value="">Select…</option>
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      categoryName
-                    )}
-                  </td>
-                  <td className="text-right">
-                    {editingId === source.id ? (
-                      <input
-                        className="sheet-input text-right"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={editForm.income}
-                        onChange={(e) =>
-                          setEditForm((f) => ({ ...f, income: e.target.value }))
-                        }
-                      />
-                    ) : (
-                      <span className="font-mono">{fmtMoney(source.income)}</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="flex gap-1">
-                      {editingId === source.id ? (
-                        <>
-                          <button
-                            className="btn-green"
-                            onClick={() => handleUpdate(source.id)}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="btn-ghost"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            className="btn-ghost"
-                            onClick={() => startEdit(source.id)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="btn-danger"
-                            onClick={() => del.mutate(source.id)}
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
             {isAdding && (
-              <tr className="add-row">
-                <td className="text-green-400 text-center">*</td>
-                <td>
-                  <input
-                    className="sheet-input"
+              <TableRow className="add-row border-0">
+                <TableCell className="py-1 px-3">
+                  <Input
+                    className="h-7 text-sm min-w-0"
                     placeholder="Source name"
                     value={addForm.name}
                     onChange={(e) =>
@@ -225,27 +214,19 @@ export function IncomeSection() {
                     }}
                     autoFocus
                   />
-                </td>
-                <td>
-                  <select
-                    className="sheet-input"
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  <CategoryCombobox
                     value={addForm.category_id}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, category_id: e.target.value }))
+                    onChange={(id) =>
+                      setAddForm((f) => ({ ...f, category_id: id }))
                     }
-                  >
-                    <option value="">Select category…</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <input
-                    className="sheet-input text-right"
+                  />
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  <Input
                     type="number"
+                    className="h-7 text-sm min-w-0 text-right"
                     min="0"
                     step="0.01"
                     placeholder="0.00"
@@ -255,46 +236,46 @@ export function IncomeSection() {
                     }
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   />
-                </td>
-                <td>
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
-                    <button className="btn-green" onClick={handleAdd}>
+                    <Button size="xs" onClick={handleAdd}>
                       Save
-                    </button>
-                    <button
-                      className="btn-ghost"
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
                       onClick={() => {
                         setIsAdding(false)
                         setAddForm(emptyForm)
                       }}
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
             {sources.length > 0 && (
-              <tr className="total-row">
-                <td />
-                <td colSpan={2} className="text-green-800 font-semibold">
+              <TableRow className="total-row border-0">
+                <TableCell className="py-1 px-3 text-green-800 font-semibold" colSpan={2}>
                   TOTAL
-                </td>
-                <td className="text-right font-mono font-semibold text-green-800">
+                </TableCell>
+                <TableCell className="py-1 px-3 text-right font-mono font-semibold text-green-800">
                   {fmtMoney(total)}
-                </td>
-                <td />
-              </tr>
+                </TableCell>
+                <TableCell className="py-1 px-3" />
+              </TableRow>
             )}
             {!isLoading && !sources.length && !isAdding && (
-              <tr>
-                <td colSpan={5} className="text-center text-green-600 py-4 italic">
+              <TableRow className="border-0">
+                <TableCell colSpan={4} className="py-4 px-3 text-center text-green-600 italic">
                   No income sources yet — add one above.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </section>
   )

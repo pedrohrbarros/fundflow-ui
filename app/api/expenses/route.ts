@@ -4,14 +4,15 @@ import type { CreateExpenseBody, Expense, ExpensesResponse } from '@/types'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const params: Record<string, string> = {}
+  const body: Record<string, number> = {}
   const page = searchParams.get('page')
   const limit = searchParams.get('limit')
-  if (page) params.page = page
-  if (limit) params.limit = limit
+  if (page) body.page = Number(page)
+  if (limit) body.limit = Number(limit)
 
-  const result = await apiRequest<ExpensesResponse>('/expenses', {
-    searchParams: Object.keys(params).length > 0 ? params : undefined,
+  const result = await apiRequest<ExpensesResponse>('/expenses/search', {
+    method: 'POST',
+    body,
   })
   return Response.json(result.parsedData, { status: result.status })
 }

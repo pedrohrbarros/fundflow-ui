@@ -1,39 +1,40 @@
 'use client'
 
+import { useState } from 'react'
 import { useExpenses } from '@/hooks/use-expenses'
 import { useSourcesOfIncome } from '@/hooks/use-sources-of-income'
 import { BalanceSummary } from '@/components/dashboard/BalanceSummary'
-import { CategoriesSection } from '@/components/dashboard/CategoriesSection'
-import { IncomeSection } from '@/components/dashboard/IncomeSection'
 import { ExpensesSection } from '@/components/dashboard/ExpensesSection'
+import { IncomeModal } from '@/components/dashboard/IncomeModal'
 
 export function DashboardClient() {
   const { data: expensesData } = useExpenses()
   const { data: incomeData } = useSourcesOfIncome()
+  const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false)
 
-  const totalIncome = incomeData
-    ? Object.values(incomeData).flat().reduce((sum, s) => sum + s.income, 0)
-    : 0
   const totalExpenses = (expensesData?.expenses ?? []).reduce(
     (sum, e) => sum + e.amount,
     0
   )
 
-  return (
-    <div className="min-h-[calc(100vh-4rem)] bg-green-50 dark:bg-gray-950">
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-green-900 dark:text-green-400">Monthly Budget</h1>
-          <p className="text-green-600 dark:text-green-500 text-sm mt-1">
-            {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-          </p>
-        </div>
+  const totalIncome = Object.values(incomeData?.sources_of_income ?? {})
+    .flat()
+    .reduce((sum, s) => sum + s.income, 0)
 
-        <BalanceSummary totalIncome={totalIncome} totalExpenses={totalExpenses} />
-        <CategoriesSection />
-        <IncomeSection />
+  return (
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950">
+      <div className="w-full px-6 md:px-10 py-8">
+        <BalanceSummary
+          totalIncome={totalIncome}
+          totalExpenses={totalExpenses}
+          onManageIncome={() => setIsIncomeModalOpen(true)}
+        />
         <ExpensesSection />
       </div>
+      <IncomeModal
+        open={isIncomeModalOpen}
+        onClose={() => setIsIncomeModalOpen(false)}
+      />
     </div>
   )
 }
