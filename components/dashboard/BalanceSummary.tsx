@@ -9,11 +9,15 @@ interface Props {
 
 export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onManageIncome }: Props) {
   function fmt(n: number) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: userCurrency,
-      minimumFractionDigits: 2,
-    }).format(Math.abs(n))
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: userCurrency,
+        minimumFractionDigits: 2,
+      }).format(Math.abs(n))
+    } catch {
+      return `${userCurrency} ${Math.abs(n).toFixed(2)}`
+    }
   }
   const remaining = totalIncome - totalExpenses
   const isNegative = remaining < 0

@@ -25,12 +25,13 @@ export function DashboardClient() {
     0
   )
 
-  const totalIncome = Object.values(incomeData?.sources_of_income ?? {})
-    .flat()
-    .reduce((sum, s) => {
-      if (!rates) return sum + s.income
-      return sum + convertCurrency(s.income, s.currency ?? 'USD', userCurrency, rates)
-    }, 0)
+  const totalIncome = !rates
+    ? 0
+    : Object.values(incomeData?.sources_of_income ?? {})
+        .flat()
+        .reduce((sum, s) => {
+          return sum + convertCurrency(s.income, s.currency ?? 'USD', userCurrency, rates)
+        }, 0)
 
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950">

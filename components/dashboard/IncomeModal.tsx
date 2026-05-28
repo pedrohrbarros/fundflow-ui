@@ -26,6 +26,8 @@ interface RowForm {
   currency: string
 }
 
+const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB']
+
 const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD' }
 
 export function IncomeModal({ open, onClose }: Props) {
@@ -200,7 +202,7 @@ export function IncomeModal({ open, onClose }: Props) {
                         value={editForm.currency}
                         onChange={(e) => setEditForm((f) => ({ ...f, currency: e.target.value }))}
                       >
-                        {['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'].map((c) => (
+                        {COMMON_CURRENCIES.map((c) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
