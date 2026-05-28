@@ -3,7 +3,7 @@
 interface Props {
   totalIncome: number
   totalExpenses: number
-  onManageIncome: () => void
+  onManageIncome?: () => void
 }
 
 function fmt(n: number) {

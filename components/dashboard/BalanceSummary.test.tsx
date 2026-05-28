@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { BalanceSummary } from './BalanceSummary'
 
 describe('BalanceSummary', () => {
@@ -23,5 +23,13 @@ describe('BalanceSummary', () => {
     render(<BalanceSummary totalIncome={2000} totalExpenses={500} />)
     const remaining = screen.getByTestId('remaining-amount')
     expect(remaining).toHaveClass('text-green-600')
+  })
+
+  it('calls onManageIncome when the manage income button is clicked', () => {
+    const mockFn = vi.fn()
+    render(<BalanceSummary totalIncome={1000} totalExpenses={500} onManageIncome={mockFn} />)
+    const button = screen.getByRole('button', { name: 'Manage income sources' })
+    fireEvent.click(button)
+    expect(mockFn).toHaveBeenCalledOnce()
   })
 })
