@@ -88,7 +88,7 @@ export function IncomeModal({ open, onClose }: Props) {
   }
 
   function handleUpdate(id: string) {
-    if (!editForm.name.trim()) return
+    if (!editForm.name.trim() || !editForm.category_id) return
     update.mutate(
       {
         id,
@@ -173,7 +173,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleUpdate(source.id)
-                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
+                            if (e.key === 'Escape') { e.stopPropagation(); setEditingId(null); setEditForm(emptyForm) }
                           }}
                           autoFocus
                         />
@@ -190,7 +190,7 @@ export function IncomeModal({ open, onClose }: Props) {
                             setEditForm((f) => ({ ...f, category_id: e.target.value }))
                           }
                           onKeyDown={(e) => {
-                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
+                            if (e.key === 'Escape') { e.stopPropagation(); setEditingId(null); setEditForm(emptyForm) }
                           }}
                         >
                           <option value="">Select…</option>
@@ -217,7 +217,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleUpdate(source.id)
-                            if (e.key === 'Escape') { setEditingId(null); setEditForm(emptyForm) }
+                            if (e.key === 'Escape') { e.stopPropagation(); setEditingId(null); setEditForm(emptyForm) }
                           }}
                         />
                       ) : (
@@ -253,6 +253,7 @@ export function IncomeModal({ open, onClose }: Props) {
                             <button
                               className="btn-danger"
                               onClick={() => deleteSource.mutate(source.id)}
+                              disabled={deleteSource.isPending}
                             >
                               Delete
                             </button>
@@ -277,6 +278,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleAdd()
                         if (e.key === 'Escape') {
+                          e.stopPropagation()
                           setIsAdding(false)
                           setAddForm(emptyForm)
                         }
@@ -314,6 +316,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') handleAdd()
                         if (e.key === 'Escape') {
+                          e.stopPropagation()
                           setIsAdding(false)
                           setAddForm(emptyForm)
                         }
