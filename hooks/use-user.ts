@@ -19,6 +19,7 @@ export function useCurrentUser() {
 export function useUpdateUserCountry() {
   const qc = useQueryClient()
   return useMutation({
+    mutationKey: KEY,
     mutationFn: async (body: UpdateUserCountryBody) => {
       const res = await fetch('/api/users/country', {
         method: 'PATCH',

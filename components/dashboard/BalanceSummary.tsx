@@ -1,24 +1,15 @@
 'use client'
 
+import { fmtMoney } from '@/lib/format'
+
 interface Props {
   totalIncome: number
   totalExpenses: number
-  userCurrency: string
+  userCurrency?: string
   onManageIncome?: () => void
 }
 
-export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onManageIncome }: Props) {
-  function fmt(n: number) {
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: userCurrency,
-        minimumFractionDigits: 2,
-      }).format(Math.abs(n))
-    } catch {
-      return `${userCurrency} ${Math.abs(n).toFixed(2)}`
-    }
-  }
+export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD', onManageIncome }: Props) {
   const remaining = totalIncome - totalExpenses
   const isNegative = remaining < 0
 
@@ -42,7 +33,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onMan
         <p className="text-xs font-semibold text-[#86efac] dark:text-green-400 uppercase tracking-wide mb-1">
           Total Income
         </p>
-        <p className="text-2xl font-bold text-white dark:text-green-300">{fmt(totalIncome)}</p>
+        <p className="text-2xl font-bold text-white dark:text-green-300">{fmtMoney(totalIncome, userCurrency)}</p>
       </div>
 
       {/* Expenses — dark red in light mode */}
@@ -50,7 +41,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onMan
         <p className="text-xs font-semibold text-[#fca5a5] dark:text-red-400 uppercase tracking-wide mb-1">
           Total Expenses
         </p>
-        <p className="text-2xl font-bold text-white dark:text-red-400">{fmt(totalExpenses)}</p>
+        <p className="text-2xl font-bold text-white dark:text-red-400">{fmtMoney(totalExpenses, userCurrency)}</p>
       </div>
 
       {/* Remaining — dynamic color */}
@@ -75,7 +66,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency, onMan
           className="text-2xl font-bold text-white dark:text-green-400"
         >
           {isNegative ? '-' : ''}
-          {fmt(remaining)}
+          {fmtMoney(Math.abs(remaining), userCurrency)}
         </p>
       </div>
     </div>

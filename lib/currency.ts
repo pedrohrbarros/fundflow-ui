@@ -7,11 +7,11 @@ export function convertCurrency(
   fromCurrency: string,
   toCurrency: string,
   rates: Record<string, number>
-): number {
+): number | null {
   if (fromCurrency === toCurrency) return amount
   const rateFrom = rates[fromCurrency]
   const rateTo = rates[toCurrency]
-  if (!rateFrom || !rateTo) return amount
+  if (!rateFrom || !rateTo) return null
   // Convert to USD first, then to target
   return (amount / rateFrom) * rateTo
 }

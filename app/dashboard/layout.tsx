@@ -11,7 +11,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <CountryPicker />
           <Show when="signed-out">
             <SignInButton />
             <SignUpButton>
@@ -24,6 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </SignUpButton>
           </Show>
           <Show when="signed-in">
+            <CountryPicker />
             <UserButton />
           </Show>
         </div>

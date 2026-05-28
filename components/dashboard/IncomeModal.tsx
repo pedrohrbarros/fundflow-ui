@@ -26,7 +26,7 @@ interface RowForm {
   currency: string
 }
 
-const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB']
+const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'] as const
 
 const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD' }
 
@@ -43,6 +43,8 @@ export function IncomeModal({ open, onClose }: Props) {
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
+  const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
+  const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
 
   useEffect(() => {
     if (!open) {
@@ -310,7 +312,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       value={addForm.currency}
                       onChange={(e) => setAddForm((f) => ({ ...f, currency: e.target.value }))}
                     >
-                      {['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'].map((c) => (
+                      {COMMON_CURRENCIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
@@ -337,9 +339,11 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {sources.length > 0 && (
                 <TableRow className="total-row border-0">
-                  <TableCell colSpan={2} className="py-1 px-3 font-semibold">TOTAL</TableCell>
+                  <TableCell colSpan={2} className="py-1 px-3 font-semibold">
+                    {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
+                  </TableCell>
                   <TableCell className="py-1 px-3 text-right font-mono font-semibold amount-col">
-                    {fmtMoney(total)}
+                    {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
                   </TableCell>
                   <TableCell colSpan={2} className="py-1 px-3" />
                 </TableRow>
