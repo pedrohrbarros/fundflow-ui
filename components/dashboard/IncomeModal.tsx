@@ -161,6 +161,10 @@ export function IncomeModal({ open, onClose }: Props) {
                           onChange={(e) =>
                             setEditForm((f) => ({ ...f, name: e.target.value }))
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleUpdate(source.id)
+                            if (e.key === 'Escape') setEditingId(null)
+                          }}
                           autoFocus
                         />
                       ) : (
@@ -175,6 +179,9 @@ export function IncomeModal({ open, onClose }: Props) {
                           onChange={(e) =>
                             setEditForm((f) => ({ ...f, category_id: e.target.value }))
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') setEditingId(null)
+                          }}
                         >
                           <option value="">Select…</option>
                           {categories.map((c) => (
@@ -198,6 +205,10 @@ export function IncomeModal({ open, onClose }: Props) {
                           onChange={(e) =>
                             setEditForm((f) => ({ ...f, income: e.target.value }))
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleUpdate(source.id)
+                            if (e.key === 'Escape') setEditingId(null)
+                          }}
                         />
                       ) : (
                         <span className="font-mono">{fmtMoney(source.income)}</span>
@@ -289,7 +300,13 @@ export function IncomeModal({ open, onClose }: Props) {
                       onChange={(e) =>
                         setAddForm((f) => ({ ...f, income: e.target.value }))
                       }
-                      onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAdd()
+                        if (e.key === 'Escape') {
+                          setIsAdding(false)
+                          setAddForm(emptyForm)
+                        }
+                      }}
                     />
                   </td>
                   <td>
