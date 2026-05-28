@@ -3,6 +3,7 @@
 interface Props {
   totalIncome: number
   totalExpenses: number
+  onManageIncome: () => void
 }
 
 function fmt(n: number) {
@@ -13,13 +14,20 @@ function fmt(n: number) {
   }).format(Math.abs(n))
 }
 
-export function BalanceSummary({ totalIncome, totalExpenses }: Props) {
+export function BalanceSummary({ totalIncome, totalExpenses, onManageIncome }: Props) {
   const remaining = totalIncome - totalExpenses
   const isNegative = remaining < 0
 
   return (
     <div className="grid grid-cols-3 gap-4 mb-8">
-      <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
+      <div className="relative bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
+        <button
+          onClick={onManageIncome}
+          aria-label="Manage income sources"
+          className="absolute top-2 right-2 p-1 text-green-600 dark:text-green-400 opacity-50 hover:opacity-100 hover:bg-green-100 dark:hover:bg-green-900 rounded transition-opacity"
+        >
+          ✎
+        </button>
         <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wide mb-1">
           Total Income
         </p>
