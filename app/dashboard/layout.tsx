@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
+import { CountryPicker } from '@/components/dashboard/CountryPicker'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
         <div className="flex items-center gap-3">
           <ThemeToggle />
+          <CountryPicker />
           <Show when="signed-out">
             <SignInButton />
             <SignUpButton>
