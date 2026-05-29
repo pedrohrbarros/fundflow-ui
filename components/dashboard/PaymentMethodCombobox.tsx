@@ -75,8 +75,8 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="w-full text-left border border-input bg-transparent hover:border-ring text-sm px-2 py-1.5 rounded outline-none transition-colors flex items-center justify-between gap-2 dark:border-white/[0.1] dark:bg-white/[0.04] dark:hover:border-green-700">
-        <span className={selected ? 'text-foreground dark:text-green-100' : 'text-muted-foreground dark:text-white/30'}>
+      <PopoverTrigger className="w-full text-left bg-transparent dark:bg-[#1a2e1a] border border-green-200 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-sm px-2 py-1.5 rounded outline-none transition-colors flex items-center justify-between gap-2">
+        <span className={selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}>
           {selected?.name ?? placeholder}
         </span>
         <svg
@@ -89,31 +89,31 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`shrink-0 text-muted-foreground transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-green-500 dark:text-[#86efac] transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </PopoverTrigger>
 
-      <PopoverContent align="start" side="bottom" className="p-0 w-64 dark:bg-gray-950 dark:border-green-900">
+      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-200 dark:border-[#166534] p-0 w-64">
         <div className="max-h-52 overflow-y-auto">
           {paymentMethods.length === 0 && (
-            <p className="text-muted-foreground text-xs italic px-3 py-3">No payment methods yet</p>
+            <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No payment methods yet</p>
           )}
           {paymentMethods.map((pm) => (
             <div
               key={pm.id}
               className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer group transition-colors ${
                 pm.id === value
-                  ? 'bg-green-50 dark:bg-green-950'
-                  : 'hover:bg-green-50/60 dark:hover:bg-green-950/60'
+                  ? 'bg-green-50 dark:bg-[#14532d]'
+                  : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'
               }`}
               onClick={() => editingId !== pm.id && selectMethod(pm.id)}
             >
               {editingId === pm.id ? (
                 <>
                   <Input
-                    className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1"
+                    className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
@@ -126,7 +126,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                   />
                   <Button
                     size="icon-xs"
-                    className="shrink-0 bg-transparent border-0 text-green-600 hover:text-white hover:bg-green-600 dark:text-green-400 dark:hover:bg-green-800"
+                    className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
                     onClick={(e) => { e.stopPropagation(); saveEdit(pm.id) }}
                     disabled={updatePm.isPending}
                     title="Save"
@@ -136,7 +136,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                   <Button
                     size="icon-xs"
                     variant="ghost"
-                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
                     onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
                     title="Cancel"
                   >
@@ -146,15 +146,15 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
               ) : (
                 <>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm text-foreground dark:text-green-100 truncate block">{pm.name}</span>
-                    <span className="text-xs text-muted-foreground dark:text-green-700 truncate block">{pm.origin}</span>
+                    <span className="text-sm text-green-900 dark:text-[#d1fae5] truncate block">{pm.name}</span>
+                    <span className="text-xs text-green-500 dark:text-[#86efac]/60 truncate block">{pm.origin}</span>
                   </div>
                   {pm.id === value && (
-                    <span className="shrink-0 text-green-600 dark:text-green-400 text-xs mr-0.5">✓</span>
+                    <span className="shrink-0 text-green-600 dark:text-[#4ade80] text-xs mr-0.5">✓</span>
                   )}
                   <button
                     onClick={(e) => startEdit(pm.id, pm.name, e)}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground hover:bg-green-100 dark:hover:bg-green-900 text-xs px-1.5 py-0.5 rounded transition-all"
+                    className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166634] text-xs px-1.5 py-0.5 rounded transition-all"
                     title="Rename"
                   >
                     ✎
@@ -173,11 +173,11 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
           ))}
         </div>
 
-        <div className="border-t border-border dark:border-green-900">
+        <div className="border-t border-green-200 dark:border-[#166534]">
           {showNew ? (
             <div className="flex flex-col gap-1.5 px-2 py-2">
               <Input
-                className="h-7 text-sm focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                className="h-7 text-sm focus-visible:ring-0 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5] placeholder:text-green-300 dark:placeholder:text-[#86efac]/40"
                 placeholder="Name…"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -188,7 +188,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                 autoFocus
               />
               <Input
-                className="h-7 text-sm focus-visible:ring-0 placeholder:text-muted-foreground/60"
+                className="h-7 text-sm focus-visible:ring-0 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5] placeholder:text-green-300 dark:placeholder:text-[#86efac]/40"
                 placeholder="Origin (e.g. Bank, Wallet)…"
                 value={newOrigin}
                 onChange={(e) => setNewOrigin(e.target.value)}
@@ -210,6 +210,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                 <Button
                   size="xs"
                   variant="ghost"
+                  className="text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
                   onClick={() => { setShowNew(false); setNewName(''); setNewOrigin('') }}
                 >
                   Cancel
@@ -219,7 +220,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setShowNew(true); setEditingId(null) }}
-              className="w-full text-left text-xs text-green-600 dark:text-green-500 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-950/60 px-3 py-2 transition-colors"
+              className="w-full text-left text-xs text-green-600 dark:text-[#86efac] hover:text-green-900 dark:hover:text-white hover:bg-green-50 dark:hover:bg-[#1a3a1a] px-3 py-2 transition-colors"
             >
               + New payment method
             </button>

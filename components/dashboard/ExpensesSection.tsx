@@ -190,35 +190,38 @@ export function ExpensesSection() {
                     />
                   </TableCell>
                   <TableCell className="py-5 px-5">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       {editingId === expense.id ? (
                         <>
+                          {editForm.name.trim() && (
+                            <Button
+                              size="default"
+                              onClick={() => handleUpdate(expense.id)}
+                            >
+                              Save
+                            </Button>
+                          )}
                           <Button
-                            size="xs"
-                            onClick={() => handleUpdate(expense.id)}
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="xs"
+                            variant="destructive"
+                            size="icon"
                             onClick={() => setEditingId(null)}
+                            aria-label="Cancel"
                           >
-                            Cancel
+                            ✕
                           </Button>
                         </>
                       ) : (
                         <>
                           <Button
                             variant="outline"
-                            size="xs"
+                            size="default"
                             onClick={() => startEdit(expense.id)}
                           >
                             Edit
                           </Button>
                           <Button
                             variant="destructive"
-                            size="xs"
+                            size="default"
                             onClick={() => del.mutate(expense.id)}
                           >
                             Delete
@@ -266,33 +269,22 @@ export function ExpensesSection() {
                       onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
                     />
                   </TableCell>
-                  <TableCell className="py-5 px-5 text-center">
-                    <Checkbox
-                      checked={addForm.is_paid}
-                      onCheckedChange={(checked) =>
-                        setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="py-5 px-5 text-center">
-                    <Checkbox
-                      checked={addForm.is_saved}
-                      onCheckedChange={(checked) =>
-                        setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))
-                      }
-                    />
-                  </TableCell>
+                  <TableCell className="py-5 px-5" />
+                  <TableCell className="py-5 px-5" />
                   <TableCell className="py-5 px-5">
-                    <div className="flex gap-2">
-                      <Button size="xs" onClick={handleAdd}>
-                        Save
-                      </Button>
+                    <div className="flex gap-2 items-center">
+                      {addForm.name.trim() && addForm.amount && (
+                        <Button size="default" onClick={handleAdd}>
+                          Save
+                        </Button>
+                      )}
                       <Button
-                        variant="outline"
-                        size="xs"
+                        variant="destructive"
+                        size="icon"
                         onClick={() => { setIsAdding(false); setAddForm(emptyForm) }}
+                        aria-label="Cancel"
                       >
-                        Cancel
+                        ✕
                       </Button>
                     </div>
                   </TableCell>
