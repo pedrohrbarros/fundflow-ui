@@ -35,6 +35,7 @@ export function ExpensesSection() {
 
   const expenses = data?.expenses ?? []
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const isEmpty = !isLoading && !expenses.length && !isAdding
 
   function handleAdd() {
     if (!addForm.name.trim() || !addForm.amount) return
@@ -86,219 +87,226 @@ export function ExpensesSection() {
   }
 
   return (
-    <section className="mb-8">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
-          Expenses
-        </h2>
-        <Button
-          size="sm"
-          onClick={() => setIsAdding(true)}
-          aria-label="Add expense"
-        >
-          + Add Expense
-        </Button>
-      </div>
-
-      <div className="border border-green-200 dark:border-green-800 rounded-lg overflow-hidden">
-        <Table className="sheet-table">
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-0">
-              <TableHead className="py-2 px-3 h-auto">Name</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-16 text-center">Paid</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-16 text-center">Saved</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow className="border-0">
-                <TableCell colSpan={5} className="py-4 px-3 text-center text-green-600">
-                  Loading…
-                </TableCell>
+    <section className="flex flex-col flex-1 min-h-0">
+      <div className="border border-green-200 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
+        <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
+          <Table className="sheet-table">
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-0">
+                <TableHead className="py-4 px-5 h-auto">Name</TableHead>
+                <TableHead className="py-4 px-5 h-auto w-32 text-right">Amount</TableHead>
+                <TableHead className="py-4 px-5 h-auto w-16 text-center">Paid</TableHead>
+                <TableHead className="py-4 px-5 h-auto w-16 text-center">Saved</TableHead>
+                <TableHead className="py-4 px-5 h-auto w-36">Actions</TableHead>
               </TableRow>
-            )}
-            {expenses.map((expense) => (
-              <TableRow key={expense.id} className="border-0">
-                <TableCell className="py-1 px-3">
-                  {editingId === expense.id ? (
+            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow className="border-0">
+                  <TableCell colSpan={5} className="py-6 px-5 text-center text-green-600">
+                    Loading…
+                  </TableCell>
+                </TableRow>
+              )}
+              {expenses.map((expense) => (
+                <TableRow key={expense.id} className="border-0">
+                  <TableCell className="py-5 px-5">
+                    {editingId === expense.id ? (
+                      <Input
+                        className="min-w-0 text-[2rem]"
+                        value={editForm.name}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, name: e.target.value }))
+                        }
+                        autoFocus
+                      />
+                    ) : (
+                      expense.name
+                    )}
+                  </TableCell>
+                  <TableCell className="py-5 px-5 text-right">
+                    {editingId === expense.id ? (
+                      <Input
+                        type="number"
+                        className="min-w-0 text-right text-[2rem]"
+                        min="0"
+                        step="0.01"
+                        value={editForm.amount}
+                        onChange={(e) =>
+                          setEditForm((f) => ({ ...f, amount: e.target.value }))
+                        }
+                      />
+                    ) : (
+                      <span className="font-mono">{fmtMoney(expense.amount)}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-5 px-5 text-center">
+                    <Checkbox
+                      checked={editingId === expense.id ? editForm.is_paid : expense.is_paid}
+                      onCheckedChange={(checked) => {
+                        if (editingId === expense.id) {
+                          setEditForm((f) => ({ ...f, is_paid: Boolean(checked) }))
+                        } else {
+                          update.mutate({ id: expense.id, is_paid: Boolean(checked) })
+                        }
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5 text-center">
+                    <Checkbox
+                      checked={editingId === expense.id ? editForm.is_saved : expense.is_saved}
+                      onCheckedChange={(checked) => {
+                        if (editingId === expense.id) {
+                          setEditForm((f) => ({ ...f, is_saved: Boolean(checked) }))
+                        } else {
+                          update.mutate({ id: expense.id, is_saved: Boolean(checked) })
+                        }
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
+                    <div className="flex gap-2">
+                      {editingId === expense.id ? (
+                        <>
+                          <Button
+                            size="xs"
+                            onClick={() => handleUpdate(expense.id)}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => setEditingId(null)}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => startEdit(expense.id)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="xs"
+                            onClick={() => del.mutate(expense.id)}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {isAdding && (
+                <TableRow className="add-row border-0">
+                  <TableCell className="py-5 px-5">
                     <Input
-                      className="h-7 text-sm min-w-0"
-                      value={editForm.name}
+                      className="min-w-0 text-[2rem]"
+                      placeholder="Expense name"
+                      value={addForm.name}
                       onChange={(e) =>
-                        setEditForm((f) => ({ ...f, name: e.target.value }))
+                        setAddForm((f) => ({ ...f, name: e.target.value }))
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAdd()
+                        if (e.key === 'Escape') { setIsAdding(false); setAddForm(emptyForm) }
+                      }}
                       autoFocus
                     />
-                  ) : (
-                    expense.name
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3 text-right">
-                  {editingId === expense.id ? (
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
                     <Input
                       type="number"
-                      className="h-7 text-sm min-w-0 text-right"
+                      className="min-w-0 text-right text-[2rem]"
                       min="0"
                       step="0.01"
-                      value={editForm.amount}
+                      placeholder="0.00"
+                      value={addForm.amount}
                       onChange={(e) =>
-                        setEditForm((f) => ({ ...f, amount: e.target.value }))
+                        setAddForm((f) => ({ ...f, amount: e.target.value }))
+                      }
+                      onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5 text-center">
+                    <Checkbox
+                      checked={addForm.is_paid}
+                      onCheckedChange={(checked) =>
+                        setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))
                       }
                     />
-                  ) : (
-                    <span className="font-mono">{fmtMoney(expense.amount)}</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  <Checkbox
-                    checked={editingId === expense.id ? editForm.is_paid : expense.is_paid}
-                    onCheckedChange={(checked) => {
-                      if (editingId === expense.id) {
-                        setEditForm((f) => ({ ...f, is_paid: Boolean(checked) }))
-                      } else {
-                        update.mutate({ id: expense.id, is_paid: Boolean(checked) })
+                  </TableCell>
+                  <TableCell className="py-5 px-5 text-center">
+                    <Checkbox
+                      checked={addForm.is_saved}
+                      onCheckedChange={(checked) =>
+                        setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))
                       }
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  <Checkbox
-                    checked={editingId === expense.id ? editForm.is_saved : expense.is_saved}
-                    onCheckedChange={(checked) => {
-                      if (editingId === expense.id) {
-                        setEditForm((f) => ({ ...f, is_saved: Boolean(checked) }))
-                      } else {
-                        update.mutate({ id: expense.id, is_saved: Boolean(checked) })
-                      }
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  <div className="flex gap-1">
-                    {editingId === expense.id ? (
-                      <>
-                        <Button
-                          size="xs"
-                          onClick={() => handleUpdate(expense.id)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => setEditingId(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => startEdit(expense.id)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="xs"
-                          onClick={() => del.mutate(expense.id)}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {isAdding && (
-              <TableRow className="add-row border-0">
-                <TableCell className="py-1 px-3">
-                  <Input
-                    className="h-7 text-sm min-w-0"
-                    placeholder="Expense name"
-                    value={addForm.name}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, name: e.target.value }))
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAdd()
-                      if (e.key === 'Escape') setIsAdding(false)
-                    }}
-                    autoFocus
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  <Input
-                    type="number"
-                    className="h-7 text-sm min-w-0 text-right"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={addForm.amount}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, amount: e.target.value }))
-                    }
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  <Checkbox
-                    checked={addForm.is_paid}
-                    onCheckedChange={(checked) =>
-                      setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))
-                    }
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  <Checkbox
-                    checked={addForm.is_saved}
-                    onCheckedChange={(checked) =>
-                      setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))
-                    }
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  <div className="flex gap-1">
-                    <Button size="xs" onClick={handleAdd}>
-                      Save
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      onClick={() => {
-                        setIsAdding(false)
-                        setAddForm(emptyForm)
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-            {expenses.length > 0 && (
-              <TableRow className="total-row border-0">
-                <TableCell className="py-1 px-3 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
-                <TableCell className="py-1 px-3 text-right font-mono font-semibold text-green-800 dark:text-green-300">
-                  {fmtMoney(total)}
-                </TableCell>
-                <TableCell colSpan={3} className="py-1 px-3" />
-              </TableRow>
-            )}
-            {!isLoading && !expenses.length && !isAdding && (
-              <TableRow className="border-0">
-                <TableCell colSpan={5} className="py-4 px-3 text-center text-green-600 italic">
-                  No expenses yet — add one above.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
+                    <div className="flex gap-2">
+                      <Button size="xs" onClick={handleAdd}>
+                        Save
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => { setIsAdding(false); setAddForm(emptyForm) }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isAdding && expenses.length > 0 && (
+                <TableRow
+                  className="border-0 cursor-pointer group"
+                  onClick={() => setIsAdding(true)}
+                >
+                  <TableCell
+                    colSpan={5}
+                    className="py-4 px-5 text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-base leading-none font-light">+</span>
+                      <span className="italic">Add expense…</span>
+                    </span>
+                  </TableCell>
+                </TableRow>
+              )}
+              {expenses.length > 0 && (
+                <TableRow className="total-row border-0">
+                  <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
+                  <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
+                    {fmtMoney(total)}
+                  </TableCell>
+                  <TableCell colSpan={3} className="py-5 px-5" />
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {isEmpty && (
+          <div className="flex-1 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Add expense"
+              onClick={() => setIsAdding(true)}
+              className="w-12 h-12 rounded-full border-2 border-dashed border-green-300 dark:border-green-800 text-green-400 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
     </section>
   )

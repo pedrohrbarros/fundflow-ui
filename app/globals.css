@@ -157,7 +157,7 @@ h2 {
 .sheet-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 0.875rem;
+  font-size: 1.125rem;
 }
 
 .sheet-table th {
@@ -173,6 +173,7 @@ h2 {
   border: none;
   border-bottom: 1px solid #dcfce7;
   vertical-align: middle;
+  font-size: 2rem;
 }
 
 .sheet-table tbody tr:last-child td {
