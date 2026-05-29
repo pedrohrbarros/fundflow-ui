@@ -8,6 +8,7 @@ import {
   useDeleteExpense,
 } from '@/hooks/use-expenses'
 import { fmtMoney } from '@/lib/format'
+import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -18,9 +19,10 @@ interface RowForm {
   amount: string
   is_paid: boolean
   is_saved: boolean
+  payment_method_id: string
 }
 
-const emptyForm: RowForm = { name: '', amount: '', is_paid: false, is_saved: false }
+const emptyForm: RowForm = { name: '', amount: '', is_paid: false, is_saved: false, payment_method_id: '' }
 
 export function ExpensesSection() {
   const { data, isLoading } = useExpenses()
@@ -39,12 +41,16 @@ export function ExpensesSection() {
 
   function handleAdd() {
     if (!addForm.name.trim() || !addForm.amount) return
+    const amount = parseFloat(addForm.amount)
     create.mutate(
       {
         name: addForm.name.trim(),
-        amount: parseFloat(addForm.amount),
+        amount,
         is_paid: addForm.is_paid,
         is_saved: addForm.is_saved,
+        payment_methods: addForm.payment_method_id
+          ? [{ payment_method_id: parseInt(addForm.payment_method_id, 10), partial_amount: amount }]
+          : [],
       },
       {
         onSuccess: () => {
@@ -64,18 +70,23 @@ export function ExpensesSection() {
       amount: String(expense.amount),
       is_paid: expense.is_paid,
       is_saved: expense.is_saved,
+      payment_method_id: expense.payment_methods[0]?.payment_method_id ?? '',
     })
   }
 
   function handleUpdate(id: string) {
     if (!editForm.name.trim()) return
+    const amount = parseFloat(editForm.amount) || 0
     update.mutate(
       {
         id,
         name: editForm.name.trim(),
-        amount: parseFloat(editForm.amount) || 0,
+        amount,
         is_paid: editForm.is_paid,
         is_saved: editForm.is_saved,
+        payment_methods: editForm.payment_method_id
+          ? [{ payment_method_id: parseInt(editForm.payment_method_id, 10), partial_amount: amount }]
+          : [],
       },
       {
         onSuccess: () => {
@@ -95,6 +106,7 @@ export function ExpensesSection() {
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead className="py-4 px-5 h-auto">Name</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-32 text-right">Amount</TableHead>
+                <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-16 text-center">Paid</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-16 text-center">Saved</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-36">Actions</TableHead>
@@ -103,7 +115,7 @@ export function ExpensesSection() {
             <TableBody>
               {isLoading && (
                 <TableRow className="border-0">
-                  <TableCell colSpan={5} className="py-6 px-5 text-center text-green-600">
+                  <TableCell colSpan={6} className="py-6 px-5 text-center text-green-600">
                     Loading…
                   </TableCell>
                 </TableRow>
@@ -113,7 +125,7 @@ export function ExpensesSection() {
                   <TableCell className="py-5 px-5">
                     {editingId === expense.id ? (
                       <Input
-                        className="min-w-0 text-[2rem]"
+                        className="min-w-0 text-[1rem]"
                         value={editForm.name}
                         onChange={(e) =>
                           setEditForm((f) => ({ ...f, name: e.target.value }))
@@ -128,9 +140,7 @@ export function ExpensesSection() {
                     {editingId === expense.id ? (
                       <Input
                         type="number"
-                        className="min-w-0 text-right text-[2rem]"
-                        min="0"
-                        step="0.01"
+                        className="min-w-0 text-right text-[1rem]"
                         value={editForm.amount}
                         onChange={(e) =>
                           setEditForm((f) => ({ ...f, amount: e.target.value }))
@@ -138,6 +148,21 @@ export function ExpensesSection() {
                       />
                     ) : (
                       <span className="font-mono">{fmtMoney(expense.amount)}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
+                    {editingId === expense.id ? (
+                      <PaymentMethodCombobox
+                        value={editForm.payment_method_id}
+                        onChange={(v) => setEditForm((f) => ({ ...f, payment_method_id: v }))}
+                      />
+                    ) : (
+                      <span className="text-green-700 dark:text-green-400 text-sm">
+                        {expense.payment_methods.length > 0
+                          ? expense.payment_methods.map((pm) => pm.name).join(', ')
+                          : <span className="text-green-300 dark:text-green-800">—</span>
+                        }
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="py-5 px-5 text-center">
@@ -208,8 +233,8 @@ export function ExpensesSection() {
                 <TableRow className="add-row border-0">
                   <TableCell className="py-5 px-5">
                     <Input
-                      className="min-w-0 text-[2rem]"
-                      placeholder="Expense name"
+                      className="min-w-0 text-[1rem]"
+                      placeholder="Work"
                       value={addForm.name}
                       onChange={(e) =>
                         setAddForm((f) => ({ ...f, name: e.target.value }))
@@ -224,7 +249,7 @@ export function ExpensesSection() {
                   <TableCell className="py-5 px-5">
                     <Input
                       type="number"
-                      className="min-w-0 text-right text-[2rem]"
+                      className="min-w-0 text-right text-[1rem]"
                       min="0"
                       step="0.01"
                       placeholder="0.00"
@@ -233,6 +258,12 @@ export function ExpensesSection() {
                         setAddForm((f) => ({ ...f, amount: e.target.value }))
                       }
                       onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
+                    <PaymentMethodCombobox
+                      value={addForm.payment_method_id}
+                      onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
                     />
                   </TableCell>
                   <TableCell className="py-5 px-5 text-center">
@@ -273,7 +304,7 @@ export function ExpensesSection() {
                   onClick={() => setIsAdding(true)}
                 >
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className="py-4 px-5 text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
@@ -289,7 +320,7 @@ export function ExpensesSection() {
                   <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
                     {fmtMoney(total)}
                   </TableCell>
-                  <TableCell colSpan={3} className="py-5 px-5" />
+                  <TableCell colSpan={4} className="py-5 px-5" />
                 </TableRow>
               )}
             </TableBody>
