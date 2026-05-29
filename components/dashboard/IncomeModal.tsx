@@ -45,6 +45,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const total = sources.reduce((sum, s) => sum + s.income, 0)
   const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
   const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
+  const isEmpty = !isLoading && !sources.length && !isAdding
 
   useEffect(() => {
     if (!open) {
@@ -107,7 +108,7 @@ export function IncomeModal({ open, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="income-modal-dark sm:max-w-2xl max-h-[80vh] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden"
+        className="income-modal-dark sm:max-w-4xl max-h-[90vh] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden"
         showCloseButton={false}
       >
         {/* Header */}
@@ -115,18 +116,13 @@ export function IncomeModal({ open, onClose }: Props) {
           <DialogTitle className="text-sm font-bold text-white uppercase tracking-widest">
             Income Sources
           </DialogTitle>
-          <div className="flex items-center gap-2">
-            <Button size="xs" onClick={() => setIsAdding(true)} aria-label="Add income">
-              + Add Income
-            </Button>
-            <DialogClose className="text-[#86efac] hover:text-white hover:bg-[#14532d] rounded px-2 py-1 text-base leading-none transition-colors">
-              ✕
-            </DialogClose>
-          </div>
+          <DialogClose className="text-[#86efac] hover:text-white hover:bg-[#14532d] rounded px-2 py-1 text-base leading-none transition-colors">
+            ✕
+          </DialogClose>
         </DialogHeader>
 
-        {/* Scrollable table area */}
-        <div className="overflow-auto flex-1">
+        {/* Table area */}
+        <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
           <Table className="sheet-table">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
@@ -134,7 +130,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableHead className="py-2 px-3 h-auto">Category</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-24">Currency</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-40">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -213,30 +209,32 @@ export function IncomeModal({ open, onClose }: Props) {
                     )}
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       {editingId === source.id ? (
                         <>
+                          {editForm.name.trim() && editForm.category_id && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdate(source.id)}
+                              disabled={update.isPending}
+                            >
+                              Save
+                            </Button>
+                          )}
                           <Button
-                            size="xs"
-                            onClick={() => handleUpdate(source.id)}
-                            disabled={update.isPending}
-                          >
-                            Save
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="xs"
-                            className="text-[#4ade80] hover:bg-[#1a2e1a]"
+                            variant="destructive"
+                            size="icon-sm"
                             onClick={() => { setEditingId(null); setEditForm(emptyForm) }}
+                            aria-label="Cancel"
                           >
-                            Cancel
+                            ✕
                           </Button>
                         </>
                       ) : (
                         <>
                           <Button
                             variant="outline"
-                            size="xs"
+                            size="sm"
                             className="border-[#166534] text-[#86efac] hover:bg-[#1a2e1a]"
                             onClick={() => startEdit(source.id)}
                           >
@@ -244,7 +242,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           </Button>
                           <Button
                             variant="destructive"
-                            size="xs"
+                            size="sm"
                             onClick={() => deleteSource.mutate(source.id)}
                             disabled={deleteSource.isPending}
                           >
@@ -318,22 +316,37 @@ export function IncomeModal({ open, onClose }: Props) {
                     </select>
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
-                    <div className="flex gap-2">
-                      <Button size="xs" onClick={handleAdd} disabled={create.isPending}>
-                        Save
-                      </Button>
+                    <div className="flex gap-2 items-center">
+                      {addForm.name.trim() && addForm.category_id && (
+                        <Button size="sm" onClick={handleAdd} disabled={create.isPending}>
+                          Save
+                        </Button>
+                      )}
                       <Button
-                        variant="ghost"
-                        size="xs"
-                        className="text-[#4ade80] hover:bg-[#1a2e1a]"
-                        onClick={() => {
-                          setIsAdding(false)
-                          setAddForm(emptyForm)
-                        }}
+                        variant="destructive"
+                        size="icon-sm"
+                        onClick={() => { setIsAdding(false); setAddForm(emptyForm) }}
+                        aria-label="Cancel"
                       >
-                        Cancel
+                        ✕
                       </Button>
                     </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isAdding && sources.length > 0 && (
+                <TableRow
+                  className="border-0 cursor-pointer group"
+                  onClick={() => setIsAdding(true)}
+                >
+                  <TableCell
+                    colSpan={5}
+                    className="py-2 px-3 text-[#4ade80]/40 select-none group-hover:text-[#4ade80]/70 transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-base leading-none font-light">+</span>
+                      <span className="italic">Add income…</span>
+                    </span>
                   </TableCell>
                 </TableRow>
               )}
@@ -348,16 +361,23 @@ export function IncomeModal({ open, onClose }: Props) {
                   <TableCell colSpan={2} className="py-2.5 px-3" />
                 </TableRow>
               )}
-              {!isLoading && !sources.length && !isAdding && (
-                <TableRow className="border-0">
-                  <TableCell colSpan={5} className="py-6 px-3 text-center italic text-[#4ade80]/60">
-                    No income sources yet — add one above.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </div>
+
+        {/* Empty state */}
+        {isEmpty && (
+          <div className="flex-1 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Add income"
+              onClick={() => setIsAdding(true)}
+              className="w-12 h-12 rounded-full border-2 border-dashed border-[#166534] text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-[#4ade80] hover:text-[#4ade80] hover:bg-[#1a2e1a] transition-all duration-150"
+            >
+              +
+            </button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
