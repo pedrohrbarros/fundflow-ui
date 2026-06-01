@@ -34,6 +34,8 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
   const [newName, setNewName] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const isBusy = createCat.isPending || !!deletingId
+
   function selectCategory(id: string) {
     onChange(id)
     setOpen(false)
@@ -152,21 +154,27 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                   {cat.id === value && (
                     <span className="shrink-0 text-green-600 dark:text-[#4ade80] text-xs mr-0.5">✓</span>
                   )}
-                  <button
-                    onClick={(e) => startEdit(cat.id, cat.name, e)}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166634] text-xs px-1.5 py-0.5 rounded transition-all"
-                    title="Rename"
-                  >
-                    ✎
-                  </button>
-                  <button
-                    onClick={(e) => handleDelete(cat.id, e)}
-                    disabled={deleteCat.isPending}
-                    className="shrink-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all"
-                    title="Delete"
-                  >
-                    {deletingId === cat.id ? <Loader2 className="size-3 animate-spin" /> : '✕'}
-                  </button>
+                  {!isBusy && (
+                    <button
+                      onClick={(e) => startEdit(cat.id, cat.name, e)}
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166634] text-xs px-1.5 py-0.5 rounded transition-all"
+                      title="Rename"
+                    >
+                      ✎
+                    </button>
+                  )}
+                  {(deletingId === cat.id || !isBusy) && (
+                    <button
+                      onClick={(e) => handleDelete(cat.id, e)}
+                      disabled={deleteCat.isPending}
+                      className={`shrink-0 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all ${
+                        deletingId === cat.id ? '' : 'opacity-0 group-hover:opacity-100'
+                      }`}
+                      title="Delete"
+                    >
+                      {deletingId === cat.id ? <Loader2 className="size-3 animate-spin" /> : '✕'}
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -197,24 +205,26 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
               >
                 {createCat.isPending ? <Loader2 className="animate-spin" /> : '✓'}
               </Button>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
-                onClick={() => { setShowNew(false); setNewName('') }}
-                title="Cancel"
-              >
-                ✕
-              </Button>
+              {!createCat.isPending && (
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
+                  onClick={() => { setShowNew(false); setNewName('') }}
+                  title="Cancel"
+                >
+                  ✕
+                </Button>
+              )}
             </div>
-          ) : (
+          ) : !isBusy ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowNew(true); setEditingId(null) }}
               className="w-full text-left text-xs text-green-600 dark:text-[#86efac] hover:text-green-900 dark:hover:text-white hover:bg-green-50 dark:hover:bg-[#1a3a1a] px-3 py-2 transition-colors"
             >
               + New category
             </button>
-          )}
+          ) : null}
         </div>
       </PopoverContent>
     </Popover>
