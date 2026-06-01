@@ -119,6 +119,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const total = sources.reduce((sum, s) => sum + s.income, 0)
@@ -425,11 +426,14 @@ export function IncomeModal({ open, onClose }: Props) {
                       <Button
                         variant="destructive"
                         size="icon-sm"
-                        onClick={() => deleteSource.mutate(source.id)}
+                        onClick={() => {
+                          setDeletingSourceId(source.id)
+                          deleteSource.mutate(source.id, { onSettled: () => setDeletingSourceId(null) })
+                        }}
                         disabled={deleteSource.isPending}
                         aria-label="Delete income source"
                       >
-                        ✕
+                        {deletingSourceId === source.id ? <Loader2 className="animate-spin" /> : '✕'}
                       </Button>
                     </TableCell>
                   </TableRow>
