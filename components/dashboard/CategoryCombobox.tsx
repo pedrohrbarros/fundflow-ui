@@ -32,6 +32,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
   const [editName, setEditName] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [newName, setNewName] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   function selectCategory(id: string) {
     onChange(id)
@@ -57,7 +58,8 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
   function handleDelete(id: string, e: React.MouseEvent) {
     e.stopPropagation()
     if (id === value) onChange('')
-    deleteCat.mutate(id)
+    setDeletingId(id)
+    deleteCat.mutate(id, { onSettled: () => setDeletingId(null) })
   }
 
   function handleCreate() {
@@ -163,7 +165,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                     className="shrink-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all"
                     title="Delete"
                   >
-                    ✕
+                    {deletingId === cat.id ? <Loader2 className="size-3 animate-spin" /> : '✕'}
                   </button>
                 </>
               )}
