@@ -93,7 +93,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
         </svg>
       </PopoverTrigger>
 
-      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-200 dark:border-[#166534] p-0 w-56">
+      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-200 dark:border-[#166534] p-0 gap-0" style={{ width: 'var(--anchor-width)' }}>
         <div className="max-h-52 overflow-y-auto">
           {categories.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No categories yet</p>

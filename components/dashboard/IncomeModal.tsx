@@ -170,7 +170,7 @@ export function IncomeModal({ open, onClose }: Props) {
         <DialogTitle className="sr-only">Income sources</DialogTitle>
 
         {/* Table area */}
-        <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
+        <div className="overflow-auto min-h-0 flex-1 relative">
           <Table className="sheet-table">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
@@ -424,21 +424,19 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
             </TableBody>
           </Table>
+          {isEmpty && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <button
+                type="button"
+                aria-label="Add income"
+                onClick={() => setIsAdding(true)}
+                className="w-12 h-12 rounded-full border-2 border-dashed border-[#166534] text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-[#4ade80] hover:text-[#4ade80] hover:bg-[#1a2e1a] transition-all duration-150"
+              >
+                +
+              </button>
+            </div>
+          )}
         </div>
-
-        {/* Empty state */}
-        {isEmpty && (
-          <div className="flex-1 flex items-center justify-center">
-            <button
-              type="button"
-              aria-label="Add income"
-              onClick={() => setIsAdding(true)}
-              className="w-12 h-12 rounded-full border-2 border-dashed border-[#166534] text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-[#4ade80] hover:text-[#4ade80] hover:bg-[#1a2e1a] transition-all duration-150"
-            >
-              +
-            </button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   )
