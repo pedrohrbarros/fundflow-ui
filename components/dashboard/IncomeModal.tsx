@@ -297,7 +297,7 @@ export function IncomeModal({ open, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="income-modal-dark sm:max-w-6xl w-[min(96vw,72rem)] h-[min(90vh,52rem)] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden"
+        className="income-modal-dark sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden rounded-none sm:rounded-xl"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Income sources</DialogTitle>
@@ -308,10 +308,10 @@ export function IncomeModal({ open, onClose }: Props) {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead className="py-2 px-3 h-auto">Name</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-64">Category</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-36 text-right">Amount</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-32">Currency</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-32" />
+                <TableHead className="py-2 px-3 h-auto w-28 sm:w-40 lg:w-64">Category</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-24 sm:w-28 lg:w-36 text-right">Amount</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-20 sm:w-24 lg:w-32">Currency</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-28 lg:w-32" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -326,7 +326,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 const isEditing = editing?.id === source.id
                 return (
                   <TableRow key={source.id} className="border-0 group/row">
-                    <TableCell className="py-2.5 px-3">
+                    <TableCell className="py-2.5 px-3 overflow-hidden">
                       {isEditing && editing.field === 'name' ? (
                         <Input
                           className="h-7 text-sm min-w-0"
@@ -347,14 +347,14 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="w-full text-left cursor-pointer hover:text-[#4ade80] transition-colors"
+                          className="w-full text-left cursor-pointer hover:text-[#4ade80] transition-colors truncate block"
                           onClick={() => startFieldEdit(source, 'name')}
                         >
                           {source.name}
                         </button>
                       )}
                     </TableCell>
-                    <TableCell className="py-2.5 px-3">
+                    <TableCell className="py-2.5 px-3 overflow-hidden">
                       {isEditing && editing.field === 'category' ? (
                         <CategoryCombobox
                           value={draft.category_id}
@@ -362,10 +362,10 @@ export function IncomeModal({ open, onClose }: Props) {
                           autoOpen
                         />
                       ) : (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 min-w-0">
                           <button
                             type="button"
-                            className="flex-1 text-left cursor-pointer hover:text-[#4ade80] transition-colors"
+                            className="flex-1 min-w-0 text-left cursor-pointer hover:text-[#4ade80] transition-colors truncate"
                             onClick={() => startFieldEdit(source, 'category')}
                           >
                             {getCategoryName(source)}
@@ -542,17 +542,6 @@ export function IncomeModal({ open, onClose }: Props) {
                   </TableCell>
                 </TableRow>
               )}
-              {sources.length > 0 && (
-                <TableRow className="total-row border-0">
-                  <TableCell colSpan={2} className="py-2.5 px-3 font-semibold">
-                    {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
-                  </TableCell>
-                  <TableCell className="py-2.5 px-3 text-right font-mono font-semibold amount-col">
-                    {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
-                  </TableCell>
-                  <TableCell colSpan={2} className="py-2.5 px-3" />
-                </TableRow>
-              )}
             </TableBody>
           </Table>
           {isEmpty && (
@@ -568,6 +557,17 @@ export function IncomeModal({ open, onClose }: Props) {
             </div>
           )}
         </div>
+
+        {sources.length > 0 && (
+          <div className="shrink-0 border-t border-[#166534] bg-[#14532d] flex items-center justify-between px-3 py-2.5">
+            <span className="text-sm font-semibold text-[#bbf7d0]">
+              {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
+            </span>
+            <span className="text-sm font-mono font-semibold text-[#4ade80]">
+              {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
+            </span>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )
