@@ -12,7 +12,7 @@ import { useCategories } from '@/hooks/use-categories'
 import { fmtMoney } from '@/lib/format'
 import type { SourceOfIncome } from '@/types'
 import { CategoryCombobox } from './CategoryCombobox'
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -167,12 +167,7 @@ export function IncomeModal({ open, onClose }: Props) {
         className="income-modal-dark sm:max-w-6xl w-[min(96vw,72rem)] h-[min(90vh,52rem)] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden"
         showCloseButton={false}
       >
-        <DialogHeader className="flex-row items-center justify-end px-5 py-2.5 bg-[#166534] rounded-t-xl shrink-0 gap-0">
-          <DialogTitle className="sr-only">Income sources</DialogTitle>
-          <DialogClose className="text-[#86efac] hover:text-white hover:bg-[#14532d] rounded px-2 py-1 text-base leading-none transition-colors">
-            ✕
-          </DialogClose>
-        </DialogHeader>
+        <DialogTitle className="sr-only">Income sources</DialogTitle>
 
         {/* Table area */}
         <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
