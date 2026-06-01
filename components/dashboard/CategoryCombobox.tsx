@@ -167,7 +167,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                   {!isBusy && (
                     <button
                       onClick={(e) => startEdit(cat.id, cat.name, e)}
-                      className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166634] text-xs px-1.5 py-0.5 rounded transition-all"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534] text-xs px-1.5 py-0.5 rounded transition-all"
                       title="Rename"
                     >
                       ✎
