@@ -151,9 +151,6 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                   <span className="flex-1 min-w-0 text-sm text-green-900 dark:text-[#d1fae5] truncate">
                     {cat.name}
                   </span>
-                  {cat.id === value && (
-                    <span className="shrink-0 text-green-600 dark:text-[#4ade80] text-xs mr-0.5">✓</span>
-                  )}
                   {!isBusy && (
                     <button
                       onClick={(e) => startEdit(cat.id, cat.name, e)}
