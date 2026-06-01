@@ -116,9 +116,60 @@ export function IncomeModal({ open, onClose }: Props) {
     )
   }
 
+  function showSaveToast(payload: { id: string; name: string; category_id: number; income: number; currency: string }) {
+    toast.custom((t) => (
+      <div className="flex items-center gap-4 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
+        <p className="flex-1 text-sm text-[#d1fae5]">Save your changes?</p>
+        <div className="flex gap-2 shrink-0">
+          <button
+            className="h-7 px-3 text-sm font-medium rounded-lg bg-[#166534] text-[#d1fae5] hover:bg-[#14532d] cursor-pointer transition-colors"
+            onClick={() => {
+              update.mutate(payload, { onSuccess: () => toast.success('Income source saved') })
+              toast.dismiss(t)
+            }}
+          >
+            Save
+          </button>
+          <button
+            className="h-7 px-3 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 cursor-pointer transition-colors"
+            onClick={() => toast.dismiss(t)}
+          >
+            Discard
+          </button>
+        </div>
+      </div>
+    ), { duration: Infinity })
+  }
+
   function startFieldEdit(source: SourceOfIncome, field: EditField) {
     setEditing({ id: source.id, field })
     setDraft(formFromSource(source))
+  }
+
+  function handleCategoryChange(sourceId: string, newCategoryId: string) {
+    const source = sources.find((s) => s.id === sourceId)
+    if (!source) {
+      setEditing(null)
+      setDraft(emptyForm)
+      return
+    }
+
+    const updatedDraft = { ...draft, category_id: newCategoryId }
+
+    setEditing(null)
+    setDraft(emptyForm)
+
+    if (!formHasChanges(source, updatedDraft) || !updatedDraft.name.trim()) return
+
+    const payload = {
+      id: sourceId,
+      name: updatedDraft.name.trim(),
+      category_id: parseInt(newCategoryId, 10),
+      income: parseFloat(updatedDraft.income) || 0,
+      currency: updatedDraft.currency || 'USD',
+    }
+
+    showSaveToast(payload)
   }
 
   function handleFieldBlur(sourceId: string) {
@@ -146,20 +197,7 @@ export function IncomeModal({ open, onClose }: Props) {
     setEditing(null)
     setDraft(emptyForm)
 
-    toast('Save your changes?', {
-      action: {
-        label: 'Save',
-        onClick: () => {
-          update.mutate(payload, {
-            onSuccess: () => toast.success('Income source saved'),
-          })
-        },
-      },
-      cancel: {
-        label: 'Discard',
-        onClick: () => {},
-      },
-    })
+    showSaveToast(payload)
   }
 
   return (
@@ -224,21 +262,11 @@ export function IncomeModal({ open, onClose }: Props) {
                     </TableCell>
                     <TableCell className="py-2.5 px-3">
                       {isEditing && editing.field === 'category' ? (
-                        <div
-                          onBlur={(e) => {
-                            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                              handleFieldBlur(source.id)
-                            }
-                          }}
-                        >
-                          <CategoryCombobox
-                            value={draft.category_id}
-                            onChange={(id) =>
-                              setDraft((f) => ({ ...f, category_id: id }))
-                            }
-                            autoOpen
-                          />
-                        </div>
+                        <CategoryCombobox
+                          value={draft.category_id}
+                          onChange={(id) => handleCategoryChange(source.id, id)}
+                          autoOpen
+                        />
                       ) : (
                         <div className="flex items-center gap-1">
                           <button
