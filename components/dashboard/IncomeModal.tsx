@@ -172,14 +172,14 @@ export function IncomeModal({ open, onClose }: Props) {
 
         {/* Table area */}
         <div className="overflow-auto min-h-0 flex-1 relative">
-          <Table className="sheet-table">
+          <Table className="sheet-table table-fixed">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead className="py-2 px-3 h-auto">Name</TableHead>
-                <TableHead className="py-2 px-3 h-auto">Category</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-64">Category</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-36 text-right">Amount</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-24">Currency</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-12" />
+                <TableHead className="py-2 px-3 h-auto w-32" />
               </TableRow>
             </TableHeader>
             <TableBody>
