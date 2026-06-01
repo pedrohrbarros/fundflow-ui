@@ -193,7 +193,7 @@ export function IncomeModal({ open, onClose }: Props) {
               {sources.map((source) => {
                 const isEditing = editing?.id === source.id
                 return (
-                  <TableRow key={source.id} className="border-0">
+                  <TableRow key={source.id} className="border-0 group/row">
                     <TableCell className="py-2.5 px-3">
                       {isEditing && editing.field === 'name' ? (
                         <Input
@@ -239,13 +239,27 @@ export function IncomeModal({ open, onClose }: Props) {
                           />
                         </div>
                       ) : (
-                        <button
-                          type="button"
-                          className="w-full text-left cursor-pointer hover:text-[#4ade80] transition-colors"
-                          onClick={() => startFieldEdit(source, 'category')}
-                        >
-                          {getCategoryName(source)}
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="flex-1 text-left cursor-pointer hover:text-[#4ade80] transition-colors"
+                            onClick={() => startFieldEdit(source, 'category')}
+                          >
+                            {getCategoryName(source)}
+                          </button>
+                          {source.category_id && source.category_id !== '0' && (
+                            <button
+                              type="button"
+                              className="shrink-0 opacity-0 group-hover/row:opacity-100 text-[#86efac]/60 hover:text-red-400 hover:bg-red-950/40 text-xs px-1 py-0.5 rounded transition-all"
+                              onClick={() => update.mutate({ id: source.id, category_id: null })}
+                              disabled={update.isPending}
+                              aria-label="Remove category"
+                              title="Remove category"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="py-2.5 px-3 text-right amount-col">

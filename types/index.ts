@@ -89,7 +89,7 @@ export interface CreateSourceOfIncomeBody {
 
 export interface UpdateSourceOfIncomeBody {
   name?: string
-  category_id?: number
+  category_id?: number | null
   income?: number
   currency?: string
 }
