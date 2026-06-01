@@ -16,9 +16,10 @@ interface Props {
   value: string
   onChange: (categoryId: string) => void
   placeholder?: string
+  autoOpen?: boolean
 }
 
-export function CategoryCombobox({ value, onChange, placeholder = 'Select category…' }: Props) {
+export function CategoryCombobox({ value, onChange, placeholder = 'Select category…', autoOpen = false }: Props) {
   const { data } = useCategories()
   const createCat = useCreateCategory()
   const updateCat = useUpdateCategory()
@@ -27,7 +28,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
   const categories = data?.categories ?? []
   const selected = categories.find((c) => c.id === value)
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [showNew, setShowNew] = useState(false)

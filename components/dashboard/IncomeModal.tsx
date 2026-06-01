@@ -236,6 +236,7 @@ export function IncomeModal({ open, onClose }: Props) {
                             onChange={(id) =>
                               setDraft((f) => ({ ...f, category_id: id }))
                             }
+                            autoOpen
                           />
                         </div>
                       ) : (
