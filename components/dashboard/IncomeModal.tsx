@@ -396,7 +396,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       <Button
                         size="sm"
                         onClick={handleAdd}
-                        disabled={create.isPending || !(parseFloat(addForm.amount) > 0)}
+                        disabled={create.isPending || !(parseFloat(addForm.income) > 0)}
                       >
                         {create.isPending ? <Loader2 className="animate-spin" /> : 'Save'}
                       </Button>
