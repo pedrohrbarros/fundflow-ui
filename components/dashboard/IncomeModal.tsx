@@ -74,7 +74,12 @@ function SaveToastContent({
     setSaving(true)
     try {
       await onSave(payload)
-      toast.success('Income source saved')
+      toast.custom(() => (
+        <div className="flex items-center gap-3 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
+          <span className="text-[#4ade80] text-sm">✓</span>
+          <p className="text-sm text-[#d1fae5]">Income source saved</p>
+        </div>
+      ))
     } catch {
       onRevert()
       toast.error('Failed to save changes')
