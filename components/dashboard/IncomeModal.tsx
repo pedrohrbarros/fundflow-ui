@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useSourcesOfIncome,
@@ -378,11 +379,13 @@ export function IncomeModal({ open, onClose }: Props) {
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
                     <div className="flex gap-2 items-center">
-                      {addForm.name.trim() && addForm.category_id && (
-                        <Button size="sm" onClick={handleAdd} disabled={create.isPending}>
-                          Save
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        onClick={handleAdd}
+                        disabled={create.isPending || !(parseFloat(addForm.amount) > 0)}
+                      >
+                        {create.isPending ? <Loader2 className="animate-spin" /> : 'Save'}
+                      </Button>
                       <Button
                         variant="destructive"
                         size="icon-sm"
