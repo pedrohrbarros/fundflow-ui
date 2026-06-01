@@ -5,8 +5,12 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
 import { cn } from "@/lib/utils"
 
-function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+function Popover({ className, ...props }: PopoverPrimitive.Root.Props & { className?: string }) {
+  return (
+    <div className={className}>
+      <PopoverPrimitive.Root data-slot="popover" {...props} />
+    </div>
+  )
 }
 
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
