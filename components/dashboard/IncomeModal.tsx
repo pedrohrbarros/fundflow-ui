@@ -178,7 +178,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableHead className="py-2 px-3 h-auto">Name</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-64">Category</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-36 text-right">Amount</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-24">Currency</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-32">Currency</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-32" />
               </TableRow>
             </TableHeader>
@@ -296,7 +296,7 @@ export function IncomeModal({ open, onClose }: Props) {
                     <TableCell className="py-2.5 px-3">
                       {isEditing && editing.field === 'currency' ? (
                         <select
-                          className="h-7 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-1 w-20"
+                          className="h-8 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-2.5 w-full"
                           value={draft.currency}
                           onChange={(e) => setDraft((f) => ({ ...f, currency: e.target.value }))}
                           onBlur={() => handleFieldBlur(source.id)}
@@ -382,7 +382,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
                     <select
-                      className="h-7 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-1 w-20"
+                      className="h-8 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-2.5 w-full"
                       value={addForm.currency}
                       onChange={(e) => setAddForm((f) => ({ ...f, currency: e.target.value }))}
                     >
