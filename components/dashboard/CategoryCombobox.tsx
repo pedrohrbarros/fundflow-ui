@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   useCategories,
   useCreateCategory,
@@ -192,7 +193,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                 disabled={createCat.isPending || !newName.trim()}
                 title="Create"
               >
-                ✓
+                {createCat.isPending ? <Loader2 className="animate-spin" /> : '✓'}
               </Button>
               <Button
                 size="icon-xs"
