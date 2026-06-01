@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import {
   useCategories,
@@ -8,6 +8,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from '@/hooks/use-categories'
+import { useSourcesOfIncome } from '@/hooks/use-sources-of-income'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,12 +22,23 @@ interface Props {
 
 export function CategoryCombobox({ value, onChange, placeholder = 'Select category…', autoOpen = false }: Props) {
   const { data } = useCategories()
+  const { data: sourcesData } = useSourcesOfIncome()
   const createCat = useCreateCategory()
   const updateCat = useUpdateCategory()
   const deleteCat = useDeleteCategory()
 
   const categories = data?.categories ?? []
   const selected = categories.find((c) => c.id === value)
+
+  const usedCategoryIds = useMemo(() => {
+    const ids = new Set<string>()
+    if (sourcesData?.sources_of_income) {
+      for (const items of Object.values(sourcesData.sources_of_income)) {
+        for (const source of items) ids.add(String(source.category_id))
+      }
+    }
+    return ids
+  }, [sourcesData])
 
   const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -161,7 +173,7 @@ export function CategoryCombobox({ value, onChange, placeholder = 'Select catego
                       ✎
                     </button>
                   )}
-                  {(deletingId === cat.id || !isBusy) && (
+                  {(deletingId === cat.id || (!isBusy && !usedCategoryIds.has(cat.id) && cat.id !== value)) && (
                     <button
                       onClick={(e) => handleDelete(cat.id, e)}
                       disabled={deleteCat.isPending}

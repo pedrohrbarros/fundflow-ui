@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   useSourcesOfIncome,
   useCreateSourceOfIncome,
@@ -11,7 +12,7 @@ import {
 } from '@/hooks/use-sources-of-income'
 import { useCategories } from '@/hooks/use-categories'
 import { fmtMoney } from '@/lib/format'
-import type { SourceOfIncome } from '@/types'
+import type { SourceOfIncome, SourcesOfIncomeResponse } from '@/types'
 import { CategoryCombobox } from './CategoryCombobox'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -54,7 +55,60 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
   )
 }
 
+type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string }
+
+function SaveToastContent({
+  t,
+  payload,
+  onSave,
+  onRevert,
+}: {
+  t: number | string
+  payload: SavePayload
+  onSave: (payload: SavePayload) => Promise<void>
+  onRevert: () => void
+}) {
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    setSaving(true)
+    try {
+      await onSave(payload)
+      toast.success('Income source saved')
+    } catch {
+      onRevert()
+      toast.error('Failed to save changes')
+    } finally {
+      toast.dismiss(t)
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-4 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
+      <p className="flex-1 text-sm text-[#d1fae5]">Save your changes?</p>
+      <div className="flex gap-2 shrink-0">
+        <button
+          className="h-7 px-3 text-sm font-medium rounded-lg bg-[#166534] text-[#d1fae5] hover:bg-[#14532d] cursor-pointer transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving && <Loader2 className="size-3 animate-spin" />}
+          Save
+        </button>
+        <button
+          className="h-7 px-3 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 cursor-pointer transition-colors disabled:opacity-50"
+          onClick={() => { onRevert(); toast.dismiss(t) }}
+          disabled={saving}
+        >
+          Discard
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function IncomeModal({ open, onClose }: Props) {
+  const qc = useQueryClient()
   const { data, isLoading } = useSourcesOfIncome()
   const { data: categoriesData } = useCategories()
   const create = useCreateSourceOfIncome()
@@ -116,28 +170,60 @@ export function IncomeModal({ open, onClose }: Props) {
     )
   }
 
-  function showSaveToast(payload: { id: string; name: string; category_id: number; income: number; currency: string }) {
+  function applyOptimisticUpdate(payload: SavePayload): SourcesOfIncomeResponse | undefined {
+    const old = qc.getQueryData<SourcesOfIncomeResponse>(['sources-of-income'])
+    if (!old) return undefined
+
+    const newCatId = String(payload.category_id)
+    const newCatName = categoryNameById.get(newCatId)
+
+    let currentCatName: string | undefined
+    let foundSource: SourceOfIncome | undefined
+    for (const [catName, items] of Object.entries(old.sources_of_income)) {
+      const item = items.find((i) => i.id === payload.id)
+      if (item) { currentCatName = catName; foundSource = item; break }
+    }
+    if (!foundSource) return old
+
+    const updated: SourceOfIncome = {
+      ...foundSource,
+      name: payload.name,
+      income: payload.income,
+      currency: payload.currency,
+      category_id: newCatId,
+    }
+
+    const categoryChanged = foundSource.category_id !== newCatId
+    const newSources: SourcesOfIncomeResponse['sources_of_income'] = {}
+
+    if (!categoryChanged) {
+      for (const [catName, items] of Object.entries(old.sources_of_income)) {
+        newSources[catName] = items.map((i) => (i.id === payload.id ? updated : i))
+      }
+    } else {
+      for (const [catName, items] of Object.entries(old.sources_of_income)) {
+        const filtered = items.filter((i) => i.id !== payload.id)
+        if (filtered.length > 0 || catName === currentCatName) newSources[catName] = filtered
+      }
+      const targetName = newCatName ?? newCatId
+      newSources[targetName] = [...(newSources[targetName] ?? []), updated]
+    }
+
+    qc.setQueryData<SourcesOfIncomeResponse>(['sources-of-income'], {
+      ...old,
+      sources_of_income: newSources,
+    })
+    return old
+  }
+
+  function showSaveToast(payload: SavePayload, onRevert: () => void) {
     toast.custom((t) => (
-      <div className="flex items-center gap-4 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
-        <p className="flex-1 text-sm text-[#d1fae5]">Save your changes?</p>
-        <div className="flex gap-2 shrink-0">
-          <button
-            className="h-7 px-3 text-sm font-medium rounded-lg bg-[#166534] text-[#d1fae5] hover:bg-[#14532d] cursor-pointer transition-colors"
-            onClick={() => {
-              update.mutate(payload, { onSuccess: () => toast.success('Income source saved') })
-              toast.dismiss(t)
-            }}
-          >
-            Save
-          </button>
-          <button
-            className="h-7 px-3 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 cursor-pointer transition-colors"
-            onClick={() => toast.dismiss(t)}
-          >
-            Discard
-          </button>
-        </div>
-      </div>
+      <SaveToastContent
+        t={t}
+        payload={payload}
+        onSave={(p) => update.mutateAsync(p)}
+        onRevert={onRevert}
+      />
     ), { duration: Infinity })
   }
 
@@ -169,7 +255,8 @@ export function IncomeModal({ open, onClose }: Props) {
       currency: updatedDraft.currency || 'USD',
     }
 
-    showSaveToast(payload)
+    const oldData = applyOptimisticUpdate(payload)
+    showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
   }
 
   function handleFieldBlur(sourceId: string) {
@@ -197,7 +284,8 @@ export function IncomeModal({ open, onClose }: Props) {
     setEditing(null)
     setDraft(emptyForm)
 
-    showSaveToast(payload)
+    const oldData = applyOptimisticUpdate(payload)
+    showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
   }
 
   return (
@@ -276,18 +364,6 @@ export function IncomeModal({ open, onClose }: Props) {
                           >
                             {getCategoryName(source)}
                           </button>
-                          {source.category_id && source.category_id !== '0' && (
-                            <button
-                              type="button"
-                              className="shrink-0 opacity-0 group-hover/row:opacity-100 text-[#86efac]/60 hover:text-red-400 hover:bg-red-950/40 text-xs px-1 py-0.5 rounded transition-all"
-                              onClick={() => update.mutate({ id: source.id, category_id: null })}
-                              disabled={update.isPending}
-                              aria-label="Remove category"
-                              title="Remove category"
-                            >
-                              ✕
-                            </button>
-                          )}
                         </div>
                       )}
                     </TableCell>
@@ -421,11 +497,11 @@ export function IncomeModal({ open, onClose }: Props) {
                     </select>
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-2 items-center justify-end">
                       <Button
                         size="sm"
                         onClick={handleAdd}
-                        disabled={create.isPending || !(parseFloat(addForm.income) > 0)}
+                        disabled={create.isPending || !(parseFloat(addForm.income) > 0) || !addForm.category_id}
                       >
                         {create.isPending ? <Loader2 className="animate-spin" /> : 'Save'}
                       </Button>
