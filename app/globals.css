@@ -238,6 +238,10 @@ h2 {
   background-color: #f0fdf4;
 }
 
+.sheet-table tbody tr.add-hint:hover {
+  background-color: transparent;
+}
+
 .dark .sheet-table tbody tr:hover {
   background-color: #14532d;
 }

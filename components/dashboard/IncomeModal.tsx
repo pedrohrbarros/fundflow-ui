@@ -528,7 +528,7 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {!isAdding && sources.length > 0 && (
                 <TableRow
-                  className="border-0 cursor-pointer group"
+                  className="border-0 cursor-pointer group add-hint"
                   onClick={() => setIsAdding(true)}
                 >
                   <TableCell
@@ -537,7 +537,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   >
                     <span className="flex items-center gap-1.5">
                       <span className="text-base leading-none font-light">+</span>
-                      <span className="italic">Add income…</span>
+                      <span>Add income…</span>
                     </span>
                   </TableCell>
                 </TableRow>
