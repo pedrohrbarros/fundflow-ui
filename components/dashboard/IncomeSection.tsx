@@ -96,7 +96,7 @@ export function IncomeSection() {
         </Button>
       </div>
 
-      <div className="border border-green-800 dark:border-green-800 rounded-lg overflow-hidden">
+      <div className="border border-green-700 dark:border-green-800 rounded-lg overflow-hidden">
         <Table className="sheet-table">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-0">
