@@ -297,7 +297,7 @@ export function IncomeModal({ open, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="income-modal-dark sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 bg-[#0f1a0f] ring-[#166534] gap-0 overflow-hidden rounded-none sm:rounded-xl"
+        className="income-modal-dark sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] gap-0 overflow-hidden rounded-none sm:rounded-xl"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Income sources</DialogTitle>
@@ -317,7 +317,7 @@ export function IncomeModal({ open, onClose }: Props) {
             <TableBody>
               {isLoading && (
                 <TableRow className="border-0">
-                  <TableCell colSpan={5} className="py-6 px-3 text-center text-[#86efac]">
+                  <TableCell colSpan={5} className="py-6 px-3 text-center text-green-700 dark:text-[#86efac]">
                     Loading…
                   </TableCell>
                 </TableRow>
@@ -347,7 +347,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="w-full text-left cursor-pointer hover:text-[#4ade80] transition-colors truncate block"
+                          className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
                           onClick={() => startFieldEdit(source, 'name')}
                         >
                           {source.name}
@@ -365,7 +365,7 @@ export function IncomeModal({ open, onClose }: Props) {
                         <div className="flex items-center gap-1 min-w-0">
                           <button
                             type="button"
-                            className="flex-1 min-w-0 text-left cursor-pointer hover:text-[#4ade80] transition-colors truncate"
+                            className="flex-1 min-w-0 text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate"
                             onClick={() => startFieldEdit(source, 'category')}
                           >
                             {getCategoryName(source)}
@@ -397,7 +397,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="w-full text-right cursor-pointer hover:text-[#4ade80] transition-colors font-mono"
+                          className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono"
                           onClick={() => startFieldEdit(source, 'income')}
                         >
                           {fmtMoney(source.income)}
@@ -407,7 +407,7 @@ export function IncomeModal({ open, onClose }: Props) {
                     <TableCell className="py-2.5 px-3">
                       {isEditing && editing.field === 'currency' ? (
                         <select
-                          className="h-8 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-2.5 w-full"
+                          className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5 w-full"
                           value={draft.currency}
                           onChange={(e) => setDraft((f) => ({ ...f, currency: e.target.value }))}
                           onBlur={() => handleFieldBlur(source.id)}
@@ -420,7 +420,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="text-xs font-mono text-[#86efac] cursor-pointer hover:text-[#4ade80] transition-colors"
+                          className="text-xs font-mono text-green-700 dark:text-[#86efac] cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors"
                           onClick={() => startFieldEdit(source, 'currency')}
                         >
                           {source.currency ?? 'USD'}
@@ -496,7 +496,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
                     <select
-                      className="h-8 text-sm bg-[#1a2e1a] border border-[#166534] text-[#d1fae5] rounded px-2.5 w-full"
+                      className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5 w-full"
                       value={addForm.currency}
                       onChange={(e) => setAddForm((f) => ({ ...f, currency: e.target.value }))}
                     >
@@ -528,16 +528,16 @@ export function IncomeModal({ open, onClose }: Props) {
               )}
               {!isAdding && sources.length > 0 && (
                 <TableRow
-                  className="border-0 cursor-pointer group"
+                  className="border-0 cursor-pointer group add-hint"
                   onClick={() => setIsAdding(true)}
                 >
                   <TableCell
                     colSpan={5}
-                    className="py-2 px-3 text-[#4ade80]/40 select-none group-hover:text-[#4ade80]/70 transition-colors"
+                    className="py-2 px-3 text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
                       <span className="text-base leading-none font-light">+</span>
-                      <span className="italic">Add income…</span>
+                      <span>Add income…</span>
                     </span>
                   </TableCell>
                 </TableRow>
@@ -550,7 +550,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 type="button"
                 aria-label="Add income"
                 onClick={() => setIsAdding(true)}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-[#166534] text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-[#4ade80] hover:text-[#4ade80] hover:bg-[#1a2e1a] transition-all duration-150"
+                className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-[#166534] text-green-700/50 dark:text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-green-600 dark:hover:border-[#4ade80] hover:text-green-600 dark:hover:text-[#4ade80] hover:bg-green-50 dark:hover:bg-[#1a2e1a] transition-all duration-150"
               >
                 +
               </button>
@@ -559,11 +559,11 @@ export function IncomeModal({ open, onClose }: Props) {
         </div>
 
         {sources.length > 0 && (
-          <div className="shrink-0 border-t border-[#166534] bg-[#14532d] flex items-center justify-between px-3 py-2.5">
-            <span className="text-sm font-semibold text-[#bbf7d0]">
+          <div className="shrink-0 border-t border-green-700 dark:border-[#166534] bg-green-800 dark:bg-[#14532d] flex items-center justify-between px-3 py-2.5">
+            <span className="text-sm font-semibold text-white dark:text-[#bbf7d0]">
               {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
             </span>
-            <span className="text-sm font-mono font-semibold text-[#4ade80]">
+            <span className="text-sm font-mono font-semibold text-green-200 dark:text-[#4ade80]">
               {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
             </span>
           </div>

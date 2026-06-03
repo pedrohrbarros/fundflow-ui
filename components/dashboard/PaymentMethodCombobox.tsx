@@ -75,7 +75,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
 
   return (
     <Popover className="w-full" open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="w-full min-w-0 text-left bg-transparent dark:bg-[#1a2e1a] border border-green-200 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2">
+      <PopoverTrigger className="w-full min-w-0 text-left bg-transparent dark:bg-[#1a2e1a] border border-green-100 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2">
         <span className={selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}>
           {selected?.name ?? placeholder}
         </span>
@@ -95,7 +95,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
         </svg>
       </PopoverTrigger>
 
-      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-200 dark:border-[#166534] p-0 w-64">
+      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-0 w-64">
         <div className="max-h-52 overflow-y-auto">
           {paymentMethods.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No payment methods yet</p>
@@ -173,7 +173,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
           ))}
         </div>
 
-        <div className="border-t border-green-200 dark:border-[#166534]">
+        <div className="border-t border-green-100 dark:border-[#166534]">
           {showNew ? (
             <div className="flex flex-col gap-1.5 px-2 py-2">
               <Input

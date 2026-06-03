@@ -99,7 +99,7 @@ export function ExpensesSection() {
 
   return (
     <section className="flex flex-col flex-1 min-h-0">
-      <div className="border border-green-200 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div className="border border-green-700 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
         <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
           <Table className="sheet-table">
             <TableHeader>
@@ -324,7 +324,7 @@ export function ExpensesSection() {
               type="button"
               aria-label="Add expense"
               onClick={() => setIsAdding(true)}
-              className="w-12 h-12 rounded-full border-2 border-dashed border-green-300 dark:border-green-800 text-green-400 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
+              className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-green-800 text-green-700 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
             >
               +
             </button>
