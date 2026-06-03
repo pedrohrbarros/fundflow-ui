@@ -99,7 +99,7 @@ export function ExpensesSection() {
 
   return (
     <section className="flex flex-col flex-1 min-h-0">
-      <div className="border border-green-200 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div className="border border-green-800 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
         <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
           <Table className="sheet-table">
             <TableHeader>

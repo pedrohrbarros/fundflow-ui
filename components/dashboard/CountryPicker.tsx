@@ -45,13 +45,13 @@ export function CountryPicker() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Select country and currency"
         title={currentCountry ? `${currentCountry.name} (${currentCountry.currency})` : 'Select country'}
-        className="flex items-center justify-center size-9 rounded-full border border-green-200 dark:border-green-800 bg-white dark:bg-gray-950 hover:bg-green-50 dark:hover:bg-green-950 transition-colors text-lg"
+        className="flex items-center justify-center size-9 rounded-full border border-green-100 dark:border-green-800 bg-white dark:bg-gray-950 hover:bg-green-50 dark:hover:bg-green-950 transition-colors text-lg"
       >
         {currentCountry?.flag ?? '🌍'}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-72 rounded-xl border border-green-200 dark:border-green-800 bg-white dark:bg-gray-900 shadow-xl overflow-hidden">
+        <div className="absolute right-0 top-11 z-50 w-72 rounded-xl border border-green-100 dark:border-green-800 bg-white dark:bg-gray-900 shadow-xl overflow-hidden">
           {/* Search */}
           <div className="p-2 border-b border-green-100 dark:border-green-800">
             <input
@@ -60,7 +60,7 @@ export function CountryPicker() {
               placeholder="Search country or currency…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-sm px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-700 bg-green-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 outline-none focus:border-green-500"
+              className="w-full text-sm px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-700 bg-green-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 outline-none focus:border-green-500"
             />
           </div>
 
