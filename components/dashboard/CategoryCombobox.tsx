@@ -35,7 +35,7 @@ export function CategoryCombobox({
   const deleteCat = useDeleteCategory()
 
   const categories = (data?.categories ?? []).filter((c) => c.type === type)
-  const selected = categories.find((c) => c.id === value)
+  const selected = categories.find((c) => String(c.id) === value)
 
   const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -113,17 +113,19 @@ export function CategoryCombobox({
           {categories.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No categories yet</p>
           )}
-          {categories.map((cat) => (
+          {categories.map((cat) => {
+            const catId = String(cat.id)
+            return (
             <div
-              key={cat.id}
+              key={catId}
               className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer group transition-colors ${
-                cat.id === value
+                catId === value
                   ? 'bg-green-50 dark:bg-[#14532d]'
                   : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'
               }`}
-              onClick={() => editingId !== cat.id && selectCategory(cat.id)}
+              onClick={() => editingId !== catId && selectCategory(catId)}
             >
-              {editingId === cat.id ? (
+              {editingId === catId ? (
                 <>
                   <Input
                     className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
@@ -131,7 +133,7 @@ export function CategoryCombobox({
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
                       e.stopPropagation()
-                      if (e.key === 'Enter') saveEdit(cat.id)
+                      if (e.key === 'Enter') saveEdit(catId)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -140,7 +142,7 @@ export function CategoryCombobox({
                   <Button
                     size="icon-xs"
                     className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
-                    onClick={(e) => { e.stopPropagation(); saveEdit(cat.id) }}
+                    onClick={(e) => { e.stopPropagation(); saveEdit(catId) }}
                     disabled={updateCat.isPending}
                     title="Save"
                   >
@@ -163,29 +165,30 @@ export function CategoryCombobox({
                   </span>
                   {!isBusy && (
                     <button
-                      onClick={(e) => startEdit(cat.id, cat.name, e)}
+                      onClick={(e) => startEdit(catId, cat.name, e)}
                       className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534] text-xs px-1.5 py-0.5 rounded transition-all"
                       title="Rename"
                     >
                       ✎
                     </button>
                   )}
-                  {(deletingId === cat.id || (!isBusy && !usedCategoryIds.has(cat.id) && cat.id !== value)) && (
+                  {(deletingId === catId || (!isBusy && !usedCategoryIds.has(catId) && catId !== value)) && (
                     <button
-                      onClick={(e) => handleDelete(cat.id, e)}
+                      onClick={(e) => handleDelete(catId, e)}
                       disabled={deleteCat.isPending}
                       className={`shrink-0 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all ${
-                        deletingId === cat.id ? '' : 'opacity-0 group-hover:opacity-100'
+                        deletingId === catId ? '' : 'opacity-0 group-hover:opacity-100'
                       }`}
                       title="Delete"
                     >
-                      {deletingId === cat.id ? <Loader2 className="size-3 animate-spin" /> : '✕'}
+                      {deletingId === catId ? <Loader2 className="size-3 animate-spin" /> : '✕'}
                     </button>
                   )}
                 </>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="border-t border-green-100 dark:border-[#166534]">

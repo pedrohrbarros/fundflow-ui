@@ -43,7 +43,7 @@ export function ExpensesSection() {
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
   const { data: categoriesData } = useCategories()
-  const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [c.id, c.name]))
+  const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
   const usedCategoryIds = new Set(expenses.map((e) => String(e.category_id)))
 
   function handleAdd() {
