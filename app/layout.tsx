@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ClerkProvider } from '@clerk/nextjs'
+import { SessionProvider } from 'next-auth/react'
 import { News_Cycle, Amiko, Rubik, Geist } from 'next/font/google'
 import { QueryProvider } from '@/providers/query-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
@@ -45,12 +45,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={cn("dark font-sans", geist.variable)}>
       <body className={`${newsCycle.variable} ${amiko.variable} ${rubik.variable} antialiased`}>
         <ThemeProvider>
-          <ClerkProvider>
+          <SessionProvider>
             <QueryProvider>
               {children}
               <Toaster richColors position="bottom-right" />
             </QueryProvider>
-          </ClerkProvider>
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>

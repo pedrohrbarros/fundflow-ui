@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FundFlow UI
 
-## Getting Started
+The Next.js frontend for FundFlow, a monthly budget tracker. It is a thin **BFF
+(backend-for-frontend)**: the browser talks to Next.js route handlers under `app/api/*`,
+which attach the user's auth token and proxy to the FundFlow backend at
+`NEXT_PUBLIC_API_URL/api/v1/*`.
 
-First, run the development server:
+## Tech stack
+
+- Next.js 16 (App Router) · React · TypeScript
+- [Auth.js (NextAuth v5)](https://authjs.dev) — Google sign-in
+- TanStack Query · Tailwind CSS · recharts · lucide-react
+- Vitest + Testing Library
+- Package manager: **bun**
+
+## Authentication
+
+Authentication is **Google-only**, via Auth.js, with the **backend as the token authority**:
+
+1. The user clicks **Sign in with Google**; Auth.js runs the Google OAuth flow.
+2. In the NextAuth `jwt` callback, Google's OpenID Connect `id_token` is exchanged at
+   `POST /api/v1/auth/google`, and the backend returns its **own** `access_token` (short-lived)
+   + `refresh_token` (long-lived).
+3. Those backend tokens are stored only in the encrypted, httpOnly NextAuth session cookie —
+   they are never exposed to the browser.
+4. Every API call goes through the BFF (`lib/api.ts`), which reads the access token
+   server-side and sends `Authorization: Bearer <access_token>` to the backend.
+5. When the access token expires, the `jwt` callback transparently refreshes and rotates it
+   via `POST /api/v1/auth/refresh`. Logout calls `POST /api/v1/auth/logout` then clears the
+   session.
+
+Key files: `auth.ts` (NextAuth config), `lib/auth-tokens.ts` (backend auth calls),
+`lib/access-token.ts` (server-side token read), `lib/api.ts` (BFF), `proxy.ts` (route
+guard), `app/page.tsx` (sign-in), `components/UserMenu.tsx` (account menu / logout / delete).
+
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in the values:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Purpose | How to get it |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | FundFlow backend base URL | Your backend (e.g. `http://localhost:8000` in dev) |
+| `AUTH_SECRET` | NextAuth session encryption | `npx auth secret` (or `openssl rand -base64 33`) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | Google Cloud Console (see below) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | Google Cloud Console (see below) |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Creating the Google OAuth client
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. [Google Cloud Console](https://console.cloud.google.com) → create/select a project.
+2. **APIs & Services → OAuth consent screen** → External; add yourself as a test user while
+   the app is in "testing".
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID → Web application**:
+   - **Authorized JavaScript origins:** `http://localhost:3000` (add your production origin too)
+   - **Authorized redirect URIs:** `http://localhost:3000/api/auth/callback/google`
+     (and the production equivalent)
+4. Copy the **Client ID** and **Client secret** into `.env.local`.
 
-## Learn More
+> The backend must implement the auth contract this app consumes:
+> `POST /api/v1/auth/{google,refresh,logout}` and `GET/PATCH/DELETE /api/v1/users/me`.
 
-To learn more about Next.js, take a look at the following resources:
+## Getting started
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+bun install
+cp .env.example .env.local   # then fill in the values above
+bun run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) and sign in with Google. (The backend
+at `NEXT_PUBLIC_API_URL` must be running for sign-in and data to work.)
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+bun run dev      # start the dev server
+bun run build    # production build
+bun run lint     # eslint
+bun run test     # vitest (run once)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Run tests with **`bun run test`** (Vitest), not `bun test`. Bun's native test runner
+> ignores `vitest.config.ts` (no jsdom env, no `vi.mock`) and will fail the suite with
+> `ReferenceError: document is not defined`.
