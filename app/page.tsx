@@ -34,15 +34,16 @@ function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
 }
 
 export default function Home() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const { resolvedTheme } = useTheme()
+  const signedIn = status === 'authenticated' && !session?.error
 
   useEffect(() => {
-    if (status === 'authenticated') router.replace('/expenses')
-  }, [status, router])
+    if (signedIn) router.replace('/expenses')
+  }, [signedIn, router])
 
-  if (status === 'authenticated') return null
+  if (signedIn) return null
 
   const is_dark = !resolvedTheme || resolvedTheme === 'dark'
   const theme = is_dark ? themes.dark : themes.light
