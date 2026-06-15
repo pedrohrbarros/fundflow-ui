@@ -15,7 +15,7 @@ import { useCategories } from '@/hooks/use-categories'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface RowForm {
   name: string
@@ -27,6 +27,20 @@ interface RowForm {
 }
 
 const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '' }
+
+function ExpensesTableColgroup() {
+  return (
+    <colgroup>
+      <col style={{ width: '26%' }} />
+      <col style={{ width: '14%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '20%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '18%' }} />
+    </colgroup>
+  )
+}
 
 export function ExpensesSection() {
   const { data, isLoading } = useExpenses()
@@ -111,25 +125,38 @@ export function ExpensesSection() {
   return (
     <section className="flex flex-col flex-1 min-h-0">
       <div className="border border-green-700 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div className={`overflow-auto min-h-0${isEmpty || isLoading ? '' : ' flex-1'}`}>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
-              <Loader2 className="size-6 animate-spin text-green-600 dark:text-green-400" />
-            </div>
-          ) : (
-          <Table className="sheet-table">
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-0">
-                <TableHead className="py-4 px-5 h-auto">Name</TableHead>
-                <TableHead className="py-4 px-5 h-auto w-48">Category</TableHead>
-                <TableHead className="py-4 px-5 h-auto w-32 text-right">Amount</TableHead>
-                <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
-                <TableHead className="py-4 px-5 h-auto w-16 text-center">Paid</TableHead>
-                <TableHead className="py-4 px-5 h-auto w-16 text-center">Saved</TableHead>
-                <TableHead className="py-4 px-5 h-auto w-36">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16 flex-1" role="status" aria-label="Loading">
+            <Loader2 className="size-6 animate-spin text-green-600 dark:text-green-400" />
+          </div>
+        ) : isEmpty ? (
+          <div className="flex-1 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Add expense"
+              onClick={() => setIsAdding(true)}
+              className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-green-800 text-green-700 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
+            >
+              +
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0 overflow-auto">
+              <table className="sheet-table table-fixed w-full">
+                <ExpensesTableColgroup />
+                <TableHeader className="sticky top-0 z-10">
+                  <TableRow className="hover:bg-transparent border-0">
+                    <TableHead className="py-4 px-5 h-auto">Name</TableHead>
+                    <TableHead className="py-4 px-5 h-auto">Category</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-right">Amount</TableHead>
+                    <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-center">Paid</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-center">Saved</TableHead>
+                    <TableHead className="py-4 px-5 h-auto">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
               {expenses.map((expense) => (
                 <TableRow key={expense.id} className="border-0">
                   <TableCell className="py-5 px-5">
@@ -341,30 +368,24 @@ export function ExpensesSection() {
                   </TableCell>
                 </TableRow>
               )}
-              {expenses.length > 0 && (
-                <TableRow className="total-row border-0">
-                  <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
-                  <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
-                    {fmtMoney(total)}
-                  </TableCell>
-                  <TableCell colSpan={5} className="py-5 px-5" />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          )}
-        </div>
-        {isEmpty && (
-          <div className="flex-1 flex items-center justify-center">
-            <button
-              type="button"
-              aria-label="Add expense"
-              onClick={() => setIsAdding(true)}
-              className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-green-800 text-green-700 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
-            >
-              +
-            </button>
-          </div>
+                </TableBody>
+              </table>
+            </div>
+            {expenses.length > 0 && (
+              <table className="sheet-table table-fixed w-full shrink-0">
+                <ExpensesTableColgroup />
+                <TableFooter className="border-t-0 bg-transparent">
+                  <TableRow className="total-row border-0">
+                    <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
+                    <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
+                      {fmtMoney(total)}
+                    </TableCell>
+                    <TableCell colSpan={5} className="py-5 px-5" />
+                  </TableRow>
+                </TableFooter>
+              </table>
+            )}
+          </>
         )}
       </div>
     </section>

@@ -12,7 +12,7 @@ export function SpendingByCategoryChart() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
+      <div className="flex items-center justify-center py-4" role="status" aria-label="Loading">
         <Loader2 className="size-5 animate-spin text-green-700 dark:text-[#86efac]" />
       </div>
     )
@@ -23,15 +23,15 @@ export function SpendingByCategoryChart() {
 
   if (slices.length === 0) {
     return (
-      <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-8 text-center text-green-700 dark:text-[#86efac]">
+      <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-4 text-center text-green-700 dark:text-[#86efac]">
         No expenses yet.
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-6">
-      <div className="flex items-baseline justify-between mb-4">
+    <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-4">
+      <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-lg font-semibold text-green-900 dark:text-[#d1fae5]">Spending by category</h2>
         <span className="font-mono text-green-800 dark:text-[#4ade80]">{fmtMoney(total)}</span>
       </div>

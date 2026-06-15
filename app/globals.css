@@ -248,14 +248,29 @@ h2 {
   background-color: #14532d;
 }
 
-.sheet-table tbody tr.total-row {
+.sheet-table tbody tr.total-row,
+.sheet-table tfoot tr.total-row {
   background-color: #dcfce7;
   font-weight: 600;
 }
 
-.dark .sheet-table tbody tr.total-row {
+.dark .sheet-table tbody tr.total-row,
+.dark .sheet-table tfoot tr.total-row {
   background-color: #14532d;
   color: #86efac;
+}
+
+.sheet-table tfoot tr.total-row td {
+  background-color: #dcfce7;
+  border-bottom: none;
+  border-top: 1px solid #16a34a;
+}
+
+.dark .sheet-table tfoot tr.total-row td {
+  background-color: #14532d;
+  color: #86efac;
+  border-bottom: none;
+  border-top: 1px solid #1a2e1a;
 }
 
 .sheet-table tbody tr.add-row td {
