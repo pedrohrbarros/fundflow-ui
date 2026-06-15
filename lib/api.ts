@@ -14,8 +14,7 @@ export async function apiRequest<T>(
 ): Promise<Response & { parsedData: T }> {
   const token = await getAccessToken()
   if (!token) {
-    const res = new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-    return Object.assign(res, { parsedData: { error: 'Unauthorized' } as T })
+    throw new Error('Unauthorized: missing access token')
   }
 
   const url = new URL(`${API_URL}/api/v1${path}`)
