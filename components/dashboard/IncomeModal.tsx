@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   useSourcesOfIncome,
@@ -56,61 +57,6 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
 }
 
 type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string }
-
-function SaveToastContent({
-  t,
-  payload,
-  onSave,
-  onRevert,
-}: {
-  t: number | string
-  payload: SavePayload
-  onSave: (payload: SavePayload) => Promise<void>
-  onRevert: () => void
-}) {
-  const [saving, setSaving] = useState(false)
-
-  async function handleSave() {
-    setSaving(true)
-    try {
-      await onSave(payload)
-      toast.custom(() => (
-        <div className="flex items-center gap-3 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
-          <span className="text-[#4ade80] text-sm">✓</span>
-          <p className="text-sm text-[#d1fae5]">Income source saved</p>
-        </div>
-      ))
-    } catch {
-      onRevert()
-      toast.error('Failed to save changes')
-    } finally {
-      toast.dismiss(t)
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-4 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
-      <p className="flex-1 text-sm text-[#d1fae5]">Save your changes?</p>
-      <div className="flex gap-2 shrink-0">
-        <button
-          className="h-7 px-3 text-sm font-medium rounded-lg bg-[#166534] text-[#d1fae5] hover:bg-[#14532d] cursor-pointer transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving && <Loader2 className="size-3 animate-spin" />}
-          Save
-        </button>
-        <button
-          className="h-7 px-3 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 cursor-pointer transition-colors disabled:opacity-50"
-          onClick={() => { onRevert(); toast.dismiss(t) }}
-          disabled={saving}
-        >
-          Discard
-        </button>
-      </div>
-    </div>
-  )
-}
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
@@ -225,10 +171,10 @@ export function IncomeModal({ open, onClose }: Props) {
 
   function showSaveToast(payload: SavePayload, onRevert: () => void) {
     toast.custom((t) => (
-      <SaveToastContent
+      <SaveChangesToast
         t={t}
-        payload={payload}
-        onSave={async (p) => { await update.mutateAsync(p) }}
+        successMessage="Income source saved"
+        onSave={async () => { await update.mutateAsync(payload) }}
         onRevert={onRevert}
       />
     ), { duration: Infinity })

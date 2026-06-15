@@ -15,9 +15,10 @@ interface Props {
   value: string
   onChange: (paymentMethodId: string) => void
   placeholder?: string
+  autoOpen?: boolean
 }
 
-export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit Card' }: Props) {
+export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit Card', autoOpen = false }: Props) {
   const { data } = usePaymentMethods()
   const createPm = useCreatePaymentMethod()
   const updatePm = useUpdatePaymentMethod()
@@ -26,7 +27,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
   const paymentMethods = data?.payment_methods ?? []
   const selected = paymentMethods.find((pm) => pm.id === value)
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [showNew, setShowNew] = useState(false)

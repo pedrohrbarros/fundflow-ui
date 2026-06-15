@@ -4,6 +4,17 @@ import { ExpensesSection } from './ExpensesSection'
 
 const createMutate = vi.fn()
 
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query')
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      setQueriesData: vi.fn(),
+      setQueryData: vi.fn(),
+    }),
+  }
+})
+
 vi.mock('@/hooks/use-expenses', () => ({
   useExpenses: () => ({
     data: { expenses: [], pagination: { page: 1, limit: 20, total: 0 } },
