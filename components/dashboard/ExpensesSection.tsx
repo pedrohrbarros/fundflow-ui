@@ -9,6 +9,8 @@ import {
 } from '@/hooks/use-expenses'
 import { fmtMoney } from '@/lib/format'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
+import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
+import { useCategories } from '@/hooks/use-categories'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -17,12 +19,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 interface RowForm {
   name: string
   amount: string
+  category_id: string
   is_paid: boolean
   is_saved: boolean
   payment_method_id: string
 }
 
-const emptyForm: RowForm = { name: '', amount: '', is_paid: false, is_saved: false, payment_method_id: '' }
+const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '' }
 
 export function ExpensesSection() {
   const { data, isLoading } = useExpenses()
@@ -39,13 +42,18 @@ export function ExpensesSection() {
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
+  const { data: categoriesData } = useCategories()
+  const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [c.id, c.name]))
+  const usedCategoryIds = new Set(expenses.map((e) => String(e.category_id)))
+
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount) return
+    if (!addForm.name.trim() || !addForm.amount || !addForm.category_id) return
     const amount = parseFloat(addForm.amount)
     create.mutate(
       {
         name: addForm.name.trim(),
         amount,
+        category_id: parseInt(addForm.category_id, 10),
         is_paid: addForm.is_paid,
         is_saved: addForm.is_saved,
         payment_methods: addForm.payment_method_id
@@ -68,6 +76,7 @@ export function ExpensesSection() {
     setEditForm({
       name: expense.name,
       amount: String(expense.amount),
+      category_id: String(expense.category_id ?? ''),
       is_paid: expense.is_paid,
       is_saved: expense.is_saved,
       payment_method_id: expense.payment_methods[0]?.payment_method_id ?? '',
@@ -82,6 +91,7 @@ export function ExpensesSection() {
         id,
         name: editForm.name.trim(),
         amount,
+        category_id: editForm.category_id ? parseInt(editForm.category_id, 10) : undefined,
         is_paid: editForm.is_paid,
         is_saved: editForm.is_saved,
         payment_methods: editForm.payment_method_id
@@ -105,6 +115,7 @@ export function ExpensesSection() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead className="py-4 px-5 h-auto">Name</TableHead>
+                <TableHead className="py-4 px-5 h-auto w-48">Category</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-32 text-right">Amount</TableHead>
                 <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
                 <TableHead className="py-4 px-5 h-auto w-16 text-center">Paid</TableHead>
@@ -115,7 +126,7 @@ export function ExpensesSection() {
             <TableBody>
               {isLoading && (
                 <TableRow className="border-0">
-                  <TableCell colSpan={6} className="py-6 px-5 text-center text-green-600">
+                  <TableCell colSpan={7} className="py-6 px-5 text-center text-green-600">
                     Loading…
                   </TableCell>
                 </TableRow>
@@ -134,6 +145,22 @@ export function ExpensesSection() {
                       />
                     ) : (
                       expense.name
+                    )}
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
+                    {editingId === expense.id ? (
+                      <CategoryCombobox
+                        value={editForm.category_id}
+                        onChange={(v) => setEditForm((f) => ({ ...f, category_id: v }))}
+                        type="EXPENSE"
+                        usedCategoryIds={usedCategoryIds}
+                      />
+                    ) : (
+                      <span className="text-green-700 dark:text-green-400 text-sm">
+                        {categoryNameById.get(String(expense.category_id)) ?? (
+                          <span className="text-green-300 dark:text-green-800">—</span>
+                        )}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="py-5 px-5 text-right">
@@ -250,6 +277,15 @@ export function ExpensesSection() {
                     />
                   </TableCell>
                   <TableCell className="py-5 px-5">
+                    <CategoryCombobox
+                      value={addForm.category_id}
+                      onChange={(v) => setAddForm((f) => ({ ...f, category_id: v }))}
+                      type="EXPENSE"
+                      usedCategoryIds={usedCategoryIds}
+                      autoOpen={false}
+                    />
+                  </TableCell>
+                  <TableCell className="py-5 px-5">
                     <Input
                       type="number"
                       className="min-w-0 text-right text-[1rem]"
@@ -273,7 +309,7 @@ export function ExpensesSection() {
                   <TableCell className="py-5 px-5" />
                   <TableCell className="py-5 px-5">
                     <div className="flex gap-2 items-center">
-                      {addForm.name.trim() && addForm.amount && (
+                      {addForm.name.trim() && addForm.amount && addForm.category_id && (
                         <Button size="default" onClick={handleAdd}>
                           Save
                         </Button>
@@ -296,7 +332,7 @@ export function ExpensesSection() {
                   onClick={() => setIsAdding(true)}
                 >
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="py-4 px-5 text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                   >
                     <span className="flex items-center gap-1.5">
@@ -312,7 +348,7 @@ export function ExpensesSection() {
                   <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
                     {fmtMoney(total)}
                   </TableCell>
-                  <TableCell colSpan={4} className="py-5 px-5" />
+                  <TableCell colSpan={5} className="py-5 px-5" />
                 </TableRow>
               )}
             </TableBody>
