@@ -1,6 +1,14 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { auth } from '@/auth'
 
-export default clerkMiddleware()
+export default auth((req) => {
+  const isAuthed = !!req.auth
+  const { pathname } = req.nextUrl
+  const isLoginPage = pathname === '/'
+  const isAuthApi = pathname.startsWith('/api/auth')
+  if (!isAuthed && !isLoginPage && !isAuthApi) {
+    return Response.redirect(new URL('/', req.nextUrl))
+  }
+})
 
 export const config = {
   matcher: [

@@ -1,13 +1,12 @@
 'use client'
 
-import { useAuth, useClerk } from '@clerk/nextjs'
+import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
-import { SignIn } from '@clerk/nextjs'
-import { dark } from '@clerk/themes'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { Button } from '@/components/ui/button'
 import { themes } from '@/constants/themes'
 
 function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
@@ -25,52 +24,23 @@ function SignInSkeleton({ is_dark }: { is_dark: boolean }) {
 }
 
 export default function Home() {
-  const { userId, isLoaded } = useAuth()
-  const { loaded } = useClerk()
+  const { status } = useSession()
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [is_desktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-    const media_query = window.matchMedia('(min-width: 1024px)')
-    setIsDesktop(media_query.matches)
+    if (status === 'authenticated') router.replace('/expenses')
+  }, [status, router])
 
-    const handler = (e: MediaQueryListEvent) => {
-      setIsDesktop(e.matches)
-    }
+  if (status === 'authenticated') return null
 
-    if (typeof media_query.addEventListener === 'function') {
-      media_query.addEventListener('change', handler)
-      return () => {
-        media_query.removeEventListener('change', handler)
-      }
-    }
-
-    if (typeof media_query.addListener === 'function') {
-      media_query.addListener(handler)
-      return () => {
-        media_query.removeListener(handler)
-      }
-    }
-
-    return
-  }, [])
-
-  useEffect(() => {
-    if (userId) router.replace('/expenses')
-  }, [userId, router])
-
-  if (userId) return null
-
-  const is_dark = !mounted || resolvedTheme === 'dark'
+  const is_dark = !resolvedTheme || resolvedTheme === 'dark'
   const theme = is_dark ? themes.dark : themes.light
 
   return (
     <main className="flex h-screen relative">
       <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle inverted disabled={!loaded} />
+        <ThemeToggle inverted />
       </div>
 
       <div
@@ -84,30 +54,25 @@ export default function Home() {
         className="w-full lg:w-1/2 flex items-center justify-center"
         style={{ backgroundColor: theme.background_color_switched }}
       >
-        {!loaded || !isLoaded ? (
+        {status === 'loading' ? (
           <SignInSkeleton is_dark={is_dark} />
         ) : (
-          <SignIn
-            routing="hash"
-            appearance={{
-              baseTheme: is_dark ? dark : undefined,
-              variables: {
-                colorPrimary: themes.brand.primary,
-                colorBackground: theme.container_color,
-                colorText: theme.text_color,
-              },
-              elements: {
-                rootBox: { backgroundColor: 'transparent' },
-                logoImage: { height: '40px', width: 'auto' },
-                ...(is_desktop ? {
-                  logoBox: { display: 'none' },
-                  headerSubtitle: { display: 'none' },
-                } : {
-                  headerTitle: { display: 'none' },
-                }),
-              },
-            }}
-          />
+          <div
+            className="w-100 rounded-2xl p-8 flex flex-col items-center gap-6"
+            style={{ backgroundColor: theme.container_color }}
+          >
+            <Image src="/logo.png" alt="FundFlow" width={160} height={40} priority style={{ height: 'auto' }} />
+            <p className="text-sm text-center" style={{ color: theme.text_color }}>
+              Sign in to track your monthly budget
+            </p>
+            <Button
+              size="lg"
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => signIn('google', { redirectTo: '/expenses' })}
+            >
+              Continue with Google
+            </Button>
+          </div>
         )}
       </div>
     </main>
