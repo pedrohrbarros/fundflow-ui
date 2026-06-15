@@ -127,6 +127,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
+  const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
   const total = sources.reduce((sum, s) => sum + s.income, 0)
   const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
   const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
@@ -227,7 +228,7 @@ export function IncomeModal({ open, onClose }: Props) {
       <SaveToastContent
         t={t}
         payload={payload}
-        onSave={(p) => update.mutateAsync(p)}
+        onSave={async (p) => { await update.mutateAsync(p) }}
         onRevert={onRevert}
       />
     ), { duration: Infinity })
@@ -359,6 +360,8 @@ export function IncomeModal({ open, onClose }: Props) {
                         <CategoryCombobox
                           value={draft.category_id}
                           onChange={(id) => handleCategoryChange(source.id, id)}
+                          type="INCOME"
+                          usedCategoryIds={usedCategoryIds}
                           autoOpen
                         />
                       ) : (
@@ -471,6 +474,8 @@ export function IncomeModal({ open, onClose }: Props) {
                       onChange={(id) =>
                         setAddForm((f) => ({ ...f, category_id: id }))
                       }
+                      type="INCOME"
+                      usedCategoryIds={usedCategoryIds}
                     />
                   </TableCell>
                   <TableCell className="py-2.5 px-3 amount-col">

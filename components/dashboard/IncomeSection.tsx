@@ -33,6 +33,7 @@ export function IncomeSection() {
   const [editForm, setEditForm] = useState<RowForm>(emptyForm)
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
+  const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
   const total = sources.reduce((sum, s) => sum + s.income, 0)
 
   function handleAdd() {
@@ -137,6 +138,8 @@ export function IncomeSection() {
                       onChange={(id) =>
                         setEditForm((f) => ({ ...f, category_id: id }))
                       }
+                      type="INCOME"
+                      usedCategoryIds={usedCategoryIds}
                     />
                   ) : (
                     source.category_id
@@ -221,6 +224,8 @@ export function IncomeSection() {
                     onChange={(id) =>
                       setAddForm((f) => ({ ...f, category_id: id }))
                     }
+                    type="INCOME"
+                    usedCategoryIds={usedCategoryIds}
                   />
                 </TableCell>
                 <TableCell className="py-1 px-3">
