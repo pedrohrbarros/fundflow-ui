@@ -45,7 +45,7 @@ cp .env.example .env.local
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | FundFlow backend base URL | Your backend (e.g. `http://localhost:8000` in dev) |
 | `AUTH_SECRET` | NextAuth session encryption | `npx auth secret` (or `openssl rand -base64 33`) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client id | Google Cloud Console (see below) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | Google Cloud Console (see below) |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | Google Cloud Console (see below) |
 
 ### Creating the Google OAuth client
