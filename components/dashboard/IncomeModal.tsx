@@ -534,15 +534,13 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableRow
                   className="border-0 cursor-pointer group add-hint"
                   onClick={() => setIsAdding(true)}
+                  aria-label="Add income"
                 >
                   <TableCell
                     colSpan={5}
-                    className="py-2 px-3 text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
+                    className="py-2 px-3 text-center text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-base leading-none font-light">+</span>
-                      <span>Add income…</span>
-                    </span>
+                    <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
                   </TableCell>
                 </TableRow>
               )}

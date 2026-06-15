@@ -159,7 +159,7 @@ export function ExpensesSection() {
                 <TableBody>
               {expenses.map((expense) => (
                 <TableRow key={expense.id} className="border-0">
-                  <TableCell className="py-5 px-5">
+                  <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
                     {editingId === expense.id ? (
                       <Input
                         className="min-w-0 text-[1rem]"
@@ -170,7 +170,9 @@ export function ExpensesSection() {
                         autoFocus
                       />
                     ) : (
-                      expense.name
+                      <span className="block truncate" title={expense.name}>
+                        {expense.name}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="py-5 px-5">
@@ -354,17 +356,15 @@ export function ExpensesSection() {
               )}
               {!isAdding && expenses.length > 0 && (
                 <TableRow
-                  className="border-0 cursor-pointer group"
+                  className="border-0 cursor-pointer group add-hint"
                   onClick={() => setIsAdding(true)}
+                  aria-label="Add expense"
                 >
                   <TableCell
                     colSpan={7}
-                    className="py-4 px-5 text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
+                    className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-base leading-none font-light">+</span>
-                      <span className="italic">Add expense…</span>
-                    </span>
+                    <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
                   </TableCell>
                 </TableRow>
               )}
