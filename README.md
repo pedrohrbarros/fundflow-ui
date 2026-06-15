@@ -81,3 +81,7 @@ bun run build    # production build
 bun run lint     # eslint
 bun run test     # vitest (run once)
 ```
+
+> Run tests with **`bun run test`** (Vitest), not `bun test`. Bun's native test runner
+> ignores `vitest.config.ts` (no jsdom env, no `vi.mock`) and will fail the suite with
+> `ReferenceError: document is not defined`.

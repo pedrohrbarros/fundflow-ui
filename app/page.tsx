@@ -73,9 +73,6 @@ export default function Home() {
             style={{ backgroundColor: theme.container_color }}
           >
             <Image src="/logo.png" alt="FundFlow" width={160} height={40} priority style={{ height: 'auto' }} />
-            <p className="text-sm text-center" style={{ color: theme.text_color }}>
-              Sign in to track your monthly budget
-            </p>
             <button
               type="button"
               onClick={() => signIn('google', { redirectTo: '/expenses' })}
