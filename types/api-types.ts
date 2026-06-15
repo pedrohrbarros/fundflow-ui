@@ -175,6 +175,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/by-category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1ExpensesBy-category"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/{id}": {
         parameters: {
             query?: never;
@@ -842,6 +858,66 @@ export interface operations {
                             limit?: number;
                             total?: number;
                         };
+                    };
+                };
+            };
+        };
+    };
+    "postApiV1ExpensesBy-category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | amount → is_equal, is_not_equal, is_greater, is_greater_or_equal, is_lower, is_lower_or_equal, is_between | is_paid/is_saved → is_equal | saving_location → string ops + is_null, is_not_null | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "amount" | "is_paid" | "is_saved" | "saving_location" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_null" | "is_not_null" | "is_greater" | "is_greater_or_equal" | "is_lower" | "is_lower_or_equal" | "is_between" | "is_before" | "is_after";
+                        /** @description string for name/saving_location; number for amount; boolean for is_paid/is_saved; ISO 8601 string for datetime; [a, b] tuple for is_between; omit for is_null/is_not_null */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        by_category?: {
+                            category_id?: number;
+                            name?: string;
+                            total?: number;
+                            count?: number;
+                        }[];
+                        total?: number;
                     };
                 };
             };
