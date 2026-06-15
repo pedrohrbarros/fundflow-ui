@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   useSourcesOfIncome,
@@ -57,61 +58,6 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
 
 type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string }
 
-function SaveToastContent({
-  t,
-  payload,
-  onSave,
-  onRevert,
-}: {
-  t: number | string
-  payload: SavePayload
-  onSave: (payload: SavePayload) => Promise<void>
-  onRevert: () => void
-}) {
-  const [saving, setSaving] = useState(false)
-
-  async function handleSave() {
-    setSaving(true)
-    try {
-      await onSave(payload)
-      toast.custom(() => (
-        <div className="flex items-center gap-3 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
-          <span className="text-[#4ade80] text-sm">✓</span>
-          <p className="text-sm text-[#d1fae5]">Income source saved</p>
-        </div>
-      ))
-    } catch {
-      onRevert()
-      toast.error('Failed to save changes')
-    } finally {
-      toast.dismiss(t)
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-4 bg-[#0f1a0f] border border-[#166534] rounded-xl px-4 py-3 shadow-xl w-full">
-      <p className="flex-1 text-sm text-[#d1fae5]">Save your changes?</p>
-      <div className="flex gap-2 shrink-0">
-        <button
-          className="h-7 px-3 text-sm font-medium rounded-lg bg-[#166534] text-[#d1fae5] hover:bg-[#14532d] cursor-pointer transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving && <Loader2 className="size-3 animate-spin" />}
-          Save
-        </button>
-        <button
-          className="h-7 px-3 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-300 cursor-pointer transition-colors disabled:opacity-50"
-          onClick={() => { onRevert(); toast.dismiss(t) }}
-          disabled={saving}
-        >
-          Discard
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
   const { data, isLoading } = useSourcesOfIncome()
@@ -127,6 +73,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
+  const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
   const total = sources.reduce((sum, s) => sum + s.income, 0)
   const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
   const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
@@ -224,10 +171,10 @@ export function IncomeModal({ open, onClose }: Props) {
 
   function showSaveToast(payload: SavePayload, onRevert: () => void) {
     toast.custom((t) => (
-      <SaveToastContent
+      <SaveChangesToast
         t={t}
-        payload={payload}
-        onSave={(p) => update.mutateAsync(p)}
+        successMessage="Income source saved"
+        onSave={async () => { await update.mutateAsync(payload) }}
         onRevert={onRevert}
       />
     ), { duration: Infinity })
@@ -304,6 +251,12 @@ export function IncomeModal({ open, onClose }: Props) {
 
         {/* Table area */}
         <div className="overflow-auto min-h-0 flex-1 relative">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
+              <Loader2 className="size-6 animate-spin text-green-700 dark:text-[#86efac]" />
+            </div>
+          ) : (
+          <>
           <Table className="sheet-table table-fixed">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
@@ -315,13 +268,6 @@ export function IncomeModal({ open, onClose }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow className="border-0">
-                  <TableCell colSpan={5} className="py-6 px-3 text-center text-green-700 dark:text-[#86efac]">
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              )}
               {sources.map((source) => {
                 const isEditing = editing?.id === source.id
                 return (
@@ -359,6 +305,8 @@ export function IncomeModal({ open, onClose }: Props) {
                         <CategoryCombobox
                           value={draft.category_id}
                           onChange={(id) => handleCategoryChange(source.id, id)}
+                          type="INCOME"
+                          usedCategoryIds={usedCategoryIds}
                           autoOpen
                         />
                       ) : (
@@ -427,10 +375,10 @@ export function IncomeModal({ open, onClose }: Props) {
                         </button>
                       )}
                     </TableCell>
-                    <TableCell className="py-2.5 px-3">
+                    <TableCell className="py-2.5 px-3 text-right">
                       <Button
                         variant="destructive"
-                        size="icon-sm"
+                        size="icon"
                         onClick={() => {
                           setDeletingSourceId(source.id)
                           deleteSource.mutate(source.id, { onSettled: () => setDeletingSourceId(null) })
@@ -471,6 +419,8 @@ export function IncomeModal({ open, onClose }: Props) {
                       onChange={(id) =>
                         setAddForm((f) => ({ ...f, category_id: id }))
                       }
+                      type="INCOME"
+                      usedCategoryIds={usedCategoryIds}
                     />
                   </TableCell>
                   <TableCell className="py-2.5 px-3 amount-col">
@@ -530,15 +480,13 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableRow
                   className="border-0 cursor-pointer group add-hint"
                   onClick={() => setIsAdding(true)}
+                  aria-label="Add income"
                 >
                   <TableCell
                     colSpan={5}
-                    className="py-2 px-3 text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
+                    className="py-2 px-3 text-center text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-base leading-none font-light">+</span>
-                      <span>Add income…</span>
-                    </span>
+                    <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
                   </TableCell>
                 </TableRow>
               )}
@@ -555,6 +503,8 @@ export function IncomeModal({ open, onClose }: Props) {
                 +
               </button>
             </div>
+          )}
+          </>
           )}
         </div>
 

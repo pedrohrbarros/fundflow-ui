@@ -59,7 +59,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (userId) router.replace('/dashboard')
+    if (userId) router.replace('/expenses')
   }, [userId, router])
 
   if (userId) return null
@@ -90,7 +90,7 @@ export default function Home() {
           <SignIn
             routing="hash"
             appearance={{
-              baseTheme: is_dark ? undefined : dark,
+              baseTheme: is_dark ? dark : undefined,
               variables: {
                 colorPrimary: themes.brand.primary,
                 colorBackground: theme.container_color,

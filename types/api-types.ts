@@ -1,36 +1,4 @@
 export interface paths {
-    "/api/v1/webhooks/clerk/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiV1WebhooksClerkRegister"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/webhooks/clerk/delete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postApiV1WebhooksClerkDelete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/categories": {
         parameters: {
             query?: never;
@@ -207,6 +175,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/by-category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["postApiV1ExpensesBy-category"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/{id}": {
         parameters: {
             query?: never;
@@ -223,38 +207,6 @@ export interface paths {
         patch: operations["patchApiV1ExpensesById"];
         trace?: never;
     };
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getIndex"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/docs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getDocs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -267,142 +219,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    postApiV1WebhooksClerkRegister: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Unique message identifier for the webhook payload */
-                "svix-id": string;
-                /** @description Unix timestamp (seconds) when the webhook was sent */
-                "svix-timestamp": string;
-                /** @description Space-delimited list of signatures (e.g. v1,<base64>) */
-                "svix-signature": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    data: {
-                        backup_code_enabled: boolean;
-                        banned: boolean;
-                        create_organization_enabled: boolean;
-                        create_organizations_limit: number | null;
-                        created_at: number;
-                        delete_self_enabled: boolean;
-                        email_addresses: unknown[];
-                        enterprise_accounts: unknown[];
-                        external_accounts: unknown[];
-                        external_id: string | null;
-                        first_name: string | null;
-                        has_image: boolean;
-                        id: string;
-                        image_url: string;
-                        last_active_at: number | null;
-                        last_name: string | null;
-                        last_sign_in_at: number | null;
-                        legal_accepted_at: number | null;
-                        locked: boolean;
-                        lockout_expires_in_seconds: number | null;
-                        mfa_disabled_at: number | null;
-                        mfa_enabled_at: number | null;
-                        /** @constant */
-                        object: "user";
-                        passkeys: unknown[];
-                        password_enabled: boolean;
-                        phone_numbers: unknown[];
-                        primary_email_address_id: string | null;
-                        primary_phone_number_id: string | null;
-                        primary_web3_wallet_id: string | null;
-                        private_metadata: {
-                            [key: string]: unknown;
-                        } | null;
-                        profile_image_url: string;
-                        public_metadata: {
-                            [key: string]: unknown;
-                        };
-                        saml_accounts: unknown[];
-                        totp_enabled: boolean;
-                        two_factor_enabled: boolean;
-                        unsafe_metadata: {
-                            [key: string]: unknown;
-                        };
-                        updated_at: number;
-                        username: string | null;
-                        verification_attempts_remaining: number | null;
-                        web3_wallets: unknown[];
-                    };
-                    event_attributes: {
-                        http_request: {
-                            client_ip: string;
-                            user_agent: string;
-                        };
-                    };
-                    instance_id: string;
-                    /** @constant */
-                    object: "event";
-                    timestamp: number;
-                    /** @constant */
-                    type: "user.created";
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    postApiV1WebhooksClerkDelete: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Unique message identifier for the webhook payload */
-                "svix-id": string;
-                /** @description Unix timestamp (seconds) when the webhook was sent */
-                "svix-timestamp": string;
-                /** @description Space-delimited list of signatures (e.g. v1,<base64>) */
-                "svix-signature": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    data: {
-                        deleted: boolean;
-                        id: string;
-                        /** @constant */
-                        object: "user";
-                    };
-                    event_attributes: {
-                        http_request: {
-                            client_ip: string;
-                            user_agent: string;
-                        };
-                    };
-                    /** @constant */
-                    object: "event";
-                    timestamp: number;
-                    /** @constant */
-                    type: "user.deleted";
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postApiV1Categories: {
         parameters: {
             query?: never;
@@ -414,15 +230,28 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
+                    type: "INCOME" | "EXPENSE";
                 };
             };
         };
         responses: {
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        /** @enum {string} */
+                        type?: "INCOME" | "EXPENSE";
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -433,13 +262,64 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | type → is_equal, is_not_equal (value: INCOME | EXPENSE) | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "type" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_before" | "is_after" | "is_between";
+                        /** @description string for name; ISO 8601 string for datetime; [ISO, ISO] tuple for is_between; omit for is_null/is_not_null */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        categories?: {
+                            id?: number;
+                            name?: string;
+                            /** @enum {string} */
+                            type?: "INCOME" | "EXPENSE";
+                            /** Format: date-time */
+                            created_at?: string;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        }[];
+                        pagination?: {
+                            page?: number;
+                            limit?: number;
+                            total?: number;
+                        };
+                    };
+                };
             };
         };
     };
@@ -454,11 +334,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        message?: string;
+                    };
+                };
             };
         };
     };
@@ -479,11 +364,23 @@ export interface operations {
             };
         };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        /** @enum {string} */
+                        type?: "INCOME" | "EXPENSE";
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -500,15 +397,29 @@ export interface operations {
                     name: string;
                     category_id: string | number;
                     income?: number;
+                    currency?: string;
                 };
             };
         };
         responses: {
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        category_id?: number;
+                        income?: number;
+                        currency?: string;
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -519,13 +430,68 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name/currency → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | income → is_equal, is_not_equal, is_greater, is_greater_or_equal, is_lower, is_lower_or_equal, is_between | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "income" | "currency" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_greater" | "is_greater_or_equal" | "is_lower" | "is_lower_or_equal" | "is_between" | "is_before" | "is_after";
+                        /** @description string for name/currency; number for income; ISO 8601 string for datetime; [a, b] tuple for is_between */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        /** @description Sources of income grouped by category name */
+                        sources_of_income?: {
+                            [key: string]: {
+                                id?: number;
+                                name?: string;
+                                category_id?: number;
+                                income?: number;
+                                currency?: string;
+                                /** Format: date-time */
+                                created_at?: string;
+                                /** Format: date-time */
+                                updated_at?: string;
+                            }[];
+                        };
+                        pagination?: {
+                            page?: number;
+                            limit?: number;
+                            total?: number;
+                        };
+                    };
+                };
             };
         };
     };
@@ -540,11 +506,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        message?: string;
+                    };
+                };
             };
         };
     };
@@ -563,15 +534,29 @@ export interface operations {
                     name?: string;
                     category_id?: string | number;
                     income?: number;
+                    currency?: string;
                 };
             };
         };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        category_id?: number;
+                        income?: number;
+                        currency?: string;
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -592,11 +577,24 @@ export interface operations {
             };
         };
         responses: {
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        origin?: string;
+                        receiver?: string | null;
+                        user_id?: number;
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -607,13 +605,65 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name/origin → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | receiver → same + is_null, is_not_null | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "origin" | "receiver" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_null" | "is_not_null" | "is_before" | "is_after" | "is_between";
+                        /** @description string for name/origin/receiver; ISO 8601 string for datetime; [ISO, ISO] tuple for is_between; omit for is_null/is_not_null */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        payment_methods?: {
+                            id?: number;
+                            name?: string;
+                            origin?: string;
+                            receiver?: string | null;
+                            user_id?: number;
+                            /** Format: date-time */
+                            created_at?: string;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        }[];
+                        pagination?: {
+                            page?: number;
+                            limit?: number;
+                            total?: number;
+                        };
+                    };
+                };
             };
         };
     };
@@ -628,11 +678,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        message?: string;
+                    };
+                };
             };
         };
     };
@@ -655,11 +710,24 @@ export interface operations {
             };
         };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        origin?: string;
+                        receiver?: string | null;
+                        user_id?: number;
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -674,6 +742,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
+                    category_id: string | number;
                     amount: number;
                     is_paid?: boolean;
                     is_saved?: boolean;
@@ -686,11 +755,33 @@ export interface operations {
             };
         };
         responses: {
-            200: {
+            /** @description Created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        category_id?: number;
+                        amount?: number;
+                        is_paid?: boolean;
+                        is_saved?: boolean;
+                        saving_location?: string | null;
+                        payment_methods?: {
+                            payment_method_id?: number;
+                            partial_amount?: number;
+                            name?: string;
+                            origin?: string;
+                            receiver?: string | null;
+                        }[];
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
+                };
             };
         };
     };
@@ -701,13 +792,134 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | amount → is_equal, is_not_equal, is_greater, is_greater_or_equal, is_lower, is_lower_or_equal, is_between | is_paid/is_saved → is_equal | saving_location → string ops + is_null, is_not_null | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "amount" | "is_paid" | "is_saved" | "saving_location" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_null" | "is_not_null" | "is_greater" | "is_greater_or_equal" | "is_lower" | "is_lower_or_equal" | "is_between" | "is_before" | "is_after";
+                        /** @description string for name/saving_location; number for amount; boolean for is_paid/is_saved; ISO 8601 string for datetime; [a, b] tuple for is_between; omit for is_null/is_not_null */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        expenses?: {
+                            id?: number;
+                            name?: string;
+                            category_id?: number;
+                            amount?: number;
+                            is_paid?: boolean;
+                            is_saved?: boolean;
+                            saving_location?: string | null;
+                            payment_methods?: {
+                                payment_method_id?: number;
+                                partial_amount?: number;
+                                name?: string;
+                                origin?: string;
+                                receiver?: string | null;
+                            }[];
+                            /** Format: date-time */
+                            created_at?: string;
+                            /** Format: date-time */
+                            updated_at?: string;
+                        }[];
+                        pagination?: {
+                            page?: number;
+                            limit?: number;
+                            total?: number;
+                        };
+                    };
+                };
+            };
+        };
+    };
+    "postApiV1ExpensesBy-category": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Page number
+                     * @default 1
+                     */
+                    page?: number;
+                    /**
+                     * @description Items per page
+                     * @default 20
+                     */
+                    limit?: number;
+                    /** @description Optional filter — either a single condition or a group of conditions */
+                    filters?: {
+                        /**
+                         * @description name → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | amount → is_equal, is_not_equal, is_greater, is_greater_or_equal, is_lower, is_lower_or_equal, is_between | is_paid/is_saved → is_equal | saving_location → string ops + is_null, is_not_null | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @enum {string}
+                         */
+                        field: "name" | "amount" | "is_paid" | "is_saved" | "saving_location" | "created_at" | "updated_at";
+                        /** @enum {string} */
+                        op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_null" | "is_not_null" | "is_greater" | "is_greater_or_equal" | "is_lower" | "is_lower_or_equal" | "is_between" | "is_before" | "is_after";
+                        /** @description string for name/saving_location; number for amount; boolean for is_paid/is_saved; ISO 8601 string for datetime; [a, b] tuple for is_between; omit for is_null/is_not_null */
+                        value?: unknown;
+                    } | {
+                        /** @enum {string} */
+                        logic: "AND" | "OR";
+                        /** @description Array of FilterCondition or nested FilterGroup objects */
+                        conditions: Record<string, never>[];
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        by_category?: {
+                            category_id?: number;
+                            name?: string;
+                            total?: number;
+                            count?: number;
+                        }[];
+                        total?: number;
+                    };
+                };
             };
         };
     };
@@ -722,11 +934,16 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        message?: string;
+                    };
+                };
             };
         };
     };
@@ -743,6 +960,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name?: string;
+                    category_id?: string | number;
                     amount?: number;
                     is_paid?: boolean;
                     is_saved?: boolean;
@@ -755,45 +973,33 @@ export interface operations {
             };
         };
         responses: {
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    getIndex: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": {
+                        id?: number;
+                        name?: string;
+                        category_id?: number;
+                        amount?: number;
+                        is_paid?: boolean;
+                        is_saved?: boolean;
+                        saving_location?: string | null;
+                        payment_methods?: {
+                            payment_method_id?: number;
+                            partial_amount?: number;
+                            name?: string;
+                            origin?: string;
+                            receiver?: string | null;
+                        }[];
+                        /** Format: date-time */
+                        created_at?: string;
+                        /** Format: date-time */
+                        updated_at?: string;
+                    };
                 };
-                content?: never;
-            };
-        };
-    };
-    getDocs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

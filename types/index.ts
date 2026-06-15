@@ -10,6 +10,7 @@ export interface Expense {
   id: string
   name: string
   amount: number
+  category_id: string
   is_paid: boolean
   is_saved: boolean
   saving_location: string | null
@@ -25,6 +26,7 @@ export interface ExpensesResponse {
 
 export interface CreateExpenseBody {
   name: string
+  category_id: number
   amount: number
   is_paid?: boolean
   is_saved?: boolean
@@ -34,6 +36,7 @@ export interface CreateExpenseBody {
 
 export interface UpdateExpenseBody {
   name?: string
+  category_id?: number
   amount?: number
   is_paid?: boolean
   is_saved?: boolean
@@ -44,6 +47,7 @@ export interface UpdateExpenseBody {
 export interface Category {
   id: string
   name: string
+  type: 'INCOME' | 'EXPENSE'
   created_at: string
   updated_at: string
 }
@@ -55,6 +59,7 @@ export interface CategoriesResponse {
 
 export interface CreateCategoryBody {
   name: string
+  type: 'INCOME' | 'EXPENSE'
 }
 
 export interface UpdateCategoryBody {
@@ -134,4 +139,16 @@ export interface User {
 
 export interface UpdateUserCountryBody {
   country: string
+}
+
+export interface ExpenseCategoryTotal {
+  category_id: number
+  name: string
+  total: number
+  count: number
+}
+
+export interface ExpensesByCategoryResponse {
+  by_category: ExpenseCategoryTotal[]
+  total: number
 }
