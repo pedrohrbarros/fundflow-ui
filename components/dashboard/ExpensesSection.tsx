@@ -108,6 +108,7 @@ export function ExpensesSection() {
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
   const expenses = data?.expenses ?? []
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
@@ -121,7 +122,7 @@ export function ExpensesSection() {
     let snapshot: ExpensesResponse | undefined
 
     qc.setQueriesData<ExpensesResponse>({ queryKey: ['expenses'] }, (old) => {
-      if (!old) return old
+      if (!old?.expenses) return old
       snapshot = old
 
       return {
@@ -129,7 +130,7 @@ export function ExpensesSection() {
         expenses: old.expenses.map((expense) => {
           if (expense.id !== payload.id) return expense
 
-          const existingPaymentMethod = expense.payment_methods[0]
+          const existingPaymentMethod = expense.payment_methods?.[0]
           const nextPaymentMethod = payload.payment_methods[0]
 
           return {
@@ -371,8 +372,8 @@ export function ExpensesSection() {
                               className="w-full text-left truncate block text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors"
                               onClick={() => startFieldEdit(expense, 'payment_method')}
                             >
-                              {expense.payment_methods.length > 0
-                                ? expense.payment_methods.map((pm) => pm.name).join(', ')
+                              {(expense.payment_methods ?? []).length > 0
+                                ? (expense.payment_methods ?? []).map((pm) => pm.name).join(', ')
                                 : <span className="text-green-300 dark:text-green-800">—</span>
                               }
                             </button>
@@ -394,13 +395,18 @@ export function ExpensesSection() {
                             }}
                           />
                         </TableCell>
-                        <TableCell className="py-5 px-5">
+                        <TableCell className="py-5 px-5 text-right">
                           <Button
                             variant="destructive"
-                            size="default"
-                            onClick={() => del.mutate(expense.id)}
+                            size="icon"
+                            onClick={() => {
+                              setDeletingExpenseId(expense.id)
+                              del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
+                            }}
+                            disabled={del.isPending}
+                            aria-label="Delete expense"
                           >
-                            Delete
+                            {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -496,10 +502,12 @@ export function ExpensesSection() {
                 <TableFooter className="border-t-0 bg-transparent">
                   <TableRow className="total-row border-0">
                     <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
-                    <TableCell className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300">
+                    <TableCell
+                      colSpan={6}
+                      className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300"
+                    >
                       {fmtMoney(total)}
                     </TableCell>
-                    <TableCell colSpan={5} className="py-5 px-5" />
                   </TableRow>
                 </TableFooter>
               </table>

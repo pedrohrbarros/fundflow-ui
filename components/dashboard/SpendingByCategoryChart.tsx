@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { useExpensesByCategory } from '@/hooks/use-expenses-by-category'
@@ -7,8 +8,13 @@ import { fmtMoney } from '@/lib/format'
 
 const COLORS = ['#16a34a', '#22c55e', '#4ade80', '#15803d', '#86efac', '#166534', '#bbf7d0', '#65a30d']
 
+const CHART_HEIGHT = 320
+
 export function SpendingByCategoryChart() {
   const { data, isLoading } = useExpensesByCategory()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
 
   if (isLoading) {
     return (
@@ -30,14 +36,15 @@ export function SpendingByCategoryChart() {
   }
 
   return (
-    <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-4">
+    <div className="w-full min-w-0 rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-lg font-semibold text-green-900 dark:text-[#d1fae5]">Spending by category</h2>
         <span className="font-mono text-green-800 dark:text-[#4ade80]">{fmtMoney(total)}</span>
       </div>
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+      <div className="w-full min-w-0" style={{ height: CHART_HEIGHT }}>
+        {mounted && (
+          <ResponsiveContainer width="100%" height={CHART_HEIGHT} minWidth={0}>
+            <PieChart>
             <Pie
               data={slices}
               dataKey="total"
@@ -55,7 +62,8 @@ export function SpendingByCategoryChart() {
             <Tooltip formatter={(value) => fmtMoney(Number(value))} />
             <Legend />
           </PieChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   )

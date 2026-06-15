@@ -375,10 +375,10 @@ export function IncomeModal({ open, onClose }: Props) {
                         </button>
                       )}
                     </TableCell>
-                    <TableCell className="py-2.5 px-3">
+                    <TableCell className="py-2.5 px-3 text-right">
                       <Button
                         variant="destructive"
-                        size="icon-sm"
+                        size="icon"
                         onClick={() => {
                           setDeletingSourceId(source.id)
                           deleteSource.mutate(source.id, { onSettled: () => setDeletingSourceId(null) })
