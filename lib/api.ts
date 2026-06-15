@@ -1,7 +1,6 @@
-import { auth } from '@clerk/nextjs/server'
+import { getAccessToken } from '@/lib/access-token'
 
-const API_URL = process.env.API_URL ?? 'http://localhost:8000'
-const API_TOKEN = process.env.API_TOKEN ?? ''
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 interface FetchOptions {
   method?: string
@@ -13,8 +12,11 @@ export async function apiRequest<T>(
   path: string,
   options: FetchOptions = {}
 ): Promise<Response & { parsedData: T }> {
-  const { getToken } = await auth()
-  const token = await getToken()
+  const token = await getAccessToken()
+  if (!token) {
+    const res = new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
+    return Object.assign(res, { parsedData: { error: 'Unauthorized' } as T })
+  }
 
   const url = new URL(`${API_URL}/api/v1${path}`)
   if (options.searchParams) {
@@ -23,18 +25,15 @@ export async function apiRequest<T>(
     }
   }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Api-Key': API_TOKEN,
-  }
-  if (token) headers['Authorization'] = `Bearer ${token}`
-
   const response = await fetch(url.toString(), {
     method: options.method ?? 'GET',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   })
 
-  const data = await response.json() as T
+  const data = (await response.json()) as T
   return Object.assign(response, { parsedData: data })
 }
