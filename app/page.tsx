@@ -59,7 +59,7 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (userId) router.replace('/dashboard')
+    if (userId) router.replace('/expenses')
   }, [userId, router])
 
   if (userId) return null
