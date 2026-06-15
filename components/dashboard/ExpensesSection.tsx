@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   useExpenses,
   useCreateExpense,
@@ -110,7 +111,12 @@ export function ExpensesSection() {
   return (
     <section className="flex flex-col flex-1 min-h-0">
       <div className="border border-green-700 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
-        <div className={`overflow-auto min-h-0${isEmpty ? '' : ' flex-1'}`}>
+        <div className={`overflow-auto min-h-0${isEmpty || isLoading ? '' : ' flex-1'}`}>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
+              <Loader2 className="size-6 animate-spin text-green-600 dark:text-green-400" />
+            </div>
+          ) : (
           <Table className="sheet-table">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
@@ -124,13 +130,6 @@ export function ExpensesSection() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow className="border-0">
-                  <TableCell colSpan={7} className="py-6 px-5 text-center text-green-600">
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              )}
               {expenses.map((expense) => (
                 <TableRow key={expense.id} className="border-0">
                   <TableCell className="py-5 px-5">
@@ -353,6 +352,7 @@ export function ExpensesSection() {
               )}
             </TableBody>
           </Table>
+          )}
         </div>
         {isEmpty && (
           <div className="flex-1 flex items-center justify-center">

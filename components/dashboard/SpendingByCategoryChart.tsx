@@ -1,5 +1,6 @@
 'use client'
 
+import { Loader2 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 import { useExpensesByCategory } from '@/hooks/use-expenses-by-category'
 import { fmtMoney } from '@/lib/format'
@@ -10,7 +11,11 @@ export function SpendingByCategoryChart() {
   const { data, isLoading } = useExpensesByCategory()
 
   if (isLoading) {
-    return <p className="text-green-700 dark:text-[#86efac] text-sm">Loading…</p>
+    return (
+      <div className="flex items-center justify-center py-8" role="status" aria-label="Loading">
+        <Loader2 className="size-5 animate-spin text-green-700 dark:text-[#86efac]" />
+      </div>
+    )
   }
 
   const slices = data?.by_category ?? []

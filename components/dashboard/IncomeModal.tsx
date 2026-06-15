@@ -305,6 +305,12 @@ export function IncomeModal({ open, onClose }: Props) {
 
         {/* Table area */}
         <div className="overflow-auto min-h-0 flex-1 relative">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
+              <Loader2 className="size-6 animate-spin text-green-700 dark:text-[#86efac]" />
+            </div>
+          ) : (
+          <>
           <Table className="sheet-table table-fixed">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
@@ -316,13 +322,6 @@ export function IncomeModal({ open, onClose }: Props) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow className="border-0">
-                  <TableCell colSpan={5} className="py-6 px-3 text-center text-green-700 dark:text-[#86efac]">
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              )}
               {sources.map((source) => {
                 const isEditing = editing?.id === source.id
                 return (
@@ -560,6 +559,8 @@ export function IncomeModal({ open, onClose }: Props) {
                 +
               </button>
             </div>
+          )}
+          </>
           )}
         </div>
 

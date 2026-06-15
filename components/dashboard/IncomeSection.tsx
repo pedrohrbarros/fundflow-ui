@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   useSourcesOfIncome,
   useCreateSourceOfIncome,
@@ -98,6 +99,11 @@ export function IncomeSection() {
       </div>
 
       <div className="border border-green-700 dark:border-green-800 rounded-lg overflow-hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12" role="status" aria-label="Loading">
+            <Loader2 className="size-6 animate-spin text-green-600 dark:text-green-400" />
+          </div>
+        ) : (
         <Table className="sheet-table">
           <TableHeader>
             <TableRow className="hover:bg-transparent border-0">
@@ -108,13 +114,6 @@ export function IncomeSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow className="border-0">
-                <TableCell colSpan={4} className="py-4 px-3 text-center text-green-600">
-                  Loading…
-                </TableCell>
-              </TableRow>
-            )}
             {sources.map((source) => (
               <TableRow key={source.id} className="border-0">
                 <TableCell className="py-1 px-3">
@@ -281,6 +280,7 @@ export function IncomeSection() {
             )}
           </TableBody>
         </Table>
+        )}
       </div>
     </section>
   )
