@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Build-time placeholders. Replace with repository secrets if the build
-      # ever needs to reach real Clerk / API services.
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk
-      CLERK_SECRET_KEY: sk_test_dummy
-      API_URL: http://localhost:3000
-      API_TOKEN: dummy
+      # ever needs to reach real auth / API services.
+      AUTH_SECRET: dummy_auth_secret_for_build_only_0000000000
+      GOOGLE_CLIENT_ID: dummy.apps.googleusercontent.com
+      GOOGLE_CLIENT_SECRET: dummy_google_secret
+      NEXT_PUBLIC_API_URL: http://localhost:8000
     steps:
       - uses: actions/checkout@v4
 
