@@ -19,8 +19,8 @@ Authentication is **Google-only**, via Auth.js, with the **backend as the token 
 
 1. The user clicks **Sign in with Google**; Auth.js runs the Google OAuth flow.
 2. In the NextAuth `jwt` callback, Google's OpenID Connect `id_token` is exchanged at
-   `POST /api/v1/auth/google`, and the backend returns its **own** `access_token` (short
-   lived) + `refresh_token` (long lived).
+   `POST /api/v1/auth/google`, and the backend returns its **own** `access_token` (short-lived)
+   + `refresh_token` (long-lived).
 3. Those backend tokens are stored only in the encrypted, httpOnly NextAuth session cookie —
    they are never exposed to the browser.
 4. Every API call goes through the BFF (`lib/api.ts`), which reads the access token
