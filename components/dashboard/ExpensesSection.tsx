@@ -52,15 +52,15 @@ const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: fal
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '20%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '10%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '6%' }} />
-      <col style={{ width: '16%' }} />
-      <col style={{ width: '6%' }} />
-      <col style={{ width: '6%' }} />
+      <col style={{ width: '19%' }} />
       <col style={{ width: '13%' }} />
+      <col style={{ width: '9%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '9%' }} />
+      <col style={{ width: '17%' }} />
+      <col style={{ width: '5%' }} />
+      <col style={{ width: '5%' }} />
+      <col style={{ width: '12%' }} />
     </colgroup>
   )
 }
@@ -289,15 +289,15 @@ export function ExpensesSection() {
                 <ExpensesTableColgroup />
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow className="hover:bg-transparent border-0">
-                    <TableHead className="py-4 px-5 h-auto">Name</TableHead>
-                    <TableHead className="py-4 px-5 h-auto">Category</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-right">Amount</TableHead>
-                    <TableHead className="py-4 px-5 h-auto w-36">Date</TableHead>
-                    <TableHead className="py-4 px-5 h-auto w-20 text-center">Recurring</TableHead>
-                    <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-center">Paid</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-center">Saved</TableHead>
-                    <TableHead className="py-4 px-5 h-auto w-28" />
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Name</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Category</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-right">Amount</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Date</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Recurring</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Payment Method</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Paid</TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Saved</TableHead>
+                    <TableHead className="py-4 px-5 h-auto" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
