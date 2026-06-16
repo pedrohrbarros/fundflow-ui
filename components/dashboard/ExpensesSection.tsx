@@ -16,6 +16,7 @@ import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombo
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
 import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
 import { useCategories } from '@/hooks/use-categories'
+import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,32 +29,38 @@ interface RowForm {
   is_paid: boolean
   is_saved: boolean
   payment_method_id: string
+  date: string
+  is_recurring: boolean
 }
 
-type EditField = 'name' | 'category' | 'amount' | 'payment_method'
+type EditField = 'name' | 'category' | 'amount' | 'date' | 'payment_method'
 
 type ExpenseUpdatePayload = {
   id: string
   name: string
   category_id: number
   amount: number
+  date: string
+  is_recurring: boolean
   is_paid: boolean
   is_saved: boolean
   payment_methods: { payment_method_id: number; partial_amount: number }[]
 }
 
-const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '' }
+const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '', date: '', is_recurring: false }
 
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '26%' }} />
-      <col style={{ width: '14%' }} />
-      <col style={{ width: '10%' }} />
       <col style={{ width: '20%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '16%' }} />
       <col style={{ width: '6%' }} />
       <col style={{ width: '6%' }} />
-      <col style={{ width: '18%' }} />
+      <col style={{ width: '13%' }} />
     </colgroup>
   )
 }
@@ -66,6 +73,8 @@ function formFromExpense(expense: Expense): RowForm {
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
     payment_method_id: expense.payment_methods[0]?.payment_method_id ?? '',
+    date: expense.date,
+    is_recurring: expense.is_recurring,
   }
 }
 
@@ -78,6 +87,7 @@ function formHasChanges(expense: Expense, form: RowForm) {
     form.name.trim() !== expense.name ||
     String(expense.category_id ?? '') !== form.category_id ||
     amount !== expense.amount ||
+    form.date !== expense.date ||
     paymentMethodId !== expensePaymentMethodId
   )
 }
@@ -89,6 +99,8 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     name: form.name.trim(),
     amount,
     category_id: parseInt(form.category_id, 10),
+    date: form.date,
+    is_recurring: form.is_recurring,
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
     payment_methods: form.payment_method_id
@@ -103,6 +115,7 @@ export function ExpensesSection() {
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
+  const { date: periodDate } = usePeriod()
 
   const [isAdding, setIsAdding] = useState(false)
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
@@ -111,7 +124,7 @@ export function ExpensesSection() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
   const expenses = data?.expenses ?? []
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const total = data?.total ?? expenses.reduce((sum, e) => sum + e.period_amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
   const { data: categoriesData } = useCategories()
@@ -138,6 +151,8 @@ export function ExpensesSection() {
             name: payload.name,
             amount: payload.amount,
             category_id: String(payload.category_id),
+            date: payload.date,
+            is_recurring: payload.is_recurring,
             payment_methods: nextPaymentMethod
               ? [{
                   payment_method_id: String(nextPaymentMethod.payment_method_id),
@@ -225,13 +240,15 @@ export function ExpensesSection() {
   }
 
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount || !addForm.category_id) return
+    if (!addForm.name.trim() || !addForm.amount || !addForm.category_id || !addForm.date) return
     const amount = parseFloat(addForm.amount)
     create.mutate(
       {
         name: addForm.name.trim(),
         amount,
         category_id: parseInt(addForm.category_id, 10),
+        date: addForm.date,
+        is_recurring: addForm.is_recurring,
         is_paid: addForm.is_paid,
         is_saved: addForm.is_saved,
         payment_methods: addForm.payment_method_id
@@ -259,7 +276,7 @@ export function ExpensesSection() {
             <button
               type="button"
               aria-label="Add expense"
-              onClick={() => setIsAdding(true)}
+              onClick={() => { setIsAdding(true); setAddForm((f) => ({ ...f, date: periodDate })) }}
               className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-green-800 text-green-700 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
             >
               +
@@ -275,6 +292,8 @@ export function ExpensesSection() {
                     <TableHead className="py-4 px-5 h-auto">Name</TableHead>
                     <TableHead className="py-4 px-5 h-auto">Category</TableHead>
                     <TableHead className="py-4 px-5 h-auto text-right">Amount</TableHead>
+                    <TableHead className="py-4 px-5 h-auto w-36">Date</TableHead>
+                    <TableHead className="py-4 px-5 h-auto w-20 text-center">Recurring</TableHead>
                     <TableHead className="py-4 px-5 h-auto">Payment Method</TableHead>
                     <TableHead className="py-4 px-5 h-auto text-center">Paid</TableHead>
                     <TableHead className="py-4 px-5 h-auto text-center">Saved</TableHead>
@@ -355,9 +374,43 @@ export function ExpensesSection() {
                               className="w-full text-right font-mono hover:text-green-600 dark:hover:text-green-400 transition-colors"
                               onClick={() => startFieldEdit(expense, 'amount')}
                             >
-                              {fmtMoney(expense.amount)}
+                              {fmtMoney(expense.period_amount)}
                             </button>
                           )}
+                        </TableCell>
+                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
+                          {isEditing && editing.field === 'date' ? (
+                            <Input
+                              type="date"
+                              className="min-w-0 text-[1rem]"
+                              value={draft.date}
+                              onChange={(e) => setDraft((f) => ({ ...f, date: e.target.value }))}
+                              onBlur={() => handleFieldBlur(expense.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  setEditing(null)
+                                  setDraft(emptyForm)
+                                }
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              className="w-full text-left truncate block text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              onClick={() => startFieldEdit(expense, 'date')}
+                            >
+                              {expense.date}
+                            </button>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-5 px-5 text-center">
+                          <Checkbox
+                            checked={expense.is_recurring}
+                            onCheckedChange={(checked) => {
+                              update.mutate({ id: expense.id, is_recurring: Boolean(checked) })
+                            }}
+                          />
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
                           {isEditing && editing.field === 'payment_method' ? (
@@ -453,6 +506,25 @@ export function ExpensesSection() {
                         />
                       </TableCell>
                       <TableCell className="py-5 px-5">
+                        <Input
+                          type="date"
+                          className="min-w-0 text-[1rem]"
+                          value={addForm.date}
+                          onChange={(e) =>
+                            setAddForm((f) => ({ ...f, date: e.target.value }))
+                          }
+                          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                        />
+                      </TableCell>
+                      <TableCell className="py-5 px-5 text-center">
+                        <Checkbox
+                          checked={addForm.is_recurring}
+                          onCheckedChange={(checked) =>
+                            setAddForm((f) => ({ ...f, is_recurring: Boolean(checked) }))
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="py-5 px-5">
                         <PaymentMethodCombobox
                           value={addForm.payment_method_id}
                           onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
@@ -462,7 +534,7 @@ export function ExpensesSection() {
                       <TableCell className="py-5 px-5" />
                       <TableCell className="py-5 px-5">
                         <div className="flex gap-2 items-center">
-                          {addForm.name.trim() && addForm.amount && addForm.category_id && (
+                          {addForm.name.trim() && addForm.amount && addForm.category_id && addForm.date && (
                             <Button size="default" onClick={handleAdd}>
                               Save
                             </Button>
@@ -482,11 +554,11 @@ export function ExpensesSection() {
                   {!isAdding && expenses.length > 0 && (
                     <TableRow
                       className="border-0 cursor-pointer group add-hint"
-                      onClick={() => setIsAdding(true)}
+                      onClick={() => { setIsAdding(true); setAddForm((f) => ({ ...f, date: periodDate })) }}
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={7}
+                        colSpan={9}
                         className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -503,7 +575,7 @@ export function ExpensesSection() {
                   <TableRow className="total-row border-0">
                     <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
                     <TableCell
-                      colSpan={6}
+                      colSpan={8}
                       className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300"
                     >
                       {fmtMoney(total)}

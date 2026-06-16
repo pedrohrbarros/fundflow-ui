@@ -15,9 +15,13 @@ vi.mock('@tanstack/react-query', async () => {
   }
 })
 
+vi.mock('@/providers/period-provider', () => ({
+  usePeriod: () => ({ granularity: 'monthly', date: '2026-06-15', setGranularity: () => {}, setDate: () => {}, next: () => {}, prev: () => {} }),
+}))
+
 vi.mock('@/hooks/use-expenses', () => ({
   useExpenses: () => ({
-    data: { expenses: [], pagination: { page: 1, limit: 20, total: 0 } },
+    data: { expenses: [], total: 0, pagination: { page: 1, limit: 20, total: 0 } },
     isLoading: false,
   }),
   useCreateExpense: () => ({ mutate: createMutate, isPending: false }),
@@ -62,6 +66,9 @@ describe('ExpensesSection', () => {
     // Select a category via the mocked combobox
     fireEvent.click(screen.getByText('pick-category'))
 
+    // The add-row date input defaults to the selected period (2026-06-15)
+    expect(screen.getByDisplayValue('2026-06-15')).toBeTruthy()
+
     // Save now appears; clicking it submits with category_id
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -70,6 +77,8 @@ describe('ExpensesSection', () => {
       name: 'Rent',
       amount: 1200,
       category_id: 7,
+      date: '2026-06-15',
+      is_recurring: false,
     })
   })
 })
