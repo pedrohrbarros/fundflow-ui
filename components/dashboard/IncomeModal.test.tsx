@@ -12,8 +12,12 @@ vi.mock('@tanstack/react-query', async () => {
   }
 })
 
+vi.mock('@/providers/period-provider', () => ({
+  usePeriod: () => ({ granularity: 'monthly', date: '2026-06-15', setGranularity: () => {}, setDate: () => {}, next: () => {}, prev: () => {} }),
+}))
+
 vi.mock('@/hooks/use-sources-of-income', () => ({
-  useSourcesOfIncome: () => ({ data: { sources_of_income: {} }, isLoading: false }),
+  useSourcesOfIncome: () => ({ data: { sources_of_income: {}, total: 0 }, isLoading: false }),
   useCreateSourceOfIncome: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateSourceOfIncome: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   useDeleteSourceOfIncome: () => ({ mutate: vi.fn(), isPending: false }),

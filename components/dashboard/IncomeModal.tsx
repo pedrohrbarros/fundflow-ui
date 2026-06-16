@@ -12,6 +12,7 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { useCategories } from '@/hooks/use-categories'
+import { usePeriod } from '@/providers/period-provider'
 import { fmtMoney } from '@/lib/format'
 import type { SourceOfIncome, SourcesOfIncomeResponse } from '@/types'
 import { CategoryCombobox } from './CategoryCombobox'
@@ -30,13 +31,15 @@ interface RowForm {
   category_id: string
   income: string
   currency: string
+  date: string
+  is_recurring: boolean
 }
 
 const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'] as const
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD' }
+const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD', date: '', is_recurring: false }
 
-type EditField = 'name' | 'category' | 'income' | 'currency'
+type EditField = 'name' | 'category' | 'income' | 'currency' | 'date'
 
 function formFromSource(source: SourceOfIncome): RowForm {
   return {
@@ -44,6 +47,8 @@ function formFromSource(source: SourceOfIncome): RowForm {
     category_id: source.category_id,
     income: String(source.income),
     currency: source.currency ?? 'USD',
+    date: source.date,
+    is_recurring: source.is_recurring,
   }
 }
 
@@ -52,14 +57,17 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
     form.name.trim() !== source.name ||
     form.category_id !== source.category_id ||
     (parseFloat(form.income) || 0) !== source.income ||
-    (form.currency || 'USD') !== (source.currency ?? 'USD')
+    (form.currency || 'USD') !== (source.currency ?? 'USD') ||
+    form.date !== source.date ||
+    form.is_recurring !== source.is_recurring
   )
 }
 
-type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string }
+type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string; date: string; is_recurring: boolean }
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
+  const { date: periodDate } = usePeriod()
   const { data, isLoading } = useSourcesOfIncome()
   const { data: categoriesData } = useCategories()
   const create = useCreateSourceOfIncome()
@@ -74,7 +82,7 @@ export function IncomeModal({ open, onClose }: Props) {
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
-  const total = sources.reduce((sum, s) => sum + s.income, 0)
+  const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
   const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
   const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
   const isEmpty = !isLoading && !sources.length && !isAdding
@@ -113,6 +121,8 @@ export function IncomeModal({ open, onClose }: Props) {
         category_id: parseInt(addForm.category_id, 10),
         income: parseFloat(addForm.income) || 0,
         currency: addForm.currency || 'USD',
+        date: addForm.date || periodDate,
+        is_recurring: addForm.is_recurring,
       },
       {
         onSuccess: () => {
@@ -144,6 +154,8 @@ export function IncomeModal({ open, onClose }: Props) {
       income: payload.income,
       currency: payload.currency,
       category_id: newCatId,
+      date: payload.date,
+      is_recurring: payload.is_recurring,
     }
 
     const categoryChanged = foundSource.category_id !== newCatId
@@ -206,6 +218,8 @@ export function IncomeModal({ open, onClose }: Props) {
       category_id: parseInt(newCategoryId, 10),
       income: parseFloat(updatedDraft.income) || 0,
       currency: updatedDraft.currency || 'USD',
+      date: updatedDraft.date,
+      is_recurring: updatedDraft.is_recurring,
     }
 
     const oldData = applyOptimisticUpdate(payload)
@@ -232,6 +246,8 @@ export function IncomeModal({ open, onClose }: Props) {
       category_id: parseInt(draft.category_id, 10),
       income: parseFloat(draft.income) || 0,
       currency: draft.currency || 'USD',
+      date: draft.date,
+      is_recurring: draft.is_recurring,
     }
 
     setEditing(null)
@@ -264,6 +280,8 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableHead className="py-2 px-3 h-auto w-28 sm:w-40 lg:w-64">Category</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-24 sm:w-28 lg:w-36 text-right">Amount</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-20 sm:w-24 lg:w-32">Currency</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-32 lg:w-40">Date</TableHead>
+                <TableHead className="py-2 px-3 h-auto w-20 lg:w-24 text-center">Recurring</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-28 lg:w-32" />
               </TableRow>
             </TableHeader>
@@ -348,7 +366,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono"
                           onClick={() => startFieldEdit(source, 'income')}
                         >
-                          {fmtMoney(source.income)}
+                          {fmtMoney(source.period_amount)}
                         </button>
                       )}
                     </TableCell>
@@ -374,6 +392,56 @@ export function IncomeModal({ open, onClose }: Props) {
                           {source.currency ?? 'USD'}
                         </button>
                       )}
+                    </TableCell>
+                    <TableCell className="py-2.5 px-3 overflow-hidden">
+                      {isEditing && editing.field === 'date' ? (
+                        <Input
+                          className="h-7 text-sm min-w-0"
+                          type="date"
+                          value={draft.date}
+                          onChange={(e) =>
+                            setDraft((f) => ({ ...f, date: e.target.value }))
+                          }
+                          onBlur={() => handleFieldBlur(source.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              e.stopPropagation()
+                              setEditing(null)
+                              setDraft(emptyForm)
+                            }
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block font-mono text-xs"
+                          onClick={() => startFieldEdit(source, 'date')}
+                        >
+                          {source.date}
+                        </button>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2.5 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        aria-label="Recurring"
+                        checked={source.is_recurring}
+                        onChange={(e) => {
+                          const updatedDraft = { ...formFromSource(source), is_recurring: e.target.checked }
+                          const payload = {
+                            id: source.id,
+                            name: updatedDraft.name.trim(),
+                            category_id: parseInt(updatedDraft.category_id, 10),
+                            income: parseFloat(updatedDraft.income) || 0,
+                            currency: updatedDraft.currency || 'USD',
+                            date: updatedDraft.date,
+                            is_recurring: updatedDraft.is_recurring,
+                          }
+                          const oldData = applyOptimisticUpdate(payload)
+                          showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
+                        }}
+                      />
                     </TableCell>
                     <TableCell className="py-2.5 px-3 text-right">
                       <Button
@@ -456,6 +524,34 @@ export function IncomeModal({ open, onClose }: Props) {
                     </select>
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
+                    <Input
+                      className="h-7 text-sm min-w-0"
+                      type="date"
+                      value={addForm.date || periodDate}
+                      onChange={(e) =>
+                        setAddForm((f) => ({ ...f, date: e.target.value }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAdd()
+                        if (e.key === 'Escape') {
+                          e.stopPropagation()
+                          setIsAdding(false)
+                          setAddForm(emptyForm)
+                        }
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      aria-label="Recurring"
+                      checked={addForm.is_recurring}
+                      onChange={(e) =>
+                        setAddForm((f) => ({ ...f, is_recurring: e.target.checked }))
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="py-2.5 px-3">
                     <div className="flex gap-2 items-center justify-end">
                       <Button
                         size="sm"
@@ -483,7 +579,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   aria-label="Add income"
                 >
                   <TableCell
-                    colSpan={5}
+                    colSpan={7}
                     className="py-2 px-3 text-center text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
                   >
                     <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
