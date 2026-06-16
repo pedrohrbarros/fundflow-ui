@@ -398,6 +398,9 @@ export interface operations {
                     category_id: string | number;
                     income?: number;
                     currency?: string;
+                    /** Format: date */
+                    date: string;
+                    is_recurring?: boolean;
                 };
             };
         };
@@ -414,6 +417,9 @@ export interface operations {
                         category_id?: number;
                         income?: number;
                         currency?: string;
+                        /** Format: date */
+                        date?: string;
+                        is_recurring?: boolean;
                         /** Format: date-time */
                         created_at?: string;
                         /** Format: date-time */
@@ -443,6 +449,16 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /**
+                     * @description Period granularity. Defaults to "monthly" when omitted.
+                     * @enum {string}
+                     */
+                    granularity?: "daily" | "monthly" | "annually";
+                    /**
+                     * Format: date
+                     * @description Anchor date (YYYY-MM-DD) for the period. Defaults to today when omitted.
+                     */
+                    date?: string;
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
@@ -479,11 +495,20 @@ export interface operations {
                                 category_id?: number;
                                 income?: number;
                                 currency?: string;
+                                /** Format: date */
+                                date?: string;
+                                is_recurring?: boolean;
                                 /** Format: date-time */
                                 created_at?: string;
                                 /** Format: date-time */
                                 updated_at?: string;
+                                /** @description Amount applicable in the requested period */
+                                period_amount?: number;
                             }[];
+                        };
+                        /** @description Sum of period_amount per currency code (e.g. { "USD": 5000, "EUR": 1000 }) */
+                        total?: {
+                            [key: string]: number;
                         };
                         pagination?: {
                             page?: number;
@@ -535,6 +560,9 @@ export interface operations {
                     category_id?: string | number;
                     income?: number;
                     currency?: string;
+                    /** Format: date */
+                    date?: string;
+                    is_recurring?: boolean;
                 };
             };
         };
@@ -551,6 +579,9 @@ export interface operations {
                         category_id?: number;
                         income?: number;
                         currency?: string;
+                        /** Format: date */
+                        date?: string;
+                        is_recurring?: boolean;
                         /** Format: date-time */
                         created_at?: string;
                         /** Format: date-time */
@@ -744,6 +775,9 @@ export interface operations {
                     name: string;
                     category_id: string | number;
                     amount: number;
+                    /** Format: date */
+                    date: string;
+                    is_recurring?: boolean;
                     is_paid?: boolean;
                     is_saved?: boolean;
                     saving_location?: string | null;
@@ -766,6 +800,9 @@ export interface operations {
                         name?: string;
                         category_id?: number;
                         amount?: number;
+                        /** Format: date */
+                        date?: string;
+                        is_recurring?: boolean;
                         is_paid?: boolean;
                         is_saved?: boolean;
                         saving_location?: string | null;
@@ -805,6 +842,16 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /**
+                     * @description Period granularity. Defaults to "monthly" when omitted.
+                     * @enum {string}
+                     */
+                    granularity?: "daily" | "monthly" | "annually";
+                    /**
+                     * Format: date
+                     * @description Anchor date (YYYY-MM-DD) for the period. Defaults to today when omitted.
+                     */
+                    date?: string;
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
@@ -838,6 +885,9 @@ export interface operations {
                             name?: string;
                             category_id?: number;
                             amount?: number;
+                            /** Format: date */
+                            date?: string;
+                            is_recurring?: boolean;
                             is_paid?: boolean;
                             is_saved?: boolean;
                             saving_location?: string | null;
@@ -852,7 +902,11 @@ export interface operations {
                             created_at?: string;
                             /** Format: date-time */
                             updated_at?: string;
+                            /** @description Amount applicable in the requested period */
+                            period_amount?: number;
                         }[];
+                        /** @description Sum of period_amount across all applicable expenses */
+                        total?: number;
                         pagination?: {
                             page?: number;
                             limit?: number;
@@ -883,6 +937,16 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /**
+                     * @description Period granularity. Defaults to "monthly" when omitted.
+                     * @enum {string}
+                     */
+                    granularity?: "daily" | "monthly" | "annually";
+                    /**
+                     * Format: date
+                     * @description Anchor date (YYYY-MM-DD) for the period. Defaults to today when omitted.
+                     */
+                    date?: string;
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
@@ -962,6 +1026,9 @@ export interface operations {
                     name?: string;
                     category_id?: string | number;
                     amount?: number;
+                    /** Format: date */
+                    date?: string;
+                    is_recurring?: boolean;
                     is_paid?: boolean;
                     is_saved?: boolean;
                     saving_location?: string | null;
@@ -984,6 +1051,9 @@ export interface operations {
                         name?: string;
                         category_id?: number;
                         amount?: number;
+                        /** Format: date */
+                        date?: string;
+                        is_recurring?: boolean;
                         is_paid?: boolean;
                         is_saved?: boolean;
                         saving_location?: string | null;

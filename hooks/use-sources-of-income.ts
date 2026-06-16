@@ -7,15 +7,18 @@ import type {
   SourcesOfIncomeResponse,
   UpdateSourceOfIncomeBody,
 } from '@/types'
+import { usePeriod } from '@/providers/period-provider'
 
 const KEY = ['sources-of-income'] as const
 
 export function useSourcesOfIncome() {
+  const { granularity, date } = usePeriod()
   return useQuery({
-    queryKey: KEY,
+    queryKey: [...KEY, { granularity, date }],
     meta: { showErrorToast: true },
     queryFn: async () => {
-      const res = await fetch('/api/sources-of-income')
+      const qs = new URLSearchParams({ granularity, date })
+      const res = await fetch(`/api/sources-of-income?${qs}`)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<SourcesOfIncomeResponse>
     },

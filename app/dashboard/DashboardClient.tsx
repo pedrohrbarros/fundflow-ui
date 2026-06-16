@@ -20,17 +20,16 @@ export function DashboardClient() {
 
   const userCurrency = getCountryCurrency(user?.country ?? 'BR')
 
-  const totalExpenses = (expensesData?.expenses ?? []).reduce(
-    (sum, e) => sum + e.amount,
-    0
-  )
+  const totalExpenses =
+    expensesData?.total ??
+    (expensesData?.expenses ?? []).reduce((sum, e) => sum + e.period_amount, 0)
 
   const sources = Object.values(incomeData?.sources_of_income ?? {}).flat()
   let hasConversionError = false
   const totalIncome = !rates
     ? null
     : sources.reduce((sum, s) => {
-        const converted = convertCurrency(s.income, s.currency ?? 'USD', userCurrency, rates)
+        const converted = convertCurrency(s.period_amount, s.currency ?? 'USD', userCurrency, rates)
         if (converted === null) {
           hasConversionError = true
           return sum

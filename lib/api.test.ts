@@ -25,11 +25,10 @@ describe('apiRequest', () => {
     expect(headers['X-Api-Key']).toBeUndefined()
   })
 
-  it('returns 401 without calling the backend when there is no token', async () => {
+  it('throws without calling the backend when there is no token', async () => {
     getAccessToken.mockResolvedValue(null)
     const fetchMock = vi.spyOn(global, 'fetch')
-    const res = await apiRequest('/users/me')
-    expect(res.status).toBe(401)
+    await expect(apiRequest('/users/me')).rejects.toThrow(/unauthorized/i)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

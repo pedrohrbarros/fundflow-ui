@@ -89,7 +89,7 @@ export function CategoryCombobox({
   return (
     <Popover className="w-full" open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="w-full text-left bg-transparent dark:bg-[#1a2e1a] border border-green-100 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2">
-        <span className={selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}>
+        <span className={`flex-1 min-w-0 truncate ${selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}`}>
           {selected?.name ?? placeholder}
         </span>
         <svg

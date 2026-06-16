@@ -10,6 +10,9 @@ export interface Expense {
   id: string
   name: string
   amount: number
+  period_amount: number
+  date: string
+  is_recurring: boolean
   category_id: string
   is_paid: boolean
   is_saved: boolean
@@ -21,6 +24,7 @@ export interface Expense {
 
 export interface ExpensesResponse {
   expenses: Expense[]
+  total: number
   pagination: { page: number; limit: number; total: number }
 }
 
@@ -28,6 +32,8 @@ export interface CreateExpenseBody {
   name: string
   category_id: number
   amount: number
+  date: string
+  is_recurring?: boolean
   is_paid?: boolean
   is_saved?: boolean
   saving_location?: string | null
@@ -38,6 +44,8 @@ export interface UpdateExpenseBody {
   name?: string
   category_id?: number
   amount?: number
+  date?: string
+  is_recurring?: boolean
   is_paid?: boolean
   is_saved?: boolean
   saving_location?: string | null
@@ -71,6 +79,9 @@ export interface SourceOfIncome {
   name: string
   category_id: string
   income: number
+  period_amount: number
+  date: string
+  is_recurring: boolean
   currency: string
   created_at: string
   updated_at: string
@@ -82,6 +93,7 @@ export type SourcesOfIncomeByCategoryResponse = {
 
 export interface SourcesOfIncomeResponse {
   sources_of_income: { [category: string]: SourceOfIncome[] }
+  total: number
   pagination: { page: number; limit: number; total: number }
 }
 
@@ -90,6 +102,8 @@ export interface CreateSourceOfIncomeBody {
   category_id: number
   income?: number
   currency?: string
+  date: string
+  is_recurring?: boolean
 }
 
 export interface UpdateSourceOfIncomeBody {
@@ -97,6 +111,8 @@ export interface UpdateSourceOfIncomeBody {
   category_id?: number | null
   income?: number
   currency?: string
+  date?: string
+  is_recurring?: boolean
 }
 
 export interface PaymentMethod {

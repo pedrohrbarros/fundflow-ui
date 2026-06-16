@@ -9,6 +9,7 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { fmtMoney } from '@/lib/format'
+import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -18,11 +19,14 @@ interface RowForm {
   name: string
   category_id: string
   income: string
+  date: string
+  is_recurring: boolean
 }
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '' }
+const emptyForm: RowForm = { name: '', category_id: '', income: '', date: '', is_recurring: false }
 
 export function IncomeSection() {
+  const { date: periodDate } = usePeriod()
   const { data, isLoading } = useSourcesOfIncome()
   const create = useCreateSourceOfIncome()
   const update = useUpdateSourceOfIncome()
@@ -35,7 +39,7 @@ export function IncomeSection() {
 
   const sources = data ? Object.values(data.sources_of_income).flat() : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
-  const total = sources.reduce((sum, s) => sum + s.income, 0)
+  const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
 
   function handleAdd() {
     if (!addForm.name.trim() || !addForm.category_id) return
@@ -44,6 +48,8 @@ export function IncomeSection() {
         name: addForm.name.trim(),
         category_id: parseInt(addForm.category_id, 10),
         income: parseFloat(addForm.income) || 0,
+        date: addForm.date || periodDate,
+        is_recurring: addForm.is_recurring,
       },
       {
         onSuccess: () => {
@@ -62,6 +68,8 @@ export function IncomeSection() {
       name: source.name,
       category_id: source.category_id,
       income: String(source.income),
+      date: source.date,
+      is_recurring: source.is_recurring,
     })
   }
 
@@ -73,6 +81,8 @@ export function IncomeSection() {
         name: editForm.name.trim(),
         category_id: parseInt(editForm.category_id, 10),
         income: parseFloat(editForm.income) || 0,
+        date: editForm.date,
+        is_recurring: editForm.is_recurring,
       },
       {
         onSuccess: () => {
@@ -110,6 +120,8 @@ export function IncomeSection() {
               <TableHead className="py-2 px-3 h-auto">Name</TableHead>
               <TableHead className="py-2 px-3 h-auto">Category</TableHead>
               <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-40">Date</TableHead>
+              <TableHead className="py-2 px-3 h-auto w-24 text-center">Recurring</TableHead>
               <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -157,7 +169,35 @@ export function IncomeSection() {
                       }
                     />
                   ) : (
-                    <span className="font-mono">{fmtMoney(source.income)}</span>
+                    <span className="font-mono">{fmtMoney(source.period_amount)}</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-1 px-3">
+                  {editingId === source.id ? (
+                    <Input
+                      type="date"
+                      className="h-7 text-sm min-w-0"
+                      value={editForm.date}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, date: e.target.value }))
+                      }
+                    />
+                  ) : (
+                    <span className="font-mono text-xs">{source.date}</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  {editingId === source.id ? (
+                    <input
+                      type="checkbox"
+                      aria-label="Recurring"
+                      checked={editForm.is_recurring}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, is_recurring: e.target.checked }))
+                      }
+                    />
+                  ) : (
+                    <input type="checkbox" aria-label="Recurring" checked={source.is_recurring} readOnly disabled />
                   )}
                 </TableCell>
                 <TableCell className="py-1 px-3">
@@ -242,6 +282,27 @@ export function IncomeSection() {
                   />
                 </TableCell>
                 <TableCell className="py-1 px-3">
+                  <Input
+                    type="date"
+                    className="h-7 text-sm min-w-0"
+                    value={addForm.date || periodDate}
+                    onChange={(e) =>
+                      setAddForm((f) => ({ ...f, date: e.target.value }))
+                    }
+                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  />
+                </TableCell>
+                <TableCell className="py-1 px-3 text-center">
+                  <input
+                    type="checkbox"
+                    aria-label="Recurring"
+                    checked={addForm.is_recurring}
+                    onChange={(e) =>
+                      setAddForm((f) => ({ ...f, is_recurring: e.target.checked }))
+                    }
+                  />
+                </TableCell>
+                <TableCell className="py-1 px-3">
                   <div className="flex gap-1">
                     <Button size="xs" onClick={handleAdd}>
                       Save
@@ -268,12 +329,12 @@ export function IncomeSection() {
                 <TableCell className="py-1 px-3 text-right font-mono font-semibold text-green-800">
                   {fmtMoney(total)}
                 </TableCell>
-                <TableCell className="py-1 px-3" />
+                <TableCell className="py-1 px-3" colSpan={3} />
               </TableRow>
             )}
             {!isLoading && !sources.length && !isAdding && (
               <TableRow className="border-0">
-                <TableCell colSpan={4} className="py-4 px-3 text-center text-green-600 italic">
+                <TableCell colSpan={6} className="py-4 px-3 text-center text-green-600 italic">
                   No income sources yet — add one above.
                 </TableCell>
               </TableRow>

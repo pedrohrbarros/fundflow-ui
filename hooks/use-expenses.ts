@@ -7,18 +7,20 @@ import type {
   ExpensesResponse,
   UpdateExpenseBody,
 } from '@/types'
+import { usePeriod } from '@/providers/period-provider'
 
 const KEY = ['expenses'] as const
 
 export function useExpenses(params?: { page?: number; limit?: number }) {
+  const { granularity, date } = usePeriod()
   return useQuery({
-    queryKey: [...KEY, params],
+    queryKey: [...KEY, { granularity, date, ...params }],
     meta: { showErrorToast: true },
     queryFn: async () => {
-      const qs = new URLSearchParams()
+      const qs = new URLSearchParams({ granularity, date })
       if (params?.page) qs.set('page', String(params.page))
       if (params?.limit) qs.set('limit', String(params.limit))
-      const res = await fetch(`/api/expenses${qs.size ? `?${qs}` : ''}`)
+      const res = await fetch(`/api/expenses?${qs}`)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<ExpensesResponse>
     },
