@@ -80,7 +80,7 @@ export function IncomeModal({ open, onClose }: Props) {
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
 
-  const sources = data ? Object.values(data.sources_of_income).flat() : []
+  const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
   const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
   const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
@@ -91,9 +91,9 @@ export function IncomeModal({ open, onClose }: Props) {
     const map = new Map<string, string>()
     categoriesData?.categories.forEach((c) => map.set(c.id, c.name))
     if (data?.sources_of_income) {
-      for (const [categoryName, list] of Object.entries(data.sources_of_income)) {
-        for (const source of list) {
-          map.set(String(source.category_id), categoryName)
+      for (const group of data.sources_of_income) {
+        if (group.category_id != null && group.category_name) {
+          map.set(String(group.category_id), group.category_name)
         }
       }
     }
@@ -138,45 +138,29 @@ export function IncomeModal({ open, onClose }: Props) {
     if (!old) return undefined
 
     const newCatId = payload.category_id == null ? null : String(payload.category_id)
-    const newCatName = newCatId == null ? undefined : categoryNameById.get(newCatId)
 
-    let currentCatName: string | undefined
-    let foundSource: SourceOfIncome | undefined
-    for (const [catName, items] of Object.entries(old.sources_of_income)) {
-      const item = items.find((i) => i.id === payload.id)
-      if (item) { currentCatName = catName; foundSource = item; break }
-    }
-    if (!foundSource) return old
-
-    const updated: SourceOfIncome = {
-      ...foundSource,
-      name: payload.name,
-      income: payload.income,
-      currency: payload.currency,
-      category_id: newCatId,
-      date: payload.date,
-      is_recurring: payload.is_recurring,
-    }
-
-    const categoryChanged = foundSource.category_id !== newCatId
-    const newSources: SourcesOfIncomeResponse['sources_of_income'] = {}
-
-    if (!categoryChanged) {
-      for (const [catName, items] of Object.entries(old.sources_of_income)) {
-        newSources[catName] = items.map((i) => (i.id === payload.id ? updated : i))
-      }
-    } else {
-      for (const [catName, items] of Object.entries(old.sources_of_income)) {
-        const filtered = items.filter((i) => i.id !== payload.id)
-        if (filtered.length > 0 || catName === currentCatName) newSources[catName] = filtered
-      }
-      const targetName = newCatName ?? (newCatId == null ? 'Uncategorized' : newCatId)
-      newSources[targetName] = [...(newSources[targetName] ?? []), updated]
-    }
+    // Update the source in place within whichever group holds it. If its category
+    // changed, the regrouping is reconciled by the refetch on mutation success.
+    const newGroups = old.sources_of_income.map((group) => ({
+      ...group,
+      sources: group.sources.map((s) =>
+        s.id === payload.id
+          ? {
+              ...s,
+              name: payload.name,
+              income: payload.income,
+              currency: payload.currency,
+              category_id: newCatId,
+              date: payload.date,
+              is_recurring: payload.is_recurring,
+            }
+          : s,
+      ),
+    }))
 
     qc.setQueryData<SourcesOfIncomeResponse>(['sources-of-income'], {
       ...old,
-      sources_of_income: newSources,
+      sources_of_income: newGroups,
     })
     return old
   }

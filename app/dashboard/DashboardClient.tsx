@@ -24,7 +24,7 @@ export function DashboardClient() {
     expensesData?.total ??
     (expensesData?.expenses ?? []).reduce((sum, e) => sum + e.period_amount, 0)
 
-  const sources = Object.values(incomeData?.sources_of_income ?? {}).flat()
+  const sources = (incomeData?.sources_of_income ?? []).flatMap((g) => g.sources)
   let hasConversionError = false
   const totalIncome = !rates
     ? null

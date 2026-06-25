@@ -17,7 +17,7 @@ vi.mock('@/providers/period-provider', () => ({
 }))
 
 vi.mock('@/hooks/use-sources-of-income', () => ({
-  useSourcesOfIncome: () => ({ data: { sources_of_income: {}, total: 0 }, isLoading: false }),
+  useSourcesOfIncome: () => ({ data: { sources_of_income: [], total: {} }, isLoading: false }),
   useCreateSourceOfIncome: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateSourceOfIncome: () => ({ mutate: vi.fn(), mutateAsync: vi.fn(), isPending: false }),
   useDeleteSourceOfIncome: () => ({ mutate: vi.fn(), isPending: false }),

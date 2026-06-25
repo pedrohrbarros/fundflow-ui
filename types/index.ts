@@ -87,13 +87,15 @@ export interface SourceOfIncome {
   updated_at: string
 }
 
-export type SourcesOfIncomeByCategoryResponse = {
-  [category_name: string]: SourceOfIncome[]
+export interface SourceOfIncomeGroup {
+  category_id: number | null
+  category_name: string | null
+  sources: SourceOfIncome[]
 }
 
 export interface SourcesOfIncomeResponse {
-  sources_of_income: { [category: string]: SourceOfIncome[] }
-  total: number
+  sources_of_income: SourceOfIncomeGroup[]
+  total: { [currency: string]: number }
   pagination: { page: number; limit: number; total: number }
 }
 
