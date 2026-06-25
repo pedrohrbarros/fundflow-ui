@@ -25,7 +25,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
   const deletePm = useDeletePaymentMethod()
 
   const paymentMethods = data?.payment_methods ?? []
-  const selected = paymentMethods.find((pm) => pm.id === value)
+  const selected = paymentMethods.find((pm) => String(pm.id) === value)
 
   const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -65,7 +65,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
     if (!newName.trim() || !newOrigin.trim()) return
     createPm.mutate({ name: newName.trim(), origin: newOrigin.trim() }, {
       onSuccess: (pm) => {
-        onChange(pm.id)
+        onChange(String(pm.id))
         setShowNew(false)
         setNewName('')
         setNewOrigin('')
@@ -101,17 +101,19 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
           {paymentMethods.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No payment methods yet</p>
           )}
-          {paymentMethods.map((pm) => (
+          {paymentMethods.map((pm) => {
+            const pmId = String(pm.id)
+            return (
             <div
-              key={pm.id}
+              key={pmId}
               className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer group transition-colors ${
-                pm.id === value
+                pmId === value
                   ? 'bg-green-50 dark:bg-[#14532d]'
                   : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'
               }`}
-              onClick={() => editingId !== pm.id && selectMethod(pm.id)}
+              onClick={() => editingId !== pmId && selectMethod(pmId)}
             >
-              {editingId === pm.id ? (
+              {editingId === pmId ? (
                 <>
                   <Input
                     className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
@@ -119,7 +121,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
                       e.stopPropagation()
-                      if (e.key === 'Enter') saveEdit(pm.id)
+                      if (e.key === 'Enter') saveEdit(pmId)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -128,7 +130,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                   <Button
                     size="icon-xs"
                     className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
-                    onClick={(e) => { e.stopPropagation(); saveEdit(pm.id) }}
+                    onClick={(e) => { e.stopPropagation(); saveEdit(pmId) }}
                     disabled={updatePm.isPending}
                     title="Save"
                   >
@@ -150,18 +152,18 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                     <span className="text-sm text-green-900 dark:text-[#d1fae5] truncate block">{pm.name}</span>
                     <span className="text-xs text-green-500 dark:text-[#86efac]/60 truncate block">{pm.origin}</span>
                   </div>
-                  {pm.id === value && (
+                  {pmId === value && (
                     <span className="shrink-0 text-green-600 dark:text-[#4ade80] text-xs mr-0.5">✓</span>
                   )}
                   <button
-                    onClick={(e) => startEdit(pm.id, pm.name, e)}
+                    onClick={(e) => startEdit(pmId, pm.name, e)}
                     className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534] text-xs px-1.5 py-0.5 rounded transition-all"
                     title="Rename"
                   >
                     ✎
                   </button>
                   <button
-                    onClick={(e) => handleDelete(pm.id, e)}
+                    onClick={(e) => handleDelete(pmId, e)}
                     disabled={deletePm.isPending}
                     className="shrink-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all"
                     title="Delete"
@@ -171,7 +173,8 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                 </>
               )}
             </div>
-          ))}
+            )
+          })}
         </div>
 
         <div className="border-t border-green-100 dark:border-[#166534]">

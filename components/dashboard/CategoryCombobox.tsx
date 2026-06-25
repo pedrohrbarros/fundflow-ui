@@ -78,7 +78,7 @@ export function CategoryCombobox({
     if (!newName.trim()) return
     createCat.mutate({ name: newName.trim(), type }, {
       onSuccess: (cat) => {
-        onChange(cat.id)
+        onChange(String(cat.id))
         setShowNew(false)
         setNewName('')
         setOpen(false)

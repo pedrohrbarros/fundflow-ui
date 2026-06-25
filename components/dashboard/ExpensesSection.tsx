@@ -52,15 +52,15 @@ const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: fal
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '19%' }} />
-      <col style={{ width: '13%' }} />
-      <col style={{ width: '9%' }} />
+      <col style={{ width: '26%' }} />
       <col style={{ width: '11%' }} />
+      <col style={{ width: '8%' }} />
       <col style={{ width: '9%' }} />
+      <col style={{ width: '8%' }} />
       <col style={{ width: '17%' }} />
       <col style={{ width: '5%' }} />
       <col style={{ width: '5%' }} />
-      <col style={{ width: '12%' }} />
+      <col style={{ width: '11%' }} />
     </colgroup>
   )
 }
@@ -343,7 +343,8 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              title={categoryNameById.get(String(expense.category_id)) ?? undefined}
                               onClick={() => startFieldEdit(expense, 'category')}
                             >
                               {categoryNameById.get(String(expense.category_id)) ?? (
@@ -397,7 +398,8 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              title={expense.date}
                               onClick={() => startFieldEdit(expense, 'date')}
                             >
                               {expense.date}
@@ -422,11 +424,19 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
                               onClick={() => startFieldEdit(expense, 'payment_method')}
                             >
                               {(expense.payment_methods ?? []).length > 0
-                                ? (expense.payment_methods ?? []).map((pm) => pm.name).join(', ')
+                                ? (expense.payment_methods ?? []).map((pm, i) => (
+                                    <span key={pm.payment_method_id}>
+                                      {i > 0 ? ', ' : ''}{pm.name}
+                                      {pm.origin ? (
+                                        <span className="text-xs text-green-400/70 dark:text-[#86efac]/50"> ({pm.origin})</span>
+                                      ) : null}
+                                    </span>
+                                  ))
                                 : <span className="text-green-300 dark:text-green-800">—</span>
                               }
                             </button>
@@ -533,7 +543,7 @@ export function ExpensesSection() {
                       <TableCell className="py-5 px-5" />
                       <TableCell className="py-5 px-5" />
                       <TableCell className="py-5 px-5">
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 items-center justify-end">
                           {addForm.name.trim() && addForm.amount && addForm.date && (
                             <Button size="default" onClick={handleAdd}>
                               Save

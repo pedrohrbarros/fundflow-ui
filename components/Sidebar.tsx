@@ -16,12 +16,13 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    setCollapsed(localStorage.getItem(STORAGE_KEY) === 'true')
+    // Default to collapsed; only expand if the user explicitly expanded it before.
+    setCollapsed(localStorage.getItem(STORAGE_KEY) !== 'false')
   }, [])
 
   function toggleCollapsed() {
