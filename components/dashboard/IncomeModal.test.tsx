@@ -39,21 +39,20 @@ vi.mock('./CategoryCombobox', () => ({
 import { IncomeModal } from './IncomeModal'
 
 describe('IncomeModal', () => {
-  it('keeps Save disabled until a category is chosen', async () => {
+  it('enables Save without a category once income is set', async () => {
     render(<IncomeModal open onClose={() => {}} />)
 
     // Empty-state add button opens the add row
     fireEvent.click(await screen.findByRole('button', { name: 'Add income' }))
 
-    // Fill name + amount, but no category yet
+    // Save stays disabled until income > 0
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+
+    // Fill name + amount, but no category
     fireEvent.change(screen.getByPlaceholderText('Source name'), { target: { value: 'Freelance' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '500' } })
 
-    const save = screen.getByRole('button', { name: 'Save' })
-    expect(save).toBeDisabled()
-
-    // Choose a category via the mocked combobox -> Save becomes enabled
-    fireEvent.click(screen.getByText('pick-category'))
+    // Save is enabled without choosing a category
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
   })
 })

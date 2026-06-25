@@ -51,7 +51,7 @@ describe('ExpensesSection', () => {
     createMutate.mockClear()
   })
 
-  it('requires a category before an expense can be created', () => {
+  it('creates an expense without requiring a category', () => {
     render(<ExpensesSection />)
 
     // Open the add row (empty-state round button has aria-label "Add expense")
@@ -60,23 +60,17 @@ describe('ExpensesSection', () => {
     fireEvent.change(screen.getByPlaceholderText('Work'), { target: { value: 'Rent' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
 
-    // No category selected yet -> Save is not shown
-    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull()
-
-    // Select a category via the mocked combobox
-    fireEvent.click(screen.getByText('pick-category'))
-
     // The add-row date input defaults to the selected period (2026-06-15)
     expect(screen.getByDisplayValue('2026-06-15')).toBeTruthy()
 
-    // Save now appears; clicking it submits with category_id
+    // Save is shown without choosing a category
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(createMutate).toHaveBeenCalledTimes(1)
     expect(createMutate.mock.calls[0][0]).toMatchObject({
       name: 'Rent',
       amount: 1200,
-      category_id: 7,
+      category_id: null,
       date: '2026-06-15',
       is_recurring: false,
     })

@@ -38,7 +38,7 @@ type EditField = 'name' | 'category' | 'amount' | 'date' | 'payment_method'
 type ExpenseUpdatePayload = {
   id: string
   name: string
-  category_id: number
+  category_id: number | null
   amount: number
   date: string
   is_recurring: boolean
@@ -98,7 +98,7 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     id,
     name: form.name.trim(),
     amount,
-    category_id: parseInt(form.category_id, 10),
+    category_id: form.category_id ? parseInt(form.category_id, 10) : null,
     date: form.date,
     is_recurring: form.is_recurring,
     is_paid: expense.is_paid,
@@ -150,7 +150,7 @@ export function ExpensesSection() {
             ...expense,
             name: payload.name,
             amount: payload.amount,
-            category_id: String(payload.category_id),
+            category_id: payload.category_id == null ? null : String(payload.category_id),
             date: payload.date,
             is_recurring: payload.is_recurring,
             payment_methods: nextPaymentMethod
@@ -184,7 +184,7 @@ export function ExpensesSection() {
   }
 
   function commitChanges(expense: Expense, form: RowForm) {
-    if (!form.name.trim() || !form.category_id || !formHasChanges(expense, form)) return
+    if (!form.name.trim() || !formHasChanges(expense, form)) return
 
     const payload = buildPayload(expense.id, form, expense)
     const oldData = applyOptimisticUpdate(payload)
@@ -240,13 +240,13 @@ export function ExpensesSection() {
   }
 
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount || !addForm.category_id || !addForm.date) return
+    if (!addForm.name.trim() || !addForm.amount || !addForm.date) return
     const amount = parseFloat(addForm.amount)
     create.mutate(
       {
         name: addForm.name.trim(),
         amount,
-        category_id: parseInt(addForm.category_id, 10),
+        category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         date: addForm.date,
         is_recurring: addForm.is_recurring,
         is_paid: addForm.is_paid,
@@ -534,7 +534,7 @@ export function ExpensesSection() {
                       <TableCell className="py-5 px-5" />
                       <TableCell className="py-5 px-5">
                         <div className="flex gap-2 items-center">
-                          {addForm.name.trim() && addForm.amount && addForm.category_id && addForm.date && (
+                          {addForm.name.trim() && addForm.amount && addForm.date && (
                             <Button size="default" onClick={handleAdd}>
                               Save
                             </Button>

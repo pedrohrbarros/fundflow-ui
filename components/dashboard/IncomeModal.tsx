@@ -44,7 +44,7 @@ type EditField = 'name' | 'category' | 'income' | 'currency' | 'date'
 function formFromSource(source: SourceOfIncome): RowForm {
   return {
     name: source.name,
-    category_id: source.category_id,
+    category_id: source.category_id ?? '',
     income: String(source.income),
     currency: source.currency ?? 'USD',
     date: source.date,
@@ -55,7 +55,7 @@ function formFromSource(source: SourceOfIncome): RowForm {
 function formHasChanges(source: SourceOfIncome, form: RowForm) {
   return (
     form.name.trim() !== source.name ||
-    form.category_id !== source.category_id ||
+    form.category_id !== (source.category_id ?? '') ||
     (parseFloat(form.income) || 0) !== source.income ||
     (form.currency || 'USD') !== (source.currency ?? 'USD') ||
     form.date !== source.date ||
@@ -63,7 +63,7 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
   )
 }
 
-type SavePayload = { id: string; name: string; category_id: number; income: number; currency: string; date: string; is_recurring: boolean }
+type SavePayload = { id: string; name: string; category_id: number | null; income: number; currency: string; date: string; is_recurring: boolean }
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
@@ -114,11 +114,11 @@ export function IncomeModal({ open, onClose }: Props) {
   }, [open])
 
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.category_id) return
+    if (!addForm.name.trim()) return
     create.mutate(
       {
         name: addForm.name.trim(),
-        category_id: parseInt(addForm.category_id, 10),
+        category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         income: parseFloat(addForm.income) || 0,
         currency: addForm.currency || 'USD',
         date: addForm.date || periodDate,
@@ -137,8 +137,8 @@ export function IncomeModal({ open, onClose }: Props) {
     const old = qc.getQueryData<SourcesOfIncomeResponse>(['sources-of-income'])
     if (!old) return undefined
 
-    const newCatId = String(payload.category_id)
-    const newCatName = categoryNameById.get(newCatId)
+    const newCatId = payload.category_id == null ? null : String(payload.category_id)
+    const newCatName = newCatId == null ? undefined : categoryNameById.get(newCatId)
 
     let currentCatName: string | undefined
     let foundSource: SourceOfIncome | undefined
@@ -170,7 +170,7 @@ export function IncomeModal({ open, onClose }: Props) {
         const filtered = items.filter((i) => i.id !== payload.id)
         if (filtered.length > 0 || catName === currentCatName) newSources[catName] = filtered
       }
-      const targetName = newCatName ?? newCatId
+      const targetName = newCatName ?? (newCatId == null ? 'Uncategorized' : newCatId)
       newSources[targetName] = [...(newSources[targetName] ?? []), updated]
     }
 
@@ -215,7 +215,7 @@ export function IncomeModal({ open, onClose }: Props) {
     const payload = {
       id: sourceId,
       name: updatedDraft.name.trim(),
-      category_id: parseInt(newCategoryId, 10),
+      category_id: newCategoryId ? parseInt(newCategoryId, 10) : null,
       income: parseFloat(updatedDraft.income) || 0,
       currency: updatedDraft.currency || 'USD',
       date: updatedDraft.date,
@@ -234,7 +234,7 @@ export function IncomeModal({ open, onClose }: Props) {
       return
     }
 
-    if (!formHasChanges(source, draft) || !draft.name.trim() || !draft.category_id) {
+    if (!formHasChanges(source, draft) || !draft.name.trim()) {
       setEditing(null)
       setDraft(emptyForm)
       return
@@ -243,7 +243,7 @@ export function IncomeModal({ open, onClose }: Props) {
     const payload = {
       id: sourceId,
       name: draft.name.trim(),
-      category_id: parseInt(draft.category_id, 10),
+      category_id: draft.category_id ? parseInt(draft.category_id, 10) : null,
       income: parseFloat(draft.income) || 0,
       currency: draft.currency || 'USD',
       date: draft.date,
@@ -432,7 +432,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           const payload = {
                             id: source.id,
                             name: updatedDraft.name.trim(),
-                            category_id: parseInt(updatedDraft.category_id, 10),
+                            category_id: updatedDraft.category_id ? parseInt(updatedDraft.category_id, 10) : null,
                             income: parseFloat(updatedDraft.income) || 0,
                             currency: updatedDraft.currency || 'USD',
                             date: updatedDraft.date,
@@ -556,7 +556,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       <Button
                         size="sm"
                         onClick={handleAdd}
-                        disabled={create.isPending || !(parseFloat(addForm.income) > 0) || !addForm.category_id}
+                        disabled={create.isPending || !(parseFloat(addForm.income) > 0)}
                       >
                         {create.isPending ? <Loader2 className="animate-spin" /> : 'Save'}
                       </Button>
