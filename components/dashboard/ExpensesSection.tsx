@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   useExpenses,
   useCreateExpense,
@@ -11,7 +10,7 @@ import {
   useDeleteExpense,
 } from '@/hooks/use-expenses'
 import { fmtMoney } from '@/lib/format'
-import type { Expense, ExpensesResponse } from '@/types'
+import type { Expense } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
 import { ColumnHeader } from '@/components/dashboard/ColumnHeader'
@@ -111,8 +110,28 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
   }
 }
 
+function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): Expense {
+  const existingPm = expense.payment_methods?.[0]
+  const nextPm = payload.payment_methods[0]
+  return {
+    ...expense,
+    name: payload.name,
+    amount: payload.amount,
+    category_id: payload.category_id == null ? null : String(payload.category_id),
+    date: payload.date,
+    payment_methods: nextPm
+      ? [{
+          payment_method_id: String(nextPm.payment_method_id),
+          partial_amount: nextPm.partial_amount,
+          name: existingPm?.payment_method_id === String(nextPm.payment_method_id) ? existingPm.name : existingPm?.name ?? '',
+          origin: existingPm?.origin ?? '',
+          receiver: existingPm?.receiver ?? null,
+        }]
+      : [],
+  }
+}
+
 export function ExpensesSection() {
-  const qc = useQueryClient()
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null)
 
@@ -144,11 +163,14 @@ export function ExpensesSection() {
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
+  const pendingToasts = useRef<Record<string, string | number>>({})
 
   const expenses = data?.expenses ?? []
+  const overlaidExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
   // TODO(backend-sort): replace this client-side sort with a backend `sort` param when ready.
   const sortedExpenses = sort
-    ? [...expenses].sort((a, b) => {
+    ? [...overlaidExpenses].sort((a, b) => {
         const dir = sort.dir === 'asc' ? 1 : -1
         switch (sort.key) {
           case 'name': return a.name.localeCompare(b.name) * dir
@@ -160,7 +182,7 @@ export function ExpensesSection() {
           default: return 0
         }
       })
-    : expenses
+    : overlaidExpenses
   const total = data?.total ?? expenses.reduce((sum, e) => sum + e.period_amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
@@ -168,66 +190,34 @@ export function ExpensesSection() {
   const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
   const usedCategoryIds = new Set(expenses.map((e) => String(e.category_id)))
 
-  function applyOptimisticUpdate(payload: ExpenseUpdatePayload): ExpensesResponse | undefined {
-    let snapshot: ExpensesResponse | undefined
-
-    qc.setQueriesData<ExpensesResponse>({ queryKey: ['expenses'] }, (old) => {
-      if (!old?.expenses) return old
-      snapshot = old
-
-      return {
-        ...old,
-        expenses: old.expenses.map((expense) => {
-          if (expense.id !== payload.id) return expense
-
-          const existingPaymentMethod = expense.payment_methods?.[0]
-          const nextPaymentMethod = payload.payment_methods[0]
-
-          return {
-            ...expense,
-            name: payload.name,
-            amount: payload.amount,
-            category_id: payload.category_id == null ? null : String(payload.category_id),
-            date: payload.date,
-            is_recurring: payload.is_recurring,
-            payment_methods: nextPaymentMethod
-              ? [{
-                  payment_method_id: String(nextPaymentMethod.payment_method_id),
-                  partial_amount: nextPaymentMethod.partial_amount,
-                  name: existingPaymentMethod?.payment_method_id === String(nextPaymentMethod.payment_method_id)
-                    ? existingPaymentMethod.name
-                    : existingPaymentMethod?.name ?? '',
-                  origin: existingPaymentMethod?.origin ?? '',
-                  receiver: existingPaymentMethod?.receiver ?? null,
-                }]
-              : [],
-          }
-        }),
-      }
+  function clearPending(id: string) {
+    setPendingEdits((prev) => {
+      const copy = { ...prev }
+      delete copy[id]
+      return copy
     })
-
-    return snapshot
+    delete pendingToasts.current[id]
   }
 
-  function showSaveToast(payload: ExpenseUpdatePayload, onRevert: () => void) {
-    toast.custom((t) => (
+  function showSaveToast(id: string, payload: ExpenseUpdatePayload) {
+    const prev = pendingToasts.current[id]
+    if (prev !== undefined) toast.dismiss(prev)
+    const tid = toast.custom((t) => (
       <SaveChangesToast
         t={t}
         successMessage="Expense saved"
-        onSave={async () => { await update.mutateAsync(payload) }}
-        onRevert={onRevert}
+        onSave={async () => { await update.mutateAsync(payload); clearPending(id) }}
+        onRevert={() => clearPending(id)}
       />
     ), { duration: Infinity })
+    pendingToasts.current[id] = tid
   }
 
   function commitChanges(expense: Expense, form: RowForm) {
     if (!form.name.trim() || !formHasChanges(expense, form)) return
-
     const payload = buildPayload(expense.id, form, expense)
-    const oldData = applyOptimisticUpdate(payload)
-    showSaveToast(payload, () => {
-      if (oldData) qc.setQueriesData({ queryKey: ['expenses'] }, oldData)
-    })
+    setPendingEdits((prev) => ({ ...prev, [expense.id]: payload }))
+    showSaveToast(expense.id, payload)
   }
 
   function startFieldEdit(expense: Expense, field: EditField) {
@@ -236,7 +226,7 @@ export function ExpensesSection() {
   }
 
   function handleCategoryChange(expenseId: string, categoryId: string) {
-    const expense = expenses.find((e) => e.id === expenseId)
+    const expense = overlaidExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
@@ -250,7 +240,7 @@ export function ExpensesSection() {
   }
 
   function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
-    const expense = expenses.find((e) => e.id === expenseId)
+    const expense = overlaidExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
@@ -264,7 +254,7 @@ export function ExpensesSection() {
   }
 
   function handleFieldBlur(expenseId: string) {
-    const expense = expenses.find((e) => e.id === expenseId)
+    const expense = overlaidExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
