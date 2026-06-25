@@ -14,7 +14,9 @@ import { fmtMoney } from '@/lib/format'
 import type { Expense, ExpensesResponse } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
+import { ColumnHeader } from '@/components/dashboard/ColumnHeader'
 import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
+import type { ExpenseFilter } from '@/lib/expense-filters'
 import { useCategories } from '@/hooks/use-categories'
 import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
@@ -111,7 +113,27 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
 
 export function ExpensesSection() {
   const qc = useQueryClient()
-  const { data, isLoading } = useExpenses()
+  const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
+  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null)
+
+  function setColumnFilter(field: string, next: ExpenseFilter | null) {
+    setFilters((prev) => {
+      const copy = { ...prev }
+      if (next) copy[field] = next
+      else delete copy[field]
+      return copy
+    })
+  }
+
+  function toggleSort(key: string) {
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: 'asc' }
+      if (prev.dir === 'asc') return { key, dir: 'desc' }
+      return null
+    })
+  }
+
+  const { data, isLoading } = useExpenses({ filters: Object.values(filters) })
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
@@ -124,6 +146,21 @@ export function ExpensesSection() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
   const expenses = data?.expenses ?? []
+  // TODO(backend-sort): replace this client-side sort with a backend `sort` param when ready.
+  const sortedExpenses = sort
+    ? [...expenses].sort((a, b) => {
+        const dir = sort.dir === 'asc' ? 1 : -1
+        switch (sort.key) {
+          case 'name': return a.name.localeCompare(b.name) * dir
+          case 'amount': return (a.period_amount - b.period_amount) * dir
+          case 'date': return a.date.localeCompare(b.date) * dir
+          case 'is_recurring': return (Number(a.is_recurring) - Number(b.is_recurring)) * dir
+          case 'is_paid': return (Number(a.is_paid) - Number(b.is_paid)) * dir
+          case 'is_saved': return (Number(a.is_saved) - Number(b.is_saved)) * dir
+          default: return 0
+        }
+      })
+    : expenses
   const total = data?.total ?? expenses.reduce((sum, e) => sum + e.period_amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
@@ -289,19 +326,35 @@ export function ExpensesSection() {
                 <ExpensesTableColgroup />
                 <TableHeader className="sticky top-0 z-10">
                   <TableRow className="hover:bg-transparent border-0">
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Name</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Category</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-right">Amount</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Date</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Recurring</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate">Payment Method</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Paid</TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-sm truncate text-center">Saved</TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Name" sortKey="name" sort={sort} onSort={toggleSort} filter={{ field: 'name', type: 'text', value: filters.name ?? null, onChange: (n) => setColumnFilter('name', n) }} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Category" />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Amount" align="right" sortKey="amount" sort={sort} onSort={toggleSort} filter={{ field: 'amount', type: 'number', value: filters.amount ?? null, onChange: (n) => setColumnFilter('amount', n) }} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Date" sortKey="date" sort={sort} onSort={toggleSort} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Payment Method" />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} filter={{ field: 'is_paid', type: 'boolean', value: filters.is_paid ?? null, onChange: (n) => setColumnFilter('is_paid', n) }} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Saved" align="center" sortKey="is_saved" sort={sort} onSort={toggleSort} filter={{ field: 'is_saved', type: 'boolean', value: filters.is_saved ?? null, onChange: (n) => setColumnFilter('is_saved', n) }} />
+                    </TableHead>
                     <TableHead className="py-4 px-5 h-auto" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {expenses.map((expense) => {
+                  {sortedExpenses.map((expense) => {
                     const isEditing = editing?.id === expense.id
                     return (
                       <TableRow key={expense.id} className="border-0">
