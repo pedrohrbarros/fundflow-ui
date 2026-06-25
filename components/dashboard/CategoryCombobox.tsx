@@ -113,6 +113,12 @@ export function CategoryCombobox({
           {categories.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No categories yet</p>
           )}
+          <div
+            className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer transition-colors ${value === '' ? 'bg-green-50 dark:bg-[#14532d]' : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'}`}
+            onClick={() => selectCategory('')}
+          >
+            <span className="flex-1 min-w-0 truncate text-sm italic text-green-500 dark:text-[#86efac]/70">No category</span>
+          </div>
           {categories.map((cat) => {
             const catId = String(cat.id)
             return (

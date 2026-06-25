@@ -13,7 +13,7 @@ export interface Expense {
   period_amount: number
   date: string
   is_recurring: boolean
-  category_id: string
+  category_id: string | null
   is_paid: boolean
   is_saved: boolean
   saving_location: string | null
@@ -30,7 +30,7 @@ export interface ExpensesResponse {
 
 export interface CreateExpenseBody {
   name: string
-  category_id: number
+  category_id?: number | null
   amount: number
   date: string
   is_recurring?: boolean
@@ -42,7 +42,7 @@ export interface CreateExpenseBody {
 
 export interface UpdateExpenseBody {
   name?: string
-  category_id?: number
+  category_id?: number | null
   amount?: number
   date?: string
   is_recurring?: boolean
@@ -77,7 +77,7 @@ export interface UpdateCategoryBody {
 export interface SourceOfIncome {
   id: string
   name: string
-  category_id: string
+  category_id: string | null
   income: number
   period_amount: number
   date: string
@@ -99,7 +99,7 @@ export interface SourcesOfIncomeResponse {
 
 export interface CreateSourceOfIncomeBody {
   name: string
-  category_id: number
+  category_id?: number | null
   income?: number
   currency?: string
   date: string

@@ -42,11 +42,11 @@ export function IncomeSection() {
   const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
 
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.category_id) return
+    if (!addForm.name.trim()) return
     create.mutate(
       {
         name: addForm.name.trim(),
-        category_id: parseInt(addForm.category_id, 10),
+        category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         income: parseFloat(addForm.income) || 0,
         date: addForm.date || periodDate,
         is_recurring: addForm.is_recurring,
@@ -66,7 +66,7 @@ export function IncomeSection() {
     setEditingId(id)
     setEditForm({
       name: source.name,
-      category_id: source.category_id,
+      category_id: source.category_id ?? '',
       income: String(source.income),
       date: source.date,
       is_recurring: source.is_recurring,
@@ -79,7 +79,7 @@ export function IncomeSection() {
       {
         id,
         name: editForm.name.trim(),
-        category_id: parseInt(editForm.category_id, 10),
+        category_id: editForm.category_id ? parseInt(editForm.category_id, 10) : null,
         income: parseFloat(editForm.income) || 0,
         date: editForm.date,
         is_recurring: editForm.is_recurring,
@@ -153,7 +153,7 @@ export function IncomeSection() {
                       usedCategoryIds={usedCategoryIds}
                     />
                   ) : (
-                    source.category_id
+                    source.category_id ?? <span className="text-green-300 dark:text-green-800">—</span>
                   )}
                 </TableCell>
                 <TableCell className="py-1 px-3 text-right">

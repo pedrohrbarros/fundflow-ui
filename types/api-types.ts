@@ -395,7 +395,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
-                    category_id: string | number;
+                    category_id?: (string | number) | null;
                     income?: number;
                     currency?: string;
                     /** Format: date */
@@ -414,7 +414,7 @@ export interface operations {
                     "application/json": {
                         id?: number;
                         name?: string;
-                        category_id?: number;
+                        category_id?: number | null;
                         income?: number;
                         currency?: string;
                         /** Format: date */
@@ -487,12 +487,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** @description Sources of income grouped by category name */
+                        /** @description Sources of income grouped by category; category_id null = uncategorized */
                         sources_of_income?: {
-                            [key: string]: {
+                            category_id?: number | null;
+                            category_name?: string | null;
+                            sources?: {
                                 id?: number;
                                 name?: string;
-                                category_id?: number;
+                                category_id?: number | null;
                                 income?: number;
                                 currency?: string;
                                 /** Format: date */
@@ -505,7 +507,7 @@ export interface operations {
                                 /** @description Amount applicable in the requested period */
                                 period_amount?: number;
                             }[];
-                        };
+                        }[];
                         /** @description Sum of period_amount per currency code (e.g. { "USD": 5000, "EUR": 1000 }) */
                         total?: {
                             [key: string]: number;
@@ -557,7 +559,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name?: string;
-                    category_id?: string | number;
+                    category_id?: (string | number) | null;
                     income?: number;
                     currency?: string;
                     /** Format: date */
@@ -576,7 +578,7 @@ export interface operations {
                     "application/json": {
                         id?: number;
                         name?: string;
-                        category_id?: number;
+                        category_id?: number | null;
                         income?: number;
                         currency?: string;
                         /** Format: date */
@@ -773,7 +775,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name: string;
-                    category_id: string | number;
+                    category_id?: (string | number) | null;
                     amount: number;
                     /** Format: date */
                     date: string;
@@ -798,7 +800,7 @@ export interface operations {
                     "application/json": {
                         id?: number;
                         name?: string;
-                        category_id?: number;
+                        category_id?: number | null;
                         amount?: number;
                         /** Format: date */
                         date?: string;
@@ -883,7 +885,7 @@ export interface operations {
                         expenses?: {
                             id?: number;
                             name?: string;
-                            category_id?: number;
+                            category_id?: number | null;
                             amount?: number;
                             /** Format: date */
                             date?: string;
@@ -976,7 +978,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         by_category?: {
-                            category_id?: number;
+                            category_id?: number | null;
                             name?: string;
                             total?: number;
                             count?: number;
@@ -1024,7 +1026,7 @@ export interface operations {
             content: {
                 "application/json": {
                     name?: string;
-                    category_id?: string | number;
+                    category_id?: (string | number) | null;
                     amount?: number;
                     /** Format: date */
                     date?: string;
@@ -1049,7 +1051,7 @@ export interface operations {
                     "application/json": {
                         id?: number;
                         name?: string;
-                        category_id?: number;
+                        category_id?: number | null;
                         amount?: number;
                         /** Format: date */
                         date?: string;
