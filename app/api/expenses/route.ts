@@ -13,6 +13,10 @@ export async function GET(request: NextRequest) {
   if (date) body.date = date
   if (page) body.page = Number(page)
   if (limit) body.limit = Number(limit)
+  const filters = searchParams.get('filters')
+  if (filters) {
+    try { body.filters = JSON.parse(filters) } catch { /* ignore malformed filters */ }
+  }
 
   const result = await apiRequest<ExpensesResponse>('/expenses/search', { method: 'POST', body })
   return Response.json(result.parsedData, { status: result.status })

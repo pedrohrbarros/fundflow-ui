@@ -8,18 +8,22 @@ import type {
   UpdateExpenseBody,
 } from '@/types'
 import { usePeriod } from '@/providers/period-provider'
+import { buildFilterQuery, type ExpenseFilter } from '@/lib/expense-filters'
 
 const KEY = ['expenses'] as const
 
-export function useExpenses(params?: { page?: number; limit?: number }) {
+export function useExpenses(opts?: { page?: number; limit?: number; filters?: ExpenseFilter[] }) {
   const { granularity, date } = usePeriod()
+  const filterQuery = buildFilterQuery(opts?.filters ?? [])
   return useQuery({
-    queryKey: [...KEY, { granularity, date, ...params }],
+    queryKey: [...KEY, { granularity, date, page: opts?.page, limit: opts?.limit, filters: filterQuery }],
     meta: { showErrorToast: true },
     queryFn: async () => {
       const qs = new URLSearchParams({ granularity, date })
-      if (params?.page) qs.set('page', String(params.page))
-      if (params?.limit) qs.set('limit', String(params.limit))
+      if (opts?.page) qs.set('page', String(opts.page))
+      if (opts?.limit) qs.set('limit', String(opts.limit))
+      if (filterQuery) qs.set('filters', JSON.stringify(filterQuery))
+      // TODO(backend-sort): add a `sort` param here once the backend supports sorting.
       const res = await fetch(`/api/expenses?${qs}`)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<ExpensesResponse>

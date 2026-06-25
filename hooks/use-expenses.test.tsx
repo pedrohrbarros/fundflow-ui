@@ -20,4 +20,16 @@ describe('useExpenses', () => {
     expect(fetchMock.mock.calls[0][0]).toContain('date=2026-06-15')
     expect(result.current.data?.expenses).toEqual([])
   })
+
+  it('includes filters in the request URL when provided', async () => {
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
+      { ok: true, json: async () => ({ expenses: [], pagination: { page: 1, limit: 20, total: 0 } }) } as Response
+    )
+    const { result } = renderHook(
+      () => useExpenses({ filters: [{ field: 'name', op: 'is_contains', value: 'rent' }] }),
+      { wrapper: createWrapper() }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(fetchMock.mock.calls[0][0]).toContain('filters=')
+  })
 })
