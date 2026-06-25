@@ -275,6 +275,15 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /** @description Optional sort. `field` must be a sortable field for the resource; `direction` defaults to asc. */
+                    sort?: {
+                        field: string;
+                        /**
+                         * @default asc
+                         * @enum {string}
+                         */
+                        direction?: "asc" | "desc";
+                    };
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
@@ -449,6 +458,15 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /** @description Optional sort. `field` must be a sortable field for the resource; `direction` defaults to asc. */
+                    sort?: {
+                        field: string;
+                        /**
+                         * @default asc
+                         * @enum {string}
+                         */
+                        direction?: "asc" | "desc";
+                    };
                     /**
                      * @description Period granularity. Defaults to "monthly" when omitted.
                      * @enum {string}
@@ -651,6 +669,15 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /** @description Optional sort. `field` must be a sortable field for the resource; `direction` defaults to asc. */
+                    sort?: {
+                        field: string;
+                        /**
+                         * @default asc
+                         * @enum {string}
+                         */
+                        direction?: "asc" | "desc";
+                    };
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
@@ -844,6 +871,15 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /** @description Optional sort. `field` must be a sortable field for the resource; `direction` defaults to asc. */
+                    sort?: {
+                        field: string;
+                        /**
+                         * @default asc
+                         * @enum {string}
+                         */
+                        direction?: "asc" | "desc";
+                    };
                     /**
                      * @description Period granularity. Defaults to "monthly" when omitted.
                      * @enum {string}
@@ -939,6 +975,15 @@ export interface operations {
                      * @default 20
                      */
                     limit?: number;
+                    /** @description Optional sort. `field` must be a sortable field for the resource; `direction` defaults to asc. */
+                    sort?: {
+                        field: string;
+                        /**
+                         * @default asc
+                         * @enum {string}
+                         */
+                        direction?: "asc" | "desc";
+                    };
                     /**
                      * @description Period granularity. Defaults to "monthly" when omitted.
                      * @enum {string}

@@ -152,7 +152,10 @@ export function ExpensesSection() {
     })
   }
 
-  const { data, isLoading } = useExpenses({ filters: Object.values(filters) })
+  const { data, isLoading } = useExpenses({
+    filters: Object.values(filters),
+    sort: sort ? { field: sort.key, direction: sort.dir } : null,
+  })
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
@@ -167,22 +170,8 @@ export function ExpensesSection() {
   const pendingToasts = useRef<Record<string, string | number>>({})
 
   const expenses = data?.expenses ?? []
-  const overlaidExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
-  // TODO(backend-sort): replace this client-side sort with a backend `sort` param when ready.
-  const sortedExpenses = sort
-    ? [...overlaidExpenses].sort((a, b) => {
-        const dir = sort.dir === 'asc' ? 1 : -1
-        switch (sort.key) {
-          case 'name': return a.name.localeCompare(b.name) * dir
-          case 'amount': return (a.period_amount - b.period_amount) * dir
-          case 'date': return a.date.localeCompare(b.date) * dir
-          case 'is_recurring': return (Number(a.is_recurring) - Number(b.is_recurring)) * dir
-          case 'is_paid': return (Number(a.is_paid) - Number(b.is_paid)) * dir
-          case 'is_saved': return (Number(a.is_saved) - Number(b.is_saved)) * dir
-          default: return 0
-        }
-      })
-    : overlaidExpenses
+  // Rows arrive already sorted from the backend (sort param); we only overlay unsaved edits.
+  const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
   const total = data?.total ?? expenses.reduce((sum, e) => sum + e.period_amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
@@ -226,7 +215,7 @@ export function ExpensesSection() {
   }
 
   function handleCategoryChange(expenseId: string, categoryId: string) {
-    const expense = overlaidExpenses.find((e) => e.id === expenseId)
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
@@ -240,7 +229,7 @@ export function ExpensesSection() {
   }
 
   function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
-    const expense = overlaidExpenses.find((e) => e.id === expenseId)
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
@@ -254,7 +243,7 @@ export function ExpensesSection() {
   }
 
   function handleFieldBlur(expenseId: string) {
-    const expense = overlaidExpenses.find((e) => e.id === expenseId)
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
     if (!expense) {
       setEditing(null)
       setDraft(emptyForm)

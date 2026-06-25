@@ -17,6 +17,10 @@ export async function GET(request: NextRequest) {
   if (filters) {
     try { body.filters = JSON.parse(filters) } catch { /* ignore malformed filters */ }
   }
+  const sort = searchParams.get('sort')
+  if (sort) {
+    try { body.sort = JSON.parse(sort) } catch { /* ignore malformed sort */ }
+  }
 
   const result = await apiRequest<ExpensesResponse>('/expenses/search', { method: 'POST', body })
   return Response.json(result.parsedData, { status: result.status })
