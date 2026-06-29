@@ -202,6 +202,7 @@ export function ExpensesSection() {
   const { data, isLoading } = useExpenses({
     filters: Object.values(filters),
     sort: sort ? { field: sort.key, direction: sort.dir } : null,
+    limit: 100,
   })
   const create = useCreateExpense()
   const update = useUpdateExpense()
