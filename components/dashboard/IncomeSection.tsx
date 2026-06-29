@@ -282,10 +282,8 @@ function IncomeExtraTools({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="xs" className="border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10">
-          <MoreVertical className="h-3 w-3" />
-        </Button>
+      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2 py-1 text-sm">
+        <MoreVertical className="h-3 w-3" />
       </PopoverTrigger>
       <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64 text-gray-900 dark:text-[#d1fae5]">
         <div className="space-y-4">
