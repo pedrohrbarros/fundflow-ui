@@ -178,9 +178,12 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
   }
 }
 
+const PAGE_LIMIT = 100
+
 export function ExpensesSection() {
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>({ key: 'amount', dir: 'desc' })
+  const [page, setPage] = useState(1)
 
   function setColumnFilter(field: string, next: ExpenseFilter | null) {
     setFilters((prev) => {
@@ -189,6 +192,7 @@ export function ExpensesSection() {
       else delete copy[field]
       return copy
     })
+    setPage(1)
   }
 
   function toggleSort(key: string) {
@@ -197,12 +201,14 @@ export function ExpensesSection() {
       if (prev.dir === 'asc') return { key, dir: 'desc' }
       return null
     })
+    setPage(1)
   }
 
   const { data, isLoading } = useExpenses({
     filters: Object.values(filters),
     sort: sort ? { field: sort.key, direction: sort.dir } : null,
-    limit: 100,
+    limit: PAGE_LIMIT,
+    page,
   })
   const create = useCreateExpense()
   const update = useUpdateExpense()
@@ -652,6 +658,34 @@ export function ExpensesSection() {
               <table className="sheet-table table-fixed w-full shrink-0">
                 <ExpensesTableColgroup />
               </table>
+            )}
+            {data && data.pagination.total > PAGE_LIMIT && (
+              <div className="flex items-center justify-between px-5 py-3 border-t border-green-700 dark:border-green-800 shrink-0">
+                <span className="text-xs text-green-600 dark:text-green-500">
+                  {(page - 1) * PAGE_LIMIT + 1}–{Math.min(page * PAGE_LIMIT, data.pagination.total)} of {data.pagination.total}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    ‹ Prev
+                  </Button>
+                  <span className="text-xs text-green-600 dark:text-green-500 px-2">
+                    {page} / {Math.ceil(data.pagination.total / PAGE_LIMIT)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page * PAGE_LIMIT >= data.pagination.total}
+                  >
+                    Next ›
+                  </Button>
+                </div>
+              </div>
             )}
           </>
         )}
