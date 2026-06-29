@@ -63,8 +63,11 @@ export function IncomeSection() {
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
+  type IncomePayload = { id: string; name: string; category_id: number | null; income: number; date: string; is_recurring: boolean }
+
   const [pendingEdits, setPendingEdits] = useState<Record<string, RowForm>>({})
-  const pendingToasts = useRef<Record<string, string | number>>({})
+  const pendingPayloads = useRef<Record<string, IncomePayload>>({})
+  const sharedToastId = useRef<string | number | undefined>(undefined)
 
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
@@ -73,25 +76,38 @@ export function IncomeSection() {
     return pendingEdits[source.id] ?? formFromSource(source)
   }
 
-  function clearPending(id: string) {
-    setPendingEdits((prev) => {
-      const copy = { ...prev }
-      delete copy[id]
-      return copy
-    })
-    const toastId = pendingToasts.current[id]
-    if (toastId !== undefined) {
-      toast.dismiss(toastId)
-      delete pendingToasts.current[id]
+  function clearAllPending() {
+    setPendingEdits({})
+    pendingPayloads.current = {}
+    if (sharedToastId.current !== undefined) {
+      toast.dismiss(sharedToastId.current)
+      sharedToastId.current = undefined
     }
     setDraft(emptyForm)
     setEditing(null)
   }
 
+  function showSharedToast(payloads: IncomePayload[]) {
+    if (sharedToastId.current !== undefined) toast.dismiss(sharedToastId.current)
+    const count = payloads.length
+    const tid = toast.custom((t) => (
+      <SaveChangesToast
+        t={t}
+        successMessage={count === 1 ? 'Income source saved' : `${count} income sources saved`}
+        onSave={async () => {
+          await Promise.all(payloads.map((p) => update.mutateAsync(p)))
+          clearAllPending()
+        }}
+        onRevert={() => clearAllPending()}
+      />
+    ), { duration: Infinity })
+    sharedToastId.current = tid
+  }
+
   function commitChanges(source: SourceOfIncome, form: RowForm) {
     if (!form.name.trim() || !formHasChanges(source, form)) return
 
-    const payload = {
+    const payload: IncomePayload = {
       id: source.id,
       name: form.name.trim(),
       category_id: form.category_id ? parseInt(form.category_id, 10) : null,
@@ -101,24 +117,9 @@ export function IncomeSection() {
     }
 
     const pendingForm: RowForm = { ...form, date: form.date || source.date }
+    pendingPayloads.current = { ...pendingPayloads.current, [source.id]: payload }
     setPendingEdits((prev) => ({ ...prev, [source.id]: pendingForm }))
-
-    const oldToastId = pendingToasts.current[source.id]
-    if (oldToastId !== undefined) toast.dismiss(oldToastId)
-
-    const toastId = toast.custom((t) => (
-      <SaveChangesToast
-        t={t}
-        successMessage="Income source saved"
-        onSave={async () => {
-          await update.mutateAsync(payload)
-          clearPending(source.id)
-        }}
-        onRevert={() => clearPending(source.id)}
-      />
-    ), { duration: Infinity })
-
-    pendingToasts.current[source.id] = toastId
+    showSharedToast(Object.values(pendingPayloads.current))
   }
 
   function startEdit(source: SourceOfIncome, field: EditField) {

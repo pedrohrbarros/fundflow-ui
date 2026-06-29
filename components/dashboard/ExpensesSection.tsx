@@ -201,7 +201,7 @@ export function ExpensesSection() {
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
-  const pendingToasts = useRef<Record<string, string | number>>({})
+  const sharedToastId = useRef<string | number | undefined>(undefined)
 
   const expenses = data?.expenses ?? []
   const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
@@ -211,36 +211,39 @@ export function ExpensesSection() {
   const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
   const usedCategoryIds = new Set(expenses.map((e) => String(e.category_id)))
 
-  function clearPending(id: string) {
-    setPendingEdits((prev) => {
-      const copy = { ...prev }
-      delete copy[id]
-      return copy
-    })
-    delete pendingToasts.current[id]
+  function clearAllPending() {
+    setPendingEdits({})
+    if (sharedToastId.current !== undefined) {
+      toast.dismiss(sharedToastId.current)
+      sharedToastId.current = undefined
+    }
     setDraft(emptyForm)
     setEditing(null)
   }
 
-  function showSaveToast(id: string, payload: ExpenseUpdatePayload) {
-    const prev = pendingToasts.current[id]
-    if (prev !== undefined) toast.dismiss(prev)
+  function showSharedToast(payloads: ExpenseUpdatePayload[]) {
+    if (sharedToastId.current !== undefined) toast.dismiss(sharedToastId.current)
+    const count = payloads.length
     const tid = toast.custom((t) => (
       <SaveChangesToast
         t={t}
-        successMessage="Expense saved"
-        onSave={async () => { await update.mutateAsync(payload); clearPending(id) }}
-        onRevert={() => clearPending(id)}
+        successMessage={count === 1 ? 'Expense saved' : `${count} expenses saved`}
+        onSave={async () => {
+          await Promise.all(payloads.map((p) => update.mutateAsync(p)))
+          clearAllPending()
+        }}
+        onRevert={() => clearAllPending()}
       />
     ), { duration: Infinity })
-    pendingToasts.current[id] = tid
+    sharedToastId.current = tid
   }
 
   function commitChanges(expense: Expense, form: RowForm) {
     if (!form.name.trim() || !formHasChanges(expense, form)) return
     const payload = buildPayload(expense.id, form, expense)
-    setPendingEdits((prev) => ({ ...prev, [expense.id]: payload }))
-    showSaveToast(expense.id, payload)
+    const nextPending = { ...pendingEdits, [expense.id]: payload }
+    setPendingEdits(nextPending)
+    showSharedToast(Object.values(nextPending))
   }
 
   function startFieldEdit(expense: Expense, field: EditField) {

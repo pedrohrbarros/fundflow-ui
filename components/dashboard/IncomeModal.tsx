@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -82,6 +82,10 @@ export function IncomeModal({ open, onClose }: Props) {
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
 
+  const originalSnapshot = useRef<SourcesOfIncomeResponse | undefined>(undefined)
+  const pendingPayloads = useRef<Map<string, SavePayload>>(new Map())
+  const sharedToastId = useRef<string | number | undefined>(undefined)
+
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
   const isEmpty = !isLoading && !sources.length && !isAdding
@@ -109,6 +113,12 @@ export function IncomeModal({ open, onClose }: Props) {
       setAddForm(emptyForm)
       setEditing(null)
       setDraft(emptyForm)
+      originalSnapshot.current = undefined
+      pendingPayloads.current = new Map()
+      if (sharedToastId.current !== undefined) {
+        toast.dismiss(sharedToastId.current)
+        sharedToastId.current = undefined
+      }
     }
   }, [open])
 
@@ -164,15 +174,43 @@ export function IncomeModal({ open, onClose }: Props) {
     return old
   }
 
-  function showSaveToast(payload: SavePayload, onRevert: () => void) {
-    toast.custom((t) => (
+  function clearAllPending() {
+    if (originalSnapshot.current) {
+      qc.setQueryData(['sources-of-income'], originalSnapshot.current)
+      originalSnapshot.current = undefined
+    }
+    pendingPayloads.current = new Map()
+    if (sharedToastId.current !== undefined) {
+      toast.dismiss(sharedToastId.current)
+      sharedToastId.current = undefined
+    }
+  }
+
+  function commitToSharedToast(payload: SavePayload) {
+    if (!originalSnapshot.current) {
+      originalSnapshot.current = qc.getQueryData<SourcesOfIncomeResponse>(['sources-of-income'])
+    }
+    applyOptimisticUpdate(payload)
+    pendingPayloads.current.set(payload.id, payload)
+
+    if (sharedToastId.current !== undefined) toast.dismiss(sharedToastId.current)
+
+    const payloads = Array.from(pendingPayloads.current.values())
+    const count = payloads.length
+    const tid = toast.custom((t) => (
       <SaveChangesToast
         t={t}
-        successMessage="Income source saved"
-        onSave={async () => { await update.mutateAsync(payload) }}
-        onRevert={onRevert}
+        successMessage={count === 1 ? 'Income source saved' : `${count} income sources saved`}
+        onSave={async () => {
+          await Promise.all(payloads.map((p) => update.mutateAsync(p)))
+          originalSnapshot.current = undefined
+          pendingPayloads.current = new Map()
+          sharedToastId.current = undefined
+        }}
+        onRevert={() => clearAllPending()}
       />
     ), { duration: Infinity })
+    sharedToastId.current = tid
   }
 
   function startFieldEdit(source: SourceOfIncome, field: EditField) {
@@ -189,13 +227,12 @@ export function IncomeModal({ open, onClose }: Props) {
     }
 
     const updatedDraft = { ...draft, category_id: newCategoryId }
-
     setEditing(null)
     setDraft(emptyForm)
 
     if (!formHasChanges(source, updatedDraft) || !updatedDraft.name.trim()) return
 
-    const payload = {
+    commitToSharedToast({
       id: sourceId,
       name: updatedDraft.name.trim(),
       category_id: newCategoryId ? parseInt(newCategoryId, 10) : null,
@@ -203,10 +240,7 @@ export function IncomeModal({ open, onClose }: Props) {
       currency: updatedDraft.currency || 'USD',
       date: updatedDraft.date,
       is_recurring: updatedDraft.is_recurring,
-    }
-
-    const oldData = applyOptimisticUpdate(payload)
-    showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
+    })
   }
 
   function handleFieldBlur(sourceId: string) {
@@ -223,7 +257,10 @@ export function IncomeModal({ open, onClose }: Props) {
       return
     }
 
-    const payload = {
+    setEditing(null)
+    setDraft(emptyForm)
+
+    commitToSharedToast({
       id: sourceId,
       name: draft.name.trim(),
       category_id: draft.category_id ? parseInt(draft.category_id, 10) : null,
@@ -231,13 +268,7 @@ export function IncomeModal({ open, onClose }: Props) {
       currency: draft.currency || 'USD',
       date: draft.date,
       is_recurring: draft.is_recurring,
-    }
-
-    setEditing(null)
-    setDraft(emptyForm)
-
-    const oldData = applyOptimisticUpdate(payload)
-    showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
+    })
   }
 
   return (
@@ -376,7 +407,7 @@ export function IncomeModal({ open, onClose }: Props) {
                     </TableCell>
                     <TableCell className="py-2.5 px-3 text-right flex items-center justify-end gap-2">
                       <IncomeModalExtraTools source={source} onUpdate={(updates) => {
-                        const payload = {
+                        commitToSharedToast({
                           id: source.id,
                           name: source.name,
                           category_id: source.category_id ? parseInt(source.category_id, 10) : null,
@@ -384,9 +415,7 @@ export function IncomeModal({ open, onClose }: Props) {
                           currency: source.currency ?? 'USD',
                           date: updates.date,
                           is_recurring: updates.is_recurring,
-                        }
-                        const oldData = applyOptimisticUpdate(payload)
-                        showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
+                        })
                       }} />
                       <Button
                         variant="destructive"
