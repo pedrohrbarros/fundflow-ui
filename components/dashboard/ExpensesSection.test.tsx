@@ -47,6 +47,10 @@ vi.mock('@/components/dashboard/PaymentMethodCombobox', () => ({
   PaymentMethodCombobox: () => <div>payment-method</div>,
 }))
 
+vi.mock('@/hooks/use-payment-methods', () => ({
+  usePaymentMethods: () => ({ data: { payment_methods: [] } }),
+}))
+
 const sampleExpense = {
   id: 'e1',
   name: 'Rent',

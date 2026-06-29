@@ -10,6 +10,7 @@ import {
   useUpdateExpense,
   useDeleteExpense,
 } from '@/hooks/use-expenses'
+import { usePaymentMethods } from '@/hooks/use-payment-methods'
 import { fmtMoney } from '@/lib/format'
 import type { Expense } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
@@ -24,19 +25,24 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
+interface PmEntry {
+  payment_method_id: string
+  partial_amount: string
+}
+
 interface RowForm {
   name: string
   amount: string
   category_id: string
   is_paid: boolean
   is_saved: boolean
-  payment_method_id: string
+  payment_methods: PmEntry[]
   date: string
   is_recurring: boolean
   recurring_months: string
 }
 
-type EditField = 'name' | 'category' | 'amount' | 'date' | 'payment_method'
+type EditField = 'name' | 'category' | 'amount' | 'date'
 
 type ExpenseUpdatePayload = {
   id: string
@@ -51,7 +57,17 @@ type ExpenseUpdatePayload = {
   payment_methods: { payment_method_id: number; partial_amount: number }[]
 }
 
-const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '', date: '', is_recurring: false, recurring_months: '' }
+const emptyForm: RowForm = {
+  name: '',
+  amount: '',
+  category_id: '',
+  is_paid: false,
+  is_saved: false,
+  payment_methods: [],
+  date: '',
+  is_recurring: false,
+  recurring_months: '',
+}
 
 function ExpensesTableColgroup() {
   return (
@@ -73,7 +89,10 @@ function formFromExpense(expense: Expense): RowForm {
     category_id: String(expense.category_id ?? ''),
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
-    payment_method_id: expense.payment_methods[0]?.payment_method_id ?? '',
+    payment_methods: expense.payment_methods.map((pm) => ({
+      payment_method_id: pm.payment_method_id,
+      partial_amount: String(pm.partial_amount),
+    })),
     date: expense.date,
     is_recurring: expense.is_recurring,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
@@ -82,16 +101,23 @@ function formFromExpense(expense: Expense): RowForm {
 
 function formHasChanges(expense: Expense, form: RowForm) {
   const amount = parseFloat(form.amount) || 0
-  const paymentMethodId = form.payment_method_id || ''
-  const expensePaymentMethodId = expense.payment_methods[0]?.payment_method_id ?? ''
+  const formPMIds = form.payment_methods.map((pm) => pm.payment_method_id).sort().join(',')
+  const expensePMIds = expense.payment_methods.map((pm) => pm.payment_method_id).sort().join(',')
+  const pmAmountsChanged = form.payment_methods.some((fpm) => {
+    const epm = expense.payment_methods.find((e) => e.payment_method_id === fpm.payment_method_id)
+    return !epm || Math.abs((parseFloat(fpm.partial_amount) || 0) - epm.partial_amount) > 0.001
+  })
+  const formRecurringMonths = form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null
 
   return (
     form.name.trim() !== expense.name ||
     String(expense.category_id ?? '') !== form.category_id ||
     amount !== expense.amount ||
     form.date !== expense.date ||
-    paymentMethodId !== expensePaymentMethodId ||
-    form.is_recurring !== expense.is_recurring
+    form.is_recurring !== expense.is_recurring ||
+    formRecurringMonths !== expense.recurring_months ||
+    formPMIds !== expensePMIds ||
+    pmAmountsChanged
   )
 }
 
@@ -104,18 +130,20 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     category_id: form.category_id ? parseInt(form.category_id, 10) : null,
     date: form.date,
     is_recurring: form.is_recurring,
-    recurring_months: form.is_recurring && form.recurring_months ? parseInt(form.recurring_months, 10) : null,
+    recurring_months: form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null,
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
-    payment_methods: form.payment_method_id
-      ? [{ payment_method_id: parseInt(form.payment_method_id, 10), partial_amount: amount }]
-      : [],
+    payment_methods: form.payment_methods
+      .filter((pm) => pm.payment_method_id)
+      .map((pm) => ({
+        payment_method_id: parseInt(pm.payment_method_id, 10),
+        partial_amount: parseFloat(pm.partial_amount) || 0,
+      })),
   }
 }
 
 function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): Expense {
-  const existingPm = expense.payment_methods?.[0]
-  const nextPm = payload.payment_methods[0]
+  const pmMap = new Map(expense.payment_methods.map((pm) => [String(pm.payment_method_id), pm]))
   return {
     ...expense,
     name: payload.name,
@@ -123,15 +151,17 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
     category_id: payload.category_id == null ? null : String(payload.category_id),
     date: payload.date,
     is_recurring: payload.is_recurring,
-    payment_methods: nextPm
-      ? [{
-          payment_method_id: String(nextPm.payment_method_id),
-          partial_amount: nextPm.partial_amount,
-          name: existingPm?.payment_method_id === String(nextPm.payment_method_id) ? existingPm.name : existingPm?.name ?? '',
-          origin: existingPm?.origin ?? '',
-          receiver: existingPm?.receiver ?? null,
-        }]
-      : [],
+    recurring_months: payload.recurring_months,
+    payment_methods: payload.payment_methods.map((pm) => {
+      const existing = pmMap.get(String(pm.payment_method_id))
+      return {
+        payment_method_id: String(pm.payment_method_id),
+        partial_amount: pm.partial_amount,
+        name: existing?.name ?? '',
+        origin: existing?.origin ?? '',
+        receiver: existing?.receiver ?? null,
+      }
+    }),
   }
 }
 
@@ -174,7 +204,6 @@ export function ExpensesSection() {
   const pendingToasts = useRef<Record<string, string | number>>({})
 
   const expenses = data?.expenses ?? []
-  // Rows arrive already sorted from the backend (sort param); we only overlay unsaved edits.
   const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
@@ -232,19 +261,6 @@ export function ExpensesSection() {
     commitChanges(expense, updatedDraft)
   }
 
-  function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-    const updatedDraft = { ...draft, payment_method_id: paymentMethodId }
-    setEditing(null)
-    setDraft(emptyForm)
-    commitChanges(expense, updatedDraft)
-  }
-
   function handleFieldBlur(expenseId: string) {
     const expense = sortedExpenses.find((e) => e.id === expenseId)
     if (!expense) {
@@ -267,12 +283,15 @@ export function ExpensesSection() {
         category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         date: addForm.date,
         is_recurring: addForm.is_recurring,
-        recurring_months: addForm.is_recurring && addForm.recurring_months ? parseInt(addForm.recurring_months, 10) : null,
+        recurring_months: addForm.is_recurring ? (parseInt(addForm.recurring_months, 10) || null) : null,
         is_paid: addForm.is_paid,
         is_saved: addForm.is_saved,
-        payment_methods: addForm.payment_method_id
-          ? [{ payment_method_id: parseInt(addForm.payment_method_id, 10), partial_amount: amount }]
-          : [],
+        payment_methods: addForm.payment_methods
+          .filter((pm) => pm.payment_method_id)
+          .map((pm) => ({
+            payment_method_id: parseInt(pm.payment_method_id, 10),
+            partial_amount: parseFloat(pm.partial_amount) || amount,
+          })),
       },
       {
         onSuccess: () => {
@@ -332,7 +351,7 @@ export function ExpensesSection() {
                     return (
                       <TableRow key={expense.id} className="border-0">
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.id === expense.id && editing.field === 'name' ? (
+                          {isEditing && editing.field === 'name' ? (
                             <Input
                               className="min-w-0 text-[1rem]"
                               value={draft.name}
@@ -358,7 +377,7 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.id === expense.id && editing.field === 'category' ? (
+                          {isEditing && editing.field === 'category' ? (
                             <CategoryCombobox
                               value={draft.category_id}
                               onChange={(v) => handleCategoryChange(expense.id, v)}
@@ -380,7 +399,7 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right">
-                          {isEditing && editing.id === expense.id && editing.field === 'amount' ? (
+                          {isEditing && editing.field === 'amount' ? (
                             <Input
                               type="number"
                               className="min-w-0 text-right text-[1rem]"
@@ -406,41 +425,36 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.id === expense.id && editing.field === 'payment_method' ? (
-                            <PaymentMethodCombobox
-                              value={draft.payment_method_id}
-                              onChange={(v) => handlePaymentMethodChange(expense.id, v)}
-                              autoOpen
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                              title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
-                              onClick={() => startFieldEdit(expense, 'payment_method')}
-                            >
-                              {(expense.payment_methods ?? []).length > 0
-                                ? (expense.payment_methods ?? []).map((pm, i) => (
-                                    <span key={pm.payment_method_id}>
-                                      {i > 0 ? ', ' : ''}{pm.name}
-                                      {pm.origin ? (
-                                        <span className="text-xs text-green-400/70 dark:text-[#86efac]/50"> ({pm.origin})</span>
-                                      ) : null}
-                                    </span>
-                                  ))
-                                : <span className="text-green-300 dark:text-green-800">—</span>
-                              }
-                            </button>
-                          )}
+                          <div
+                            className="w-full text-left truncate text-green-700 dark:text-green-400 text-sm"
+                            title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
+                          >
+                            {(expense.payment_methods ?? []).length > 0
+                              ? (expense.payment_methods ?? []).map((pm, i) => (
+                                  <span key={pm.payment_method_id}>
+                                    {i > 0 ? ', ' : ''}{pm.name}
+                                    {pm.origin ? (
+                                      <span className="text-xs text-green-400/70 dark:text-[#86efac]/50"> ({pm.origin})</span>
+                                    ) : null}
+                                  </span>
+                                ))
+                              : <span className="text-green-300 dark:text-green-800">—</span>
+                            }
+                          </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center">
-                          <Checkbox
-                            checked={expense.is_recurring}
-                            onCheckedChange={(checked) => {
-                              const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked) }
-                              commitChanges(expense, merged)
-                            }}
-                          />
+                          <div className="flex flex-col items-center gap-1">
+                            <Checkbox
+                              checked={expense.is_recurring}
+                              onCheckedChange={(checked) => {
+                                const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
+                                commitChanges(expense, merged)
+                              }}
+                            />
+                            {expense.is_recurring && expense.recurring_months != null && (
+                              <span className="text-xs text-green-600 dark:text-[#86efac]/70 font-mono">{expense.recurring_months}mo</span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
@@ -504,10 +518,44 @@ export function ExpensesSection() {
                         />
                       </TableCell>
                       <TableCell className="py-5 px-5">
-                        <PaymentMethodCombobox
-                          value={addForm.payment_method_id}
-                          onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
-                        />
+                        <div className="flex flex-col gap-1">
+                          <PaymentMethodCombobox
+                            value=""
+                            onChange={(id) => {
+                              if (!id || addForm.payment_methods.some((pm) => pm.payment_method_id === id)) return
+                              setAddForm((f) => ({
+                                ...f,
+                                payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: '' }],
+                              }))
+                            }}
+                            placeholder="Add payment method"
+                          />
+                          {addForm.payment_methods.length > 0 && (
+                            <div className="flex flex-col gap-0.5">
+                              {addForm.payment_methods.map((pm, i) => (
+                                <AddFormPmRow
+                                  key={pm.payment_method_id}
+                                  pmId={pm.payment_method_id}
+                                  partialAmount={pm.partial_amount}
+                                  onAmountChange={(val) =>
+                                    setAddForm((f) => ({
+                                      ...f,
+                                      payment_methods: f.payment_methods.map((p, j) =>
+                                        j === i ? { ...p, partial_amount: val } : p
+                                      ),
+                                    }))
+                                  }
+                                  onRemove={() =>
+                                    setAddForm((f) => ({
+                                      ...f,
+                                      payment_methods: f.payment_methods.filter((_, j) => j !== i),
+                                    }))
+                                  }
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center">
                         <div className="flex flex-col items-center gap-1">
@@ -576,12 +624,55 @@ export function ExpensesSection() {
   )
 }
 
+function AddFormPmRow({
+  pmId,
+  partialAmount,
+  onAmountChange,
+  onRemove,
+}: {
+  pmId: string
+  partialAmount: string
+  onAmountChange: (val: string) => void
+  onRemove: () => void
+}) {
+  const { data } = usePaymentMethods()
+  const pm = data?.payment_methods.find((p) => String(p.id) === pmId)
+  return (
+    <div className="flex items-center gap-1 text-xs">
+      <span className="flex-1 truncate text-green-700 dark:text-green-400">{pm?.name ?? pmId}</span>
+      <Input
+        type="number"
+        className="w-16 h-5 text-xs text-right px-1 py-0"
+        min="0"
+        step="0.01"
+        placeholder="amt"
+        value={partialAmount}
+        onChange={(e) => onAmountChange(e.target.value)}
+      />
+      <button
+        type="button"
+        className="text-red-400 hover:text-red-300 shrink-0"
+        onClick={onRemove}
+        aria-label="Remove"
+      >
+        ✕
+      </button>
+    </div>
+  )
+}
+
 function ExpenseExtraTools({
   expense,
   onUpdate,
 }: {
   expense: Expense
-  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean; recurring_months: string }) => void
+  onUpdate: (updates: {
+    date: string
+    is_paid: boolean
+    is_saved: boolean
+    recurring_months: string
+    payment_methods: PmEntry[]
+  }) => void
 }) {
   const [open, setOpen] = useState(false)
   const [localDraft, setLocalDraft] = useState({
@@ -589,14 +680,37 @@ function ExpenseExtraTools({
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
+    payment_methods: expense.payment_methods.map((pm) => ({
+      payment_method_id: pm.payment_method_id,
+      partial_amount: String(pm.partial_amount),
+    })),
   })
 
+  const { data: pmData } = usePaymentMethods()
+  const paymentMethods = pmData?.payment_methods ?? []
+
+  function handleOpen(o: boolean) {
+    if (o) {
+      setLocalDraft({
+        date: expense.date,
+        is_paid: expense.is_paid,
+        is_saved: expense.is_saved,
+        recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
+        payment_methods: expense.payment_methods.map((pm) => ({
+          payment_method_id: pm.payment_method_id,
+          partial_amount: String(pm.partial_amount),
+        })),
+      })
+    }
+    setOpen(o)
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2.5 py-1.5">
         <MoreVertical className="h-4 w-4" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64 text-gray-900 dark:text-[#d1fae5]">
+      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-72 text-gray-900 dark:text-[#d1fae5]">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Date</label>
@@ -620,23 +734,79 @@ function ExpenseExtraTools({
               />
             </div>
           )}
+          <div>
+            <label className="block text-sm font-medium mb-2">Payment Methods</label>
+            <div className="flex flex-col gap-1.5 mb-2">
+              {localDraft.payment_methods.map((pm, i) => {
+                const meta = paymentMethods.find((p) => String(p.id) === pm.payment_method_id)
+                return (
+                  <div key={pm.payment_method_id} className="flex items-center gap-1">
+                    <span className="flex-1 text-xs truncate text-green-800 dark:text-[#d1fae5]">
+                      {meta?.name ?? pm.payment_method_id}
+                      {meta?.origin ? <span className="text-green-500 dark:text-[#86efac]/60"> ({meta.origin})</span> : null}
+                    </span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="amt"
+                      value={pm.partial_amount}
+                      onChange={(e) =>
+                        setLocalDraft((f) => ({
+                          ...f,
+                          payment_methods: f.payment_methods.map((p, j) =>
+                            j === i ? { ...p, partial_amount: e.target.value } : p
+                          ),
+                        }))
+                      }
+                      className="w-20 h-6 text-xs text-right px-1.5 bg-green-50 dark:bg-[#1a2e1a] border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+                    />
+                    <button
+                      type="button"
+                      className="shrink-0 text-red-400 hover:text-red-300 text-xs px-1"
+                      onClick={() =>
+                        setLocalDraft((f) => ({
+                          ...f,
+                          payment_methods: f.payment_methods.filter((_, j) => j !== i),
+                        }))
+                      }
+                      aria-label="Remove payment method"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+            <PaymentMethodCombobox
+              value=""
+              onChange={(id) => {
+                if (!id || localDraft.payment_methods.some((pm) => pm.payment_method_id === id)) return
+                setLocalDraft((f) => ({
+                  ...f,
+                  payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: '' }],
+                }))
+              }}
+              placeholder="Add payment method"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id="is_paid"
+              id={`is_paid_${expense.id}`}
               checked={localDraft.is_paid}
               onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_paid: Boolean(checked) }))}
             />
-            <label htmlFor="is_paid" className="text-sm font-medium cursor-pointer">
+            <label htmlFor={`is_paid_${expense.id}`} className="text-sm font-medium cursor-pointer">
               Paid
             </label>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id="is_saved"
+              id={`is_saved_${expense.id}`}
               checked={localDraft.is_saved}
               onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_saved: Boolean(checked) }))}
             />
-            <label htmlFor="is_saved" className="text-sm font-medium cursor-pointer">
+            <label htmlFor={`is_saved_${expense.id}`} className="text-sm font-medium cursor-pointer">
               Saved
             </label>
           </div>
@@ -645,11 +815,11 @@ function ExpenseExtraTools({
             className="w-full"
             onClick={() => {
               onUpdate({
-                id: expense.id,
                 date: localDraft.date,
                 is_paid: localDraft.is_paid,
                 is_saved: localDraft.is_saved,
                 recurring_months: localDraft.recurring_months,
+                payment_methods: localDraft.payment_methods,
               })
               setOpen(false)
             }}
