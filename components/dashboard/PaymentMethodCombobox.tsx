@@ -30,6 +30,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
   const [open, setOpen] = useState(autoOpen)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [editOrigin, setEditOrigin] = useState('')
   const [showNew, setShowNew] = useState(false)
   const [newName, setNewName] = useState('')
   const [newOrigin, setNewOrigin] = useState('')
@@ -41,16 +42,17 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
     setShowNew(false)
   }
 
-  function startEdit(id: string, name: string, e: React.MouseEvent) {
+  function startEdit(id: string, name: string, origin: string, e: React.MouseEvent) {
     e.stopPropagation()
     setEditingId(id)
     setEditName(name)
+    setEditOrigin(origin)
     setShowNew(false)
   }
 
   function saveEdit(id: string) {
     if (!editName.trim()) return
-    updatePm.mutate({ id, name: editName.trim() }, {
+    updatePm.mutate({ id, name: editName.trim(), origin: editOrigin.trim() }, {
       onSuccess: () => setEditingId(null),
     })
   }
@@ -114,9 +116,9 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
               onClick={() => editingId !== pmId && selectMethod(pmId)}
             >
               {editingId === pmId ? (
-                <>
+                <div className="flex flex-col gap-1 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
                   <Input
-                    className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
+                    className="h-7 text-sm focus-visible:ring-0 min-w-0 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
@@ -124,28 +126,39 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                       if (e.key === 'Enter') saveEdit(pmId)
                       if (e.key === 'Escape') setEditingId(null)
                     }}
-                    onClick={(e) => e.stopPropagation()}
+                    placeholder="Name…"
                     autoFocus
                   />
-                  <Button
-                    size="icon-xs"
-                    className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
-                    onClick={(e) => { e.stopPropagation(); saveEdit(pmId) }}
-                    disabled={updatePm.isPending}
-                    title="Save"
-                  >
-                    ✓
-                  </Button>
-                  <Button
-                    size="icon-xs"
-                    variant="ghost"
-                    className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
-                    onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
-                    title="Cancel"
-                  >
-                    ✕
-                  </Button>
-                </>
+                  <Input
+                    className="h-7 text-sm focus-visible:ring-0 min-w-0 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5] placeholder:text-green-300 dark:placeholder:text-[#86efac]/40"
+                    value={editOrigin}
+                    onChange={(e) => setEditOrigin(e.target.value)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation()
+                      if (e.key === 'Enter') saveEdit(pmId)
+                      if (e.key === 'Escape') setEditingId(null)
+                    }}
+                    placeholder="Origin…"
+                  />
+                  <div className="flex gap-1">
+                    <Button
+                      size="xs"
+                      className="flex-1"
+                      onClick={() => saveEdit(pmId)}
+                      disabled={updatePm.isPending || !editName.trim()}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      className="text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
+                      onClick={() => setEditingId(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="flex-1 min-w-0">
@@ -156,7 +169,7 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
                     <span className="shrink-0 text-green-600 dark:text-[#4ade80] text-xs mr-0.5">✓</span>
                   )}
                   <button
-                    onClick={(e) => startEdit(pmId, pm.name, e)}
+                    onClick={(e) => startEdit(pmId, pm.name, pm.origin, e)}
                     className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534] text-xs px-1.5 py-0.5 rounded transition-all"
                     title="Rename"
                   >
