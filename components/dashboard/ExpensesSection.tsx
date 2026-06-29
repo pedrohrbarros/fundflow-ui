@@ -54,11 +54,12 @@ const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: fal
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '28%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '24%' }} />
-      <col style={{ width: '24%' }} />
+      <col style={{ width: '25%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '21%' }} />
+      <col style={{ width: '9%' }} />
+      <col style={{ width: '23%' }} />
     </colgroup>
   )
 }
@@ -312,6 +313,9 @@ export function ExpensesSection() {
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Payment Method" />
                     </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
+                    </TableHead>
                     <TableHead className="py-4 px-5 h-auto text-right" />
                   </TableRow>
                 </TableHeader>
@@ -422,6 +426,15 @@ export function ExpensesSection() {
                             </button>
                           )}
                         </TableCell>
+                        <TableCell className="py-5 px-5 text-center">
+                          <Checkbox
+                            checked={expense.is_recurring}
+                            onCheckedChange={(checked) => {
+                              const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked) }
+                              commitChanges(expense, merged)
+                            }}
+                          />
+                        </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
                             const merged = { ...formFromExpense(expense), ...updates }
@@ -489,6 +502,12 @@ export function ExpensesSection() {
                           onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
                         />
                       </TableCell>
+                      <TableCell className="py-5 px-5 text-center">
+                        <Checkbox
+                          checked={addForm.is_recurring}
+                          onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked) }))}
+                        />
+                      </TableCell>
                       <TableCell className="py-5 px-5 text-right">
                         <div className="flex gap-2 items-center justify-end">
                           {addForm.name.trim() && addForm.amount && (
@@ -515,7 +534,7 @@ export function ExpensesSection() {
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -542,10 +561,10 @@ function ExpenseExtraTools({
   onUpdate,
 }: {
   expense: Expense
-  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean; is_recurring: boolean }) => void
+  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean }) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [localDraft, setLocalDraft] = useState({ date: expense.date, is_paid: expense.is_paid, is_saved: expense.is_saved, is_recurring: expense.is_recurring })
+  const [localDraft, setLocalDraft] = useState({ date: expense.date, is_paid: expense.is_paid, is_saved: expense.is_saved })
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -583,16 +602,6 @@ function ExpenseExtraTools({
               Saved
             </label>
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="is_recurring"
-              checked={localDraft.is_recurring}
-              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked) }))}
-            />
-            <label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
-              Recurring
-            </label>
-          </div>
           <Button
             size="sm"
             className="w-full"
@@ -602,7 +611,6 @@ function ExpenseExtraTools({
                 date: localDraft.date,
                 is_paid: localDraft.is_paid,
                 is_saved: localDraft.is_saved,
-                is_recurring: localDraft.is_recurring,
               })
               setOpen(false)
             }}
