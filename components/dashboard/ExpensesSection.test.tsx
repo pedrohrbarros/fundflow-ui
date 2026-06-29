@@ -116,11 +116,11 @@ describe('ExpensesSection', () => {
 
     const { rerender } = render(<ExpensesSection />)
 
-    // Enter edit mode on the name cell, change it, then blur to commit to the overlay.
+    // Enter edit mode on the name cell, change it, then click Save to commit to the overlay.
     fireEvent.click(screen.getByRole('button', { name: 'Rent' }))
     const input = screen.getByDisplayValue('Rent')
     fireEvent.change(input, { target: { value: 'Mortgage' } })
-    fireEvent.blur(input)
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     // Edit is now in the overlay.
     expect(screen.getByText('Mortgage')).toBeTruthy()

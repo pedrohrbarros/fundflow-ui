@@ -211,44 +211,27 @@ export function ExpensesSection() {
   }
 
   function handleCategoryChange(expenseId: string, categoryId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-
-    const updatedDraft = { ...draft, category_id: categoryId }
-    setEditing(null)
-    setDraft(emptyForm)
-    commitChanges(expense, updatedDraft)
+    setDraft((f) => ({ ...f, category_id: categoryId }))
   }
 
   function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-
-    const updatedDraft = { ...draft, payment_method_id: paymentMethodId }
-    setEditing(null)
-    setDraft(emptyForm)
-    commitChanges(expense, updatedDraft)
+    setDraft((f) => ({ ...f, payment_method_id: paymentMethodId }))
   }
 
-  function handleFieldBlur(expenseId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
+  function handleSaveEdit(expense: Expense) {
+    if (!draft.name.trim() || !formHasChanges(expense, draft)) {
       setEditing(null)
       setDraft(emptyForm)
       return
     }
-
+    commitChanges(expense, draft)
     setEditing(null)
     setDraft(emptyForm)
-    commitChanges(expense, draft)
+  }
+
+  function handleCancelEdit() {
+    setEditing(null)
+    setDraft(emptyForm)
   }
 
   function handleAdd() {
@@ -322,17 +305,14 @@ export function ExpensesSection() {
                     return (
                       <TableRow key={expense.id} className="border-0">
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.field === 'name' ? (
+                          {isEditing && editing.id === expense.id ? (
                             <Input
                               className="min-w-0 text-[1rem]"
                               value={draft.name}
                               onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
-                              onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditing(null)
-                                  setDraft(emptyForm)
-                                }
+                                if (e.key === 'Escape') handleCancelEdit()
+                                if (e.key === 'Enter') handleSaveEdit(expense)
                               }}
                               autoFocus
                             />
@@ -348,7 +328,7 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.field === 'category' ? (
+                          {isEditing && editing.id === expense.id && editing.field === 'category' ? (
                             <CategoryCombobox
                               value={draft.category_id}
                               onChange={(v) => handleCategoryChange(expense.id, v)}
@@ -360,28 +340,25 @@ export function ExpensesSection() {
                             <button
                               type="button"
                               className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                              title={categoryNameById.get(String(expense.category_id)) ?? undefined}
+                              title={categoryNameById.get(String(draft.category_id)) ?? undefined}
                               onClick={() => startFieldEdit(expense, 'category')}
                             >
-                              {categoryNameById.get(String(expense.category_id)) ?? (
+                              {categoryNameById.get(String(draft.category_id)) ?? (
                                 <span className="text-green-300 dark:text-green-800">—</span>
                               )}
                             </button>
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right">
-                          {isEditing && editing.field === 'amount' ? (
+                          {isEditing && editing.id === expense.id && editing.field === 'amount' ? (
                             <Input
                               type="number"
                               className="min-w-0 text-right text-[1rem]"
                               value={draft.amount}
                               onChange={(e) => setDraft((f) => ({ ...f, amount: e.target.value }))}
-                              onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditing(null)
-                                  setDraft(emptyForm)
-                                }
+                                if (e.key === 'Escape') handleCancelEdit()
+                                if (e.key === 'Enter') handleSaveEdit(expense)
                               }}
                               autoFocus
                             />
@@ -391,12 +368,12 @@ export function ExpensesSection() {
                               className="w-full text-right font-mono hover:text-green-600 dark:hover:text-green-400 transition-colors"
                               onClick={() => startFieldEdit(expense, 'amount')}
                             >
-                              {fmtMoney(expense.period_amount)}
+                              {fmtMoney(parseFloat(draft.amount) || expense.period_amount)}
                             </button>
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.field === 'payment_method' ? (
+                          {isEditing && editing.id === expense.id && editing.field === 'payment_method' ? (
                             <PaymentMethodCombobox
                               value={draft.payment_method_id}
                               onChange={(v) => handlePaymentMethodChange(expense.id, v)}
@@ -424,19 +401,39 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
-                          <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => update.mutate(updates)} />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => {
-                              setDeletingExpenseId(expense.id)
-                              del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
-                            }}
-                            disabled={del.isPending}
-                            aria-label="Delete expense"
-                          >
-                            {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
-                          </Button>
+                          {isEditing && editing.id === expense.id ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveEdit(expense)}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => update.mutate(updates)} />
+                              <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                  setDeletingExpenseId(expense.id)
+                                  del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
+                                }}
+                                disabled={del.isPending}
+                                aria-label="Delete expense"
+                              >
+                                {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
+                              </Button>
+                            </>
+                          )}
                         </TableCell>
                       </TableRow>
                     )
