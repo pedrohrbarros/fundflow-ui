@@ -659,10 +659,12 @@ export function ExpensesSection() {
                 <ExpensesTableColgroup />
               </table>
             )}
-            {data && data.pagination.total > PAGE_LIMIT && (
+            {data && (
               <div className="flex items-center justify-between px-5 py-3 border-t border-green-700 dark:border-green-800 shrink-0">
                 <span className="text-xs text-green-600 dark:text-green-500">
-                  {(page - 1) * PAGE_LIMIT + 1}–{Math.min(page * PAGE_LIMIT, data.pagination.total)} of {data.pagination.total}
+                  {data.pagination.total === 0
+                    ? '0 expenses'
+                    : `${(page - 1) * PAGE_LIMIT + 1}–${Math.min(page * PAGE_LIMIT, data.pagination.total)} of ${data.pagination.total}`}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button
@@ -674,7 +676,7 @@ export function ExpensesSection() {
                     ‹ Prev
                   </Button>
                   <span className="text-xs text-green-600 dark:text-green-500 px-2">
-                    {page} / {Math.ceil(data.pagination.total / PAGE_LIMIT)}
+                    {page} / {Math.max(1, Math.ceil(data.pagination.total / PAGE_LIMIT))}
                   </span>
                   <Button
                     variant="outline"
