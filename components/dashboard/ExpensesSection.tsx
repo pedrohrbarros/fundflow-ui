@@ -167,7 +167,7 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
 
 export function ExpensesSection() {
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
-  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>(null)
+  const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>({ key: 'amount', dir: 'desc' })
 
   function setColumnFilter(field: string, next: ExpenseFilter | null) {
     setFilters((prev) => {
