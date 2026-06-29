@@ -287,7 +287,7 @@ function IncomeExtraTools({
           <MoreVertical className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64">
+      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Date</label>
