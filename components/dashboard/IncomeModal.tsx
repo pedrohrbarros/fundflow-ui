@@ -542,7 +542,7 @@ function IncomeModalExtraTools({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" className="border-white text-white hover:bg-white/10">
+        <Button variant="outline" size="icon" className="border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10">
           <MoreVertical className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
