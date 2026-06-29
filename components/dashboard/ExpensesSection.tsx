@@ -57,8 +57,8 @@ function ExpensesTableColgroup() {
       <col style={{ width: '28%' }} />
       <col style={{ width: '12%' }} />
       <col style={{ width: '12%' }} />
-      <col style={{ width: '18%' }} />
-      <col style={{ width: '30%' }} />
+      <col style={{ width: '24%' }} />
+      <col style={{ width: '24%' }} />
     </colgroup>
   )
 }
