@@ -375,20 +375,18 @@ export function IncomeModal({ open, onClose }: Props) {
                       )}
                     </TableCell>
                     <TableCell className="py-2.5 px-3 text-right flex items-center justify-end gap-2">
-                      <IncomeModalExtraTools source={source} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => {
+                      <IncomeModalExtraTools source={source} onUpdate={(updates) => {
                         const payload = {
                           id: source.id,
-                          name: draft.name.trim(),
-                          category_id: draft.category_id ? parseInt(draft.category_id, 10) : null,
-                          income: parseFloat(draft.income) || 0,
-                          currency: draft.currency || 'USD',
+                          name: source.name,
+                          category_id: source.category_id ? parseInt(source.category_id, 10) : null,
+                          income: source.income,
+                          currency: source.currency ?? 'USD',
                           date: updates.date,
                           is_recurring: updates.is_recurring,
                         }
                         const oldData = applyOptimisticUpdate(payload)
                         showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
-                        setEditing(null)
-                        setDraft(emptyForm)
                       }} />
                       <Button
                         variant="destructive"
@@ -528,19 +526,19 @@ export function IncomeModal({ open, onClose }: Props) {
 
 function IncomeModalExtraTools({
   source,
-  draft,
-  onDraftChange,
   onUpdate,
 }: {
   source: SourceOfIncome
-  draft: RowForm
-  onDraftChange: (form: RowForm) => void
   onUpdate: (updates: { date: string; is_recurring: boolean }) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [localDraft, setLocalDraft] = useState({ date: source.date, is_recurring: source.is_recurring })
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => {
+      if (o) setLocalDraft({ date: source.date, is_recurring: source.is_recurring })
+      setOpen(o)
+    }}>
       <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2.5 py-1.5">
         <MoreVertical className="h-4 w-4" />
       </PopoverTrigger>
@@ -550,18 +548,18 @@ function IncomeModalExtraTools({
             <label className="block text-sm font-medium mb-2">Date</label>
             <Input
               type="date"
-              value={draft.date || source.date}
-              onChange={(e) => onDraftChange({ ...draft, date: e.target.value })}
+              value={localDraft.date}
+              onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id="is_recurring_modal"
-              checked={draft.is_recurring}
-              onCheckedChange={(checked) => onDraftChange({ ...draft, is_recurring: Boolean(checked) })}
+              id={`is_recurring_modal_${source.id}`}
+              checked={localDraft.is_recurring}
+              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked) }))}
             />
-            <label htmlFor="is_recurring_modal" className="text-sm font-medium cursor-pointer">
+            <label htmlFor={`is_recurring_modal_${source.id}`} className="text-sm font-medium cursor-pointer">
               Recurring
             </label>
           </div>
@@ -569,10 +567,7 @@ function IncomeModalExtraTools({
             size="sm"
             className="w-full"
             onClick={() => {
-              onUpdate({
-                date: draft.date || source.date,
-                is_recurring: draft.is_recurring,
-              })
+              onUpdate({ date: localDraft.date, is_recurring: localDraft.is_recurring })
               setOpen(false)
             }}
           >

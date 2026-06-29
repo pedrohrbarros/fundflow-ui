@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
+import { toast } from 'sonner'
+import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
 import {
   useSourcesOfIncome,
   useCreateSourceOfIncome,
@@ -16,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
+import type { SourceOfIncome } from '@/types'
 
 interface RowForm {
   name: string
@@ -27,6 +30,28 @@ interface RowForm {
 
 const emptyForm: RowForm = { name: '', category_id: '', income: '', date: '', is_recurring: true }
 
+type EditField = 'name' | 'category' | 'income'
+
+function formFromSource(source: SourceOfIncome): RowForm {
+  return {
+    name: source.name,
+    category_id: String(source.category_id ?? ''),
+    income: String(source.income),
+    date: source.date,
+    is_recurring: source.is_recurring,
+  }
+}
+
+function formHasChanges(source: SourceOfIncome, form: RowForm) {
+  return (
+    form.name.trim() !== source.name ||
+    form.category_id !== String(source.category_id ?? '') ||
+    (parseFloat(form.income) || 0) !== source.income ||
+    form.date !== source.date ||
+    form.is_recurring !== source.is_recurring
+  )
+}
+
 export function IncomeSection() {
   const { date: periodDate } = usePeriod()
   const { data, isLoading } = useSourcesOfIncome()
@@ -36,11 +61,102 @@ export function IncomeSection() {
 
   const [isAdding, setIsAdding] = useState(false)
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<RowForm>(emptyForm)
+  const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
+  const [draft, setDraft] = useState<RowForm>(emptyForm)
+  const [pendingEdits, setPendingEdits] = useState<Record<string, RowForm>>({})
+  const pendingToasts = useRef<Record<string, string | number>>({})
 
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
+
+  function mergedForm(source: SourceOfIncome): RowForm {
+    return pendingEdits[source.id] ?? formFromSource(source)
+  }
+
+  function clearPending(id: string) {
+    setPendingEdits((prev) => {
+      const copy = { ...prev }
+      delete copy[id]
+      return copy
+    })
+    const toastId = pendingToasts.current[id]
+    if (toastId !== undefined) {
+      toast.dismiss(toastId)
+      delete pendingToasts.current[id]
+    }
+    setDraft(emptyForm)
+    setEditing(null)
+  }
+
+  function commitChanges(source: SourceOfIncome, form: RowForm) {
+    if (!form.name.trim() || !formHasChanges(source, form)) return
+
+    const payload = {
+      id: source.id,
+      name: form.name.trim(),
+      category_id: form.category_id ? parseInt(form.category_id, 10) : null,
+      income: parseFloat(form.income) || 0,
+      date: form.date || source.date,
+      is_recurring: form.is_recurring,
+    }
+
+    const pendingForm: RowForm = { ...form, date: form.date || source.date }
+    setPendingEdits((prev) => ({ ...prev, [source.id]: pendingForm }))
+
+    const oldToastId = pendingToasts.current[source.id]
+    if (oldToastId !== undefined) toast.dismiss(oldToastId)
+
+    const toastId = toast.custom((t) => (
+      <SaveChangesToast
+        t={t}
+        successMessage="Income source saved"
+        onSave={async () => {
+          await update.mutateAsync(payload)
+          clearPending(source.id)
+        }}
+        onRevert={() => clearPending(source.id)}
+      />
+    ), { duration: Infinity })
+
+    pendingToasts.current[source.id] = toastId
+  }
+
+  function startEdit(source: SourceOfIncome, field: EditField) {
+    setEditing({ id: source.id, field })
+    setDraft(pendingEdits[source.id] ?? formFromSource(source))
+  }
+
+  function handleFieldBlur(sourceId: string) {
+    const source = sources.find((s) => s.id === sourceId)
+    if (!source) {
+      setEditing(null)
+      setDraft(emptyForm)
+      return
+    }
+
+    const currentDraft = draft
+    setEditing(null)
+    setDraft(emptyForm)
+
+    if (!currentDraft.name.trim()) return
+    commitChanges(source, currentDraft)
+  }
+
+  function handleCategoryChange(sourceId: string, newCategoryId: string) {
+    const source = sources.find((s) => s.id === sourceId)
+    if (!source) {
+      setEditing(null)
+      setDraft(emptyForm)
+      return
+    }
+
+    const updatedDraft = { ...draft, category_id: newCategoryId }
+    setEditing(null)
+    setDraft(emptyForm)
+
+    if (!updatedDraft.name.trim()) return
+    commitChanges(source, updatedDraft)
+  }
 
   function handleAdd() {
     if (!addForm.name.trim()) return
@@ -61,37 +177,13 @@ export function IncomeSection() {
     )
   }
 
-  function handleUpdate(id: string) {
-    if (!editForm.name.trim()) return
-    update.mutate(
-      {
-        id,
-        name: editForm.name.trim(),
-        category_id: editForm.category_id ? parseInt(editForm.category_id, 10) : null,
-        income: parseFloat(editForm.income) || 0,
-        date: editForm.date,
-        is_recurring: editForm.is_recurring,
-      },
-      {
-        onSuccess: () => {
-          setEditingId(null)
-          setEditForm(emptyForm)
-        },
-      }
-    )
-  }
-
   return (
     <section className="mb-8">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide">
           Income Sources
         </h2>
-        <Button
-          size="sm"
-          onClick={() => setIsAdding(true)}
-          aria-label="Add income"
-        >
+        <Button size="sm" onClick={() => setIsAdding(true)} aria-label="Add income">
           + Add Income
         </Button>
       </div>
@@ -112,86 +204,100 @@ export function IncomeSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sources.map((source) => (
-              <TableRow key={source.id} className="border-0">
-                <TableCell className="py-1 px-3">
-                  {editingId === source.id ? (
-                    <Input
-                      className="h-7 text-sm min-w-0"
-                      value={editForm.name}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, name: e.target.value }))
-                      }
-                      autoFocus
-                    />
-                  ) : (
-                    source.name
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  {editingId === source.id ? (
-                    <CategoryCombobox
-                      value={editForm.category_id}
-                      onChange={(id) =>
-                        setEditForm((f) => ({ ...f, category_id: id }))
-                      }
-                      type="INCOME"
-                      usedCategoryIds={usedCategoryIds}
-                    />
-                  ) : (
-                    source.category_id ?? <span className="text-green-300 dark:text-green-800">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3 text-right">
-                  {editingId === source.id ? (
-                    <Input
-                      type="number"
-                      className="h-7 text-sm min-w-0 text-right"
-                      min="0"
-                      step="0.01"
-                      value={editForm.income}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, income: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    <span className="font-mono">{fmtMoney(source.period_amount)}</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3 text-right">
-                  <div className="flex gap-1 justify-end">
-                    {editingId === source.id ? (
-                      <>
-                        <Button
-                          size="xs"
-                          onClick={() => handleUpdate(source.id)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => setEditingId(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </>
+            {sources.map((source) => {
+              const merged = mergedForm(source)
+              const isEditing = editing?.id === source.id
+              return (
+                <TableRow key={source.id} className="border-0">
+                  <TableCell className="py-1 px-3">
+                    {isEditing && editing.field === 'name' ? (
+                      <Input
+                        className="h-7 text-sm min-w-0"
+                        value={draft.name}
+                        onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
+                        onBlur={() => handleFieldBlur(source.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm) }
+                        }}
+                        autoFocus
+                      />
                     ) : (
-                      <>
-                        <IncomeExtraTools source={source} editForm={editForm} onEditFormChange={setEditForm} onUpdate={(updates) => update.mutate(updates)} />
-                        <Button
-                          variant="destructive"
-                          size="xs"
-                          onClick={() => del.mutate(source.id)}
-                        >
-                          Delete
-                        </Button>
-                      </>
+                      <button
+                        type="button"
+                        className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
+                        onClick={() => startEdit(source, 'name')}
+                      >
+                        {merged.name}
+                      </button>
                     )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell className="py-1 px-3">
+                    {isEditing && editing.field === 'category' ? (
+                      <CategoryCombobox
+                        value={draft.category_id}
+                        onChange={(id) => handleCategoryChange(source.id, id)}
+                        type="INCOME"
+                        usedCategoryIds={usedCategoryIds}
+                        autoOpen
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
+                        onClick={() => startEdit(source, 'category')}
+                      >
+                        {merged.category_id || <span className="text-green-300 dark:text-green-800">—</span>}
+                      </button>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-1 px-3 text-right">
+                    {isEditing && editing.field === 'income' ? (
+                      <Input
+                        type="number"
+                        className="h-7 text-sm min-w-0 text-right"
+                        min="0"
+                        step="0.01"
+                        value={draft.income}
+                        onChange={(e) => setDraft((f) => ({ ...f, income: e.target.value }))}
+                        onBlur={() => handleFieldBlur(source.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm) }
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
+                        onClick={() => startEdit(source, 'income')}
+                      >
+                        {pendingEdits[source.id]
+                          ? fmtMoney(parseFloat(merged.income) || 0)
+                          : fmtMoney(source.period_amount)}
+                      </button>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-1 px-3 text-right">
+                    <div className="flex gap-1 justify-end">
+                      <IncomeExtraTools
+                        source={{ id: source.id, date: merged.date, is_recurring: merged.is_recurring }}
+                        onUpdate={(updates) => {
+                          const base = pendingEdits[source.id] ?? formFromSource(source)
+                          commitChanges(source, { ...base, date: updates.date, is_recurring: updates.is_recurring })
+                        }}
+                      />
+                      <Button
+                        variant="destructive"
+                        size="xs"
+                        onClick={() => del.mutate(source.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
             {isAdding && (
               <TableRow className="add-row border-0">
                 <TableCell className="py-1 px-3">
@@ -199,9 +305,7 @@ export function IncomeSection() {
                     className="h-7 text-sm min-w-0"
                     placeholder="Source name"
                     value={addForm.name}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, name: e.target.value }))
-                    }
+                    onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleAdd()
                       if (e.key === 'Escape') setIsAdding(false)
@@ -212,9 +316,7 @@ export function IncomeSection() {
                 <TableCell className="py-1 px-3">
                   <CategoryCombobox
                     value={addForm.category_id}
-                    onChange={(id) =>
-                      setAddForm((f) => ({ ...f, category_id: id }))
-                    }
+                    onChange={(id) => setAddForm((f) => ({ ...f, category_id: id }))}
                     type="INCOME"
                     usedCategoryIds={usedCategoryIds}
                   />
@@ -227,9 +329,7 @@ export function IncomeSection() {
                     step="0.01"
                     placeholder="0.00"
                     value={addForm.income}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, income: e.target.value }))
-                    }
+                    onChange={(e) => setAddForm((f) => ({ ...f, income: e.target.value }))}
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   />
                 </TableCell>
@@ -269,19 +369,19 @@ export function IncomeSection() {
 
 function IncomeExtraTools({
   source,
-  editForm,
-  onEditFormChange,
   onUpdate,
 }: {
   source: { id: string; date: string; is_recurring: boolean }
-  editForm: RowForm
-  onEditFormChange: (form: RowForm) => void
-  onUpdate: (updates: { id: string; date: string; is_recurring: boolean }) => void
+  onUpdate: (updates: { date: string; is_recurring: boolean }) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [localDraft, setLocalDraft] = useState({ date: source.date, is_recurring: source.is_recurring })
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => {
+      if (o) setLocalDraft({ date: source.date, is_recurring: source.is_recurring })
+      setOpen(o)
+    }}>
       <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2 py-1 text-sm">
         <MoreVertical className="h-3 w-3" />
       </PopoverTrigger>
@@ -291,18 +391,18 @@ function IncomeExtraTools({
             <label className="block text-sm font-medium mb-2">Date</label>
             <Input
               type="date"
-              value={editForm.date || source.date}
-              onChange={(e) => onEditFormChange({ ...editForm, date: e.target.value })}
+              value={localDraft.date}
+              onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id="is_recurring"
-              checked={editForm.is_recurring}
-              onCheckedChange={(checked) => onEditFormChange({ ...editForm, is_recurring: Boolean(checked) })}
+              id={`is_recurring_${source.id}`}
+              checked={localDraft.is_recurring}
+              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked) }))}
             />
-            <label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
+            <label htmlFor={`is_recurring_${source.id}`} className="text-sm font-medium cursor-pointer">
               Recurring
             </label>
           </div>
@@ -310,11 +410,7 @@ function IncomeExtraTools({
             size="sm"
             className="w-full"
             onClick={() => {
-              onUpdate({
-                id: source.id,
-                date: editForm.date || source.date,
-                is_recurring: editForm.is_recurring,
-              })
+              onUpdate({ date: localDraft.date, is_recurring: localDraft.is_recurring })
               setOpen(false)
             }}
           >
