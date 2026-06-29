@@ -10,19 +10,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
+  session: { strategy: 'jwt' },
   pages: { signIn: '/' },
-  cookies: {
-    sessionToken: {
-      name: `__Secure-authjs.session-token`,
-      options: {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60,
-      },
-    },
-  },
   callbacks: {
     async jwt({ token, account }) {
       if (account?.id_token) {
