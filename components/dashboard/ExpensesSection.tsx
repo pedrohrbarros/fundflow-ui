@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MoreVertical } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import {
   useExpenses,
@@ -21,7 +22,7 @@ import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface RowForm {
   name: string
@@ -53,15 +54,11 @@ const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: fal
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '26%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '8%' }} />
-      <col style={{ width: '9%' }} />
-      <col style={{ width: '8%' }} />
-      <col style={{ width: '17%' }} />
-      <col style={{ width: '5%' }} />
-      <col style={{ width: '5%' }} />
-      <col style={{ width: '11%' }} />
+      <col style={{ width: '28%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '18%' }} />
+      <col style={{ width: '30%' }} />
     </colgroup>
   )
 }
@@ -172,7 +169,6 @@ export function ExpensesSection() {
   const expenses = data?.expenses ?? []
   // Rows arrive already sorted from the backend (sort param); we only overlay unsaved edits.
   const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
-  const total = data?.total ?? expenses.reduce((sum, e) => sum + e.period_amount, 0)
   const isEmpty = !isLoading && !expenses.length && !isAdding
 
   const { data: categoriesData } = useCategories()
@@ -256,7 +252,7 @@ export function ExpensesSection() {
   }
 
   function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount || !addForm.date) return
+    if (!addForm.name.trim() || !addForm.amount) return
     const amount = parseFloat(addForm.amount)
     create.mutate(
       {
@@ -315,21 +311,9 @@ export function ExpensesSection() {
                       <ColumnHeader label="Amount" align="right" sortKey="amount" sort={sort} onSort={toggleSort} filter={{ field: 'amount', type: 'number', value: filters.amount ?? null, onChange: (n) => setColumnFilter('amount', n) }} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto">
-                      <ColumnHeader label="Date" sortKey="date" sort={sort} onSort={toggleSort} />
-                    </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
-                      <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
-                    </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Payment Method" />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
-                      <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} filter={{ field: 'is_paid', type: 'boolean', value: filters.is_paid ?? null, onChange: (n) => setColumnFilter('is_paid', n) }} />
-                    </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
-                      <ColumnHeader label="Saved" align="center" sortKey="is_saved" sort={sort} onSort={toggleSort} filter={{ field: 'is_saved', type: 'boolean', value: filters.is_saved ?? null, onChange: (n) => setColumnFilter('is_saved', n) }} />
-                    </TableHead>
-                    <TableHead className="py-4 px-5 h-auto" />
+                    <TableHead className="py-4 px-5 h-auto text-right" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -412,41 +396,6 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.field === 'date' ? (
-                            <Input
-                              type="date"
-                              className="min-w-0 text-[1rem]"
-                              value={draft.date}
-                              onChange={(e) => setDraft((f) => ({ ...f, date: e.target.value }))}
-                              onBlur={() => handleFieldBlur(expense.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditing(null)
-                                  setDraft(emptyForm)
-                                }
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                              title={expense.date}
-                              onClick={() => startFieldEdit(expense, 'date')}
-                            >
-                              {expense.date}
-                            </button>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
-                          <Checkbox
-                            checked={expense.is_recurring}
-                            onCheckedChange={(checked) => {
-                              update.mutate({ id: expense.id, is_recurring: Boolean(checked) })
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
                           {isEditing && editing.field === 'payment_method' ? (
                             <PaymentMethodCombobox
                               value={draft.payment_method_id}
@@ -474,23 +423,8 @@ export function ExpensesSection() {
                             </button>
                           )}
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
-                          <Checkbox
-                            checked={expense.is_paid}
-                            onCheckedChange={(checked) => {
-                              update.mutate({ id: expense.id, is_paid: Boolean(checked) })
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
-                          <Checkbox
-                            checked={expense.is_saved}
-                            onCheckedChange={(checked) => {
-                              update.mutate({ id: expense.id, is_saved: Boolean(checked) })
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-right">
+                        <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
+                          <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => update.mutate(updates)} />
                           <Button
                             variant="destructive"
                             size="icon"
@@ -548,35 +482,14 @@ export function ExpensesSection() {
                         />
                       </TableCell>
                       <TableCell className="py-5 px-5">
-                        <Input
-                          type="date"
-                          className="min-w-0 text-[1rem]"
-                          value={addForm.date}
-                          onChange={(e) =>
-                            setAddForm((f) => ({ ...f, date: e.target.value }))
-                          }
-                          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 px-5 text-center">
-                        <Checkbox
-                          checked={addForm.is_recurring}
-                          onCheckedChange={(checked) =>
-                            setAddForm((f) => ({ ...f, is_recurring: Boolean(checked) }))
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 px-5">
                         <PaymentMethodCombobox
                           value={addForm.payment_method_id}
                           onChange={(v) => setAddForm((f) => ({ ...f, payment_method_id: v }))}
                         />
                       </TableCell>
-                      <TableCell className="py-5 px-5" />
-                      <TableCell className="py-5 px-5" />
-                      <TableCell className="py-5 px-5">
+                      <TableCell className="py-5 px-5 text-right">
                         <div className="flex gap-2 items-center justify-end">
-                          {addForm.name.trim() && addForm.amount && addForm.date && (
+                          {addForm.name.trim() && addForm.amount && (
                             <Button size="default" onClick={handleAdd}>
                               Save
                             </Button>
@@ -600,7 +513,7 @@ export function ExpensesSection() {
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={9}
+                        colSpan={5}
                         className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -613,22 +526,83 @@ export function ExpensesSection() {
             {expenses.length > 0 && (
               <table className="sheet-table table-fixed w-full shrink-0">
                 <ExpensesTableColgroup />
-                <TableFooter className="border-t-0 bg-transparent">
-                  <TableRow className="total-row border-0">
-                    <TableCell className="py-5 px-5 text-green-800 dark:text-green-300 font-semibold">TOTAL</TableCell>
-                    <TableCell
-                      colSpan={8}
-                      className="py-5 px-5 text-right font-mono font-semibold text-green-800 dark:text-green-300"
-                    >
-                      {fmtMoney(total)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
               </table>
             )}
           </>
         )}
       </div>
     </section>
+  )
+}
+
+function ExpenseExtraTools({
+  expense,
+  draft,
+  onDraftChange,
+  onUpdate,
+}: {
+  expense: Expense
+  draft: RowForm
+  onDraftChange: (form: RowForm) => void
+  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean }) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" className="border-white text-white hover:bg-white/10">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Date</label>
+            <Input
+              type="date"
+              value={draft.date}
+              onChange={(e) => onDraftChange({ ...draft, date: e.target.value })}
+              className="w-full"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is_paid"
+              checked={draft.is_paid}
+              onCheckedChange={(checked) => onDraftChange({ ...draft, is_paid: Boolean(checked) })}
+            />
+            <label htmlFor="is_paid" className="text-sm font-medium cursor-pointer">
+              Paid
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is_saved"
+              checked={draft.is_saved}
+              onCheckedChange={(checked) => onDraftChange({ ...draft, is_saved: Boolean(checked) })}
+            />
+            <label htmlFor="is_saved" className="text-sm font-medium cursor-pointer">
+              Saved
+            </label>
+          </div>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              onUpdate({
+                id: expense.id,
+                date: draft.date,
+                is_paid: draft.is_paid,
+                is_saved: draft.is_saved,
+              })
+              setOpen(false)
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

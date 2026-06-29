@@ -87,10 +87,7 @@ describe('ExpensesSection', () => {
     fireEvent.change(screen.getByPlaceholderText('Work'), { target: { value: 'Rent' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
 
-    // The add-row date input defaults to the selected period (2026-06-15)
-    expect(screen.getByDisplayValue('2026-06-15')).toBeTruthy()
-
-    // Save is shown without choosing a category
+    // Save is shown without choosing a category; date is set automatically to the period date
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(createMutate).toHaveBeenCalledTimes(1)

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MoreVertical } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   useSourcesOfIncome,
   useCreateSourceOfIncome,
@@ -23,7 +25,7 @@ interface RowForm {
   is_recurring: boolean
 }
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '', date: '', is_recurring: false }
+const emptyForm: RowForm = { name: '', category_id: '', income: '', date: '', is_recurring: true }
 
 export function IncomeSection() {
   const { date: periodDate } = usePeriod()
@@ -39,7 +41,6 @@ export function IncomeSection() {
 
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
-  const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
 
   function handleAdd() {
     if (!addForm.name.trim()) return
@@ -58,19 +59,6 @@ export function IncomeSection() {
         },
       }
     )
-  }
-
-  function startEdit(id: string) {
-    const source = sources.find((s) => s.id === id)
-    if (!source) return
-    setEditingId(id)
-    setEditForm({
-      name: source.name,
-      category_id: source.category_id ?? '',
-      income: String(source.income),
-      date: source.date,
-      is_recurring: source.is_recurring,
-    })
   }
 
   function handleUpdate(id: string) {
@@ -120,9 +108,7 @@ export function IncomeSection() {
               <TableHead className="py-2 px-3 h-auto">Name</TableHead>
               <TableHead className="py-2 px-3 h-auto">Category</TableHead>
               <TableHead className="py-2 px-3 h-auto w-32 text-right">Amount</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-40">Date</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-24 text-center">Recurring</TableHead>
-              <TableHead className="py-2 px-3 h-auto w-36">Actions</TableHead>
+              <TableHead className="py-2 px-3 h-auto text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,36 +158,8 @@ export function IncomeSection() {
                     <span className="font-mono">{fmtMoney(source.period_amount)}</span>
                   )}
                 </TableCell>
-                <TableCell className="py-1 px-3">
-                  {editingId === source.id ? (
-                    <Input
-                      type="date"
-                      className="h-7 text-sm min-w-0"
-                      value={editForm.date}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, date: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    <span className="font-mono text-xs">{source.date}</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  {editingId === source.id ? (
-                    <input
-                      type="checkbox"
-                      aria-label="Recurring"
-                      checked={editForm.is_recurring}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, is_recurring: e.target.checked }))
-                      }
-                    />
-                  ) : (
-                    <input type="checkbox" aria-label="Recurring" checked={source.is_recurring} readOnly disabled />
-                  )}
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  <div className="flex gap-1">
+                <TableCell className="py-1 px-3 text-right">
+                  <div className="flex gap-1 justify-end">
                     {editingId === source.id ? (
                       <>
                         <Button
@@ -220,13 +178,7 @@ export function IncomeSection() {
                       </>
                     ) : (
                       <>
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => startEdit(source.id)}
-                        >
-                          Edit
-                        </Button>
+                        <IncomeExtraTools source={source} editForm={editForm} onEditFormChange={setEditForm} onUpdate={(updates) => update.mutate(updates)} />
                         <Button
                           variant="destructive"
                           size="xs"
@@ -281,29 +233,8 @@ export function IncomeSection() {
                     onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                   />
                 </TableCell>
-                <TableCell className="py-1 px-3">
-                  <Input
-                    type="date"
-                    className="h-7 text-sm min-w-0"
-                    value={addForm.date || periodDate}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, date: e.target.value }))
-                    }
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3 text-center">
-                  <input
-                    type="checkbox"
-                    aria-label="Recurring"
-                    checked={addForm.is_recurring}
-                    onChange={(e) =>
-                      setAddForm((f) => ({ ...f, is_recurring: e.target.checked }))
-                    }
-                  />
-                </TableCell>
-                <TableCell className="py-1 px-3">
-                  <div className="flex gap-1">
+                <TableCell className="py-1 px-3 text-right">
+                  <div className="flex gap-1 justify-end">
                     <Button size="xs" onClick={handleAdd}>
                       Save
                     </Button>
@@ -321,20 +252,9 @@ export function IncomeSection() {
                 </TableCell>
               </TableRow>
             )}
-            {sources.length > 0 && (
-              <TableRow className="total-row border-0">
-                <TableCell className="py-1 px-3 text-green-800 font-semibold" colSpan={2}>
-                  TOTAL
-                </TableCell>
-                <TableCell className="py-1 px-3 text-right font-mono font-semibold text-green-800">
-                  {fmtMoney(total)}
-                </TableCell>
-                <TableCell className="py-1 px-3" colSpan={3} />
-              </TableRow>
-            )}
             {!isLoading && !sources.length && !isAdding && (
               <TableRow className="border-0">
-                <TableCell colSpan={6} className="py-4 px-3 text-center text-green-600 italic">
+                <TableCell colSpan={4} className="py-4 px-3 text-center text-green-600 italic">
                   No income sources yet — add one above.
                 </TableCell>
               </TableRow>
@@ -344,5 +264,66 @@ export function IncomeSection() {
         )}
       </div>
     </section>
+  )
+}
+
+function IncomeExtraTools({
+  source,
+  editForm,
+  onEditFormChange,
+  onUpdate,
+}: {
+  source: { id: string; date: string; is_recurring: boolean }
+  editForm: RowForm
+  onEditFormChange: (form: RowForm) => void
+  onUpdate: (updates: { id: string; date: string; is_recurring: boolean }) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="xs" className="border-white text-white hover:bg-white/10">
+          <MoreVertical className="h-3 w-3" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Date</label>
+            <Input
+              type="date"
+              value={editForm.date || source.date}
+              onChange={(e) => onEditFormChange({ ...editForm, date: e.target.value })}
+              className="w-full"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is_recurring"
+              checked={editForm.is_recurring}
+              onCheckedChange={(checked) => onEditFormChange({ ...editForm, is_recurring: Boolean(checked) })}
+            />
+            <label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
+              Recurring
+            </label>
+          </div>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              onUpdate({
+                id: source.id,
+                date: editForm.date || source.date,
+                is_recurring: editForm.is_recurring,
+              })
+              setOpen(false)
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
