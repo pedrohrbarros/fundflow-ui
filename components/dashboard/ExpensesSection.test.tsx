@@ -116,13 +116,13 @@ describe('ExpensesSection', () => {
 
     const { rerender } = render(<ExpensesSection />)
 
-    // Enter edit mode on the name cell, change it, then click Save to commit to the overlay.
+    // Enter edit mode on the name cell, change it, then blur to commit to the overlay via toast.
     fireEvent.click(screen.getByRole('button', { name: 'Rent' }))
     const input = screen.getByDisplayValue('Rent')
     fireEvent.change(input, { target: { value: 'Mortgage' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    fireEvent.blur(input)
 
-    // Edit is now in the overlay.
+    // Edit is now in the overlay (pending changes).
     expect(screen.getByText('Mortgage')).toBeTruthy()
 
     // Simulate a refetch that returns the original (unchanged) server data.

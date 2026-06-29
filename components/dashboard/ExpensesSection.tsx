@@ -211,27 +211,52 @@ export function ExpensesSection() {
   }
 
   function handleCategoryChange(expenseId: string, categoryId: string) {
-    setDraft((f) => ({ ...f, category_id: categoryId }))
-  }
-
-  function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
-    setDraft((f) => ({ ...f, payment_method_id: paymentMethodId }))
-  }
-
-  function handleSaveEdit(expense: Expense) {
-    if (!draft.name.trim() || !formHasChanges(expense, draft)) {
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
+    if (!expense) {
       setEditing(null)
       setDraft(emptyForm)
       return
     }
-    commitChanges(expense, draft)
-    setEditing(null)
-    setDraft(emptyForm)
+
+    const updatedDraft = { ...draft, category_id: categoryId }
+    setDraft(updatedDraft)
+    if (formHasChanges(expense, updatedDraft)) {
+      const payload = buildPayload(expense.id, updatedDraft, expense)
+      showSaveToast(expense.id, payload)
+    }
   }
 
-  function handleCancelEdit() {
+  function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
+    if (!expense) {
+      setEditing(null)
+      setDraft(emptyForm)
+      return
+    }
+
+    const updatedDraft = { ...draft, payment_method_id: paymentMethodId }
+    setDraft(updatedDraft)
+    if (formHasChanges(expense, updatedDraft)) {
+      const payload = buildPayload(expense.id, updatedDraft, expense)
+      showSaveToast(expense.id, payload)
+    }
+  }
+
+  function handleFieldBlur(expenseId: string) {
+    const expense = sortedExpenses.find((e) => e.id === expenseId)
+    if (!expense) {
+      setEditing(null)
+      setDraft(emptyForm)
+      return
+    }
+
     setEditing(null)
-    setDraft(emptyForm)
+    if (formHasChanges(expense, draft)) {
+      const payload = buildPayload(expense.id, draft, expense)
+      showSaveToast(expense.id, payload)
+    } else {
+      setDraft(emptyForm)
+    }
   }
 
   function handleAdd() {
@@ -305,14 +330,24 @@ export function ExpensesSection() {
                     return (
                       <TableRow key={expense.id} className="border-0">
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.id === expense.id ? (
+                          {isEditing && editing.id === expense.id && editing.field === 'name' ? (
                             <Input
                               className="min-w-0 text-[1rem]"
                               value={draft.name}
-                              onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
+                              onChange={(e) => {
+                                const updated = { ...draft, name: e.target.value }
+                                setDraft(updated)
+                                if (formHasChanges(expense, updated)) {
+                                  const payload = buildPayload(expense.id, updated, expense)
+                                  showSaveToast(expense.id, payload)
+                                }
+                              }}
+                              onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Escape') handleCancelEdit()
-                                if (e.key === 'Enter') handleSaveEdit(expense)
+                                if (e.key === 'Escape') {
+                                  setEditing(null)
+                                  setDraft(emptyForm)
+                                }
                               }}
                               autoFocus
                             />
@@ -320,10 +355,10 @@ export function ExpensesSection() {
                             <button
                               type="button"
                               className="w-full text-left truncate block hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                              title={expense.name}
+                              title={draft.name || expense.name}
                               onClick={() => startFieldEdit(expense, 'name')}
                             >
-                              {expense.name}
+                              {draft.name || expense.name}
                             </button>
                           )}
                         </TableCell>
@@ -340,10 +375,10 @@ export function ExpensesSection() {
                             <button
                               type="button"
                               className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
-                              title={categoryNameById.get(String(draft.category_id)) ?? undefined}
+                              title={categoryNameById.get(String(expense.category_id)) ?? undefined}
                               onClick={() => startFieldEdit(expense, 'category')}
                             >
-                              {categoryNameById.get(String(draft.category_id)) ?? (
+                              {categoryNameById.get(String(expense.category_id)) ?? (
                                 <span className="text-green-300 dark:text-green-800">—</span>
                               )}
                             </button>
@@ -355,10 +390,20 @@ export function ExpensesSection() {
                               type="number"
                               className="min-w-0 text-right text-[1rem]"
                               value={draft.amount}
-                              onChange={(e) => setDraft((f) => ({ ...f, amount: e.target.value }))}
+                              onChange={(e) => {
+                                const updated = { ...draft, amount: e.target.value }
+                                setDraft(updated)
+                                if (formHasChanges(expense, updated)) {
+                                  const payload = buildPayload(expense.id, updated, expense)
+                                  showSaveToast(expense.id, payload)
+                                }
+                              }}
+                              onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
-                                if (e.key === 'Escape') handleCancelEdit()
-                                if (e.key === 'Enter') handleSaveEdit(expense)
+                                if (e.key === 'Escape') {
+                                  setEditing(null)
+                                  setDraft(emptyForm)
+                                }
                               }}
                               autoFocus
                             />
@@ -368,7 +413,7 @@ export function ExpensesSection() {
                               className="w-full text-right font-mono hover:text-green-600 dark:hover:text-green-400 transition-colors"
                               onClick={() => startFieldEdit(expense, 'amount')}
                             >
-                              {fmtMoney(parseFloat(draft.amount) || expense.period_amount)}
+                              {fmtMoney(expense.period_amount)}
                             </button>
                           )}
                         </TableCell>
@@ -401,39 +446,22 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
-                          {isEditing && editing.id === expense.id ? (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => handleSaveEdit(expense)}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleCancelEdit}
-                              >
-                                Cancel
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => update.mutate(updates)} />
-                              <Button
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => {
-                                  setDeletingExpenseId(expense.id)
-                                  del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
-                                }}
-                                disabled={del.isPending}
-                                aria-label="Delete expense"
-                              >
-                                {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
-                              </Button>
-                            </>
-                          )}
+                          <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => {
+                            const payload = buildPayload(expense.id, draft, expense)
+                            showSaveToast(expense.id, payload)
+                          }} />
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => {
+                              setDeletingExpenseId(expense.id)
+                              del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
+                            }}
+                            disabled={del.isPending}
+                            aria-label="Delete expense"
+                          >
+                            {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     )
