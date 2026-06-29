@@ -555,7 +555,7 @@ function ExpenseExtraTools({
           <MoreVertical className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64">
+      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64 text-gray-900 dark:text-[#d1fae5]">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Date</label>
@@ -563,7 +563,7 @@ function ExpenseExtraTools({
               type="date"
               value={draft.date}
               onChange={(e) => onDraftChange({ ...draft, date: e.target.value })}
-              className="w-full"
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
           <div className="flex items-center gap-2">
