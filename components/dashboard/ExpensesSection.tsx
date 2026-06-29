@@ -33,6 +33,7 @@ interface RowForm {
   payment_method_id: string
   date: string
   is_recurring: boolean
+  recurring_months: string
 }
 
 type EditField = 'name' | 'category' | 'amount' | 'date' | 'payment_method'
@@ -44,12 +45,13 @@ type ExpenseUpdatePayload = {
   amount: number
   date: string
   is_recurring: boolean
+  recurring_months: number | null
   is_paid: boolean
   is_saved: boolean
   payment_methods: { payment_method_id: number; partial_amount: number }[]
 }
 
-const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '', date: '', is_recurring: false }
+const emptyForm: RowForm = { name: '', amount: '', category_id: '', is_paid: false, is_saved: false, payment_method_id: '', date: '', is_recurring: false, recurring_months: '' }
 
 function ExpensesTableColgroup() {
   return (
@@ -74,6 +76,7 @@ function formFromExpense(expense: Expense): RowForm {
     payment_method_id: expense.payment_methods[0]?.payment_method_id ?? '',
     date: expense.date,
     is_recurring: expense.is_recurring,
+    recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
   }
 }
 
@@ -87,7 +90,8 @@ function formHasChanges(expense: Expense, form: RowForm) {
     String(expense.category_id ?? '') !== form.category_id ||
     amount !== expense.amount ||
     form.date !== expense.date ||
-    paymentMethodId !== expensePaymentMethodId
+    paymentMethodId !== expensePaymentMethodId ||
+    form.is_recurring !== expense.is_recurring
   )
 }
 
@@ -100,6 +104,7 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     category_id: form.category_id ? parseInt(form.category_id, 10) : null,
     date: form.date,
     is_recurring: form.is_recurring,
+    recurring_months: form.is_recurring && form.recurring_months ? parseInt(form.recurring_months, 10) : null,
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
     payment_methods: form.payment_method_id
@@ -117,6 +122,7 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
     amount: payload.amount,
     category_id: payload.category_id == null ? null : String(payload.category_id),
     date: payload.date,
+    is_recurring: payload.is_recurring,
     payment_methods: nextPm
       ? [{
           payment_method_id: String(nextPm.payment_method_id),
@@ -261,6 +267,7 @@ export function ExpensesSection() {
         category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         date: addForm.date,
         is_recurring: addForm.is_recurring,
+        recurring_months: addForm.is_recurring && addForm.recurring_months ? parseInt(addForm.recurring_months, 10) : null,
         is_paid: addForm.is_paid,
         is_saved: addForm.is_saved,
         payment_methods: addForm.payment_method_id
@@ -503,10 +510,23 @@ export function ExpensesSection() {
                         />
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center">
-                        <Checkbox
-                          checked={addForm.is_recurring}
-                          onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked) }))}
-                        />
+                        <div className="flex flex-col items-center gap-1">
+                          <Checkbox
+                            checked={addForm.is_recurring}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                          />
+                          {addForm.is_recurring && (
+                            <Input
+                              type="number"
+                              className="w-14 text-center text-xs px-1 py-0.5 h-6"
+                              min="1"
+                              placeholder="∞"
+                              value={addForm.recurring_months}
+                              onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
+                              title="Recurring months limit"
+                            />
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-right">
                         <div className="flex gap-2 items-center justify-end">
@@ -561,10 +581,15 @@ function ExpenseExtraTools({
   onUpdate,
 }: {
   expense: Expense
-  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean }) => void
+  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean; recurring_months: string }) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [localDraft, setLocalDraft] = useState({ date: expense.date, is_paid: expense.is_paid, is_saved: expense.is_saved })
+  const [localDraft, setLocalDraft] = useState({
+    date: expense.date,
+    is_paid: expense.is_paid,
+    is_saved: expense.is_saved,
+    recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
+  })
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -582,6 +607,19 @@ function ExpenseExtraTools({
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
+          {expense.is_recurring && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Recurring months limit</label>
+              <Input
+                type="number"
+                min="1"
+                placeholder="Indefinite"
+                value={localDraft.recurring_months}
+                onChange={(e) => setLocalDraft((f) => ({ ...f, recurring_months: e.target.value }))}
+                className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Checkbox
               id="is_paid"
@@ -611,6 +649,7 @@ function ExpenseExtraTools({
                 date: localDraft.date,
                 is_paid: localDraft.is_paid,
                 is_saved: localDraft.is_saved,
+                recurring_months: localDraft.recurring_months,
               })
               setOpen(false)
             }}

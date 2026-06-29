@@ -807,6 +807,7 @@ export interface operations {
                     /** Format: date */
                     date: string;
                     is_recurring?: boolean;
+                    recurring_months?: (string | number) | null;
                     is_paid?: boolean;
                     is_saved?: boolean;
                     saving_location?: string | null;
@@ -1076,6 +1077,7 @@ export interface operations {
                     /** Format: date */
                     date?: string;
                     is_recurring?: boolean;
+                    recurring_months?: (string | number) | null;
                     is_paid?: boolean;
                     is_saved?: boolean;
                     saving_location?: string | null;

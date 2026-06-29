@@ -3,6 +3,7 @@ import type { BackendUser } from '@/lib/auth-tokens'
 declare module 'next-auth' {
   interface Session {
     error?: string
+    accessToken?: string
     user: {
       id?: string
       name?: string | null

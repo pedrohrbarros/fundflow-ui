@@ -48,6 +48,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       session.error = token.error
+      session.accessToken = token.accessToken
       if (token.backendUser) {
         session.user = {
           ...session.user,

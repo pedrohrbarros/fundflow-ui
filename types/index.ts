@@ -13,6 +13,7 @@ export interface Expense {
   period_amount: number
   date: string
   is_recurring: boolean
+  recurring_months: number | null
   category_id: string | null
   is_paid: boolean
   is_saved: boolean
@@ -34,6 +35,7 @@ export interface CreateExpenseBody {
   amount: number
   date: string
   is_recurring?: boolean
+  recurring_months?: number | null
   is_paid?: boolean
   is_saved?: boolean
   saving_location?: string | null
@@ -46,6 +48,7 @@ export interface UpdateExpenseBody {
   amount?: number
   date?: string
   is_recurring?: boolean
+  recurring_months?: number | null
   is_paid?: boolean
   is_saved?: boolean
   saving_location?: string | null

@@ -1,10 +1,19 @@
 import 'server-only'
+import { auth } from '@/auth'
 import { cookies } from 'next/headers'
 import { getToken } from 'next-auth/jwt'
 
-async function readToken() {
+export async function getAccessToken(): Promise<string | null> {
+  const session = await auth()
+  if (!session || session.error) return null
+  return session.accessToken ?? null
+}
+
+// Used only during logout to revoke the backend session — getToken() is
+// intentional here: we want the raw stored value, not a refreshed one.
+export async function getRefreshToken(): Promise<string | null> {
   const cookieStore = await cookies()
-  return getToken({
+  const token = await getToken({
     req: { headers: { cookie: cookieStore.toString() } } as never,
     secret: process.env.AUTH_SECRET,
     secureCookie: process.env.NODE_ENV === 'production',
@@ -13,15 +22,5 @@ async function readToken() {
         ? '__Secure-authjs.session-token'
         : 'authjs.session-token',
   })
-}
-
-export async function getAccessToken(): Promise<string | null> {
-  const token = await readToken()
-  if (!token || token.error) return null
-  return token.accessToken ?? null
-}
-
-export async function getRefreshToken(): Promise<string | null> {
-  const token = await readToken()
   return token?.refreshToken ?? null
 }
