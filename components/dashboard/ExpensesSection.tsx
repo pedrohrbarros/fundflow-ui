@@ -125,6 +125,8 @@ function formHasChanges(expense: Expense, form: RowForm) {
     form.date !== expense.date ||
     form.is_recurring !== expense.is_recurring ||
     formRecurringMonths !== expense.recurring_months ||
+    form.is_paid !== expense.is_paid ||
+    form.is_saved !== expense.is_saved ||
     formPMIds !== expensePMIds ||
     pmAmountsChanged
   )
@@ -140,8 +142,8 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     date: form.date,
     is_recurring: form.is_recurring,
     recurring_months: form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null,
-    is_paid: expense.is_paid,
-    is_saved: expense.is_saved,
+    is_paid: form.is_paid,
+    is_saved: form.is_saved,
     payment_methods: form.payment_methods
       .filter((pm) => pm.payment_method_id)
       .map((pm) => ({
@@ -161,6 +163,8 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
     date: payload.date,
     is_recurring: payload.is_recurring,
     recurring_months: payload.recurring_months,
+    is_paid: payload.is_paid,
+    is_saved: payload.is_saved,
     payment_methods: payload.payment_methods.map((pm) => {
       const existing = pmMap.get(String(pm.payment_method_id))
       return {
