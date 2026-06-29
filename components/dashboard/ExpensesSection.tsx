@@ -670,6 +670,7 @@ export function ExpensesSection() {
                   <Button
                     variant="outline"
                     size="xs"
+                    className="text-gray-900 dark:text-white"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
@@ -681,6 +682,7 @@ export function ExpensesSection() {
                   <Button
                     variant="outline"
                     size="xs"
+                    className="text-gray-900 dark:text-white"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * PAGE_LIMIT >= data.pagination.total}
                   >
