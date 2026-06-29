@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MoreVertical } from 'lucide-react'
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { SaveChangesToast } from '@/components/dashboard/SaveChangesToast'
 import { useQueryClient } from '@tanstack/react-query'
@@ -37,7 +39,7 @@ interface RowForm {
 
 const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'] as const
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD', date: '', is_recurring: false }
+const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD', date: '', is_recurring: true }
 
 type EditField = 'name' | 'category' | 'income' | 'currency' | 'date'
 
@@ -264,9 +266,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 <TableHead className="py-2 px-3 h-auto w-28 sm:w-40 lg:w-64">Category</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-24 sm:w-28 lg:w-36 text-right">Amount</TableHead>
                 <TableHead className="py-2 px-3 h-auto w-20 sm:w-24 lg:w-32">Currency</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-32 lg:w-40">Date</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-20 lg:w-24 text-center">Recurring</TableHead>
-                <TableHead className="py-2 px-3 h-auto w-28 lg:w-32" />
+                <TableHead className="py-2 px-3 h-auto w-28 lg:w-32 text-right" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -377,57 +377,22 @@ export function IncomeModal({ open, onClose }: Props) {
                         </button>
                       )}
                     </TableCell>
-                    <TableCell className="py-2.5 px-3 overflow-hidden">
-                      {isEditing && editing.field === 'date' ? (
-                        <Input
-                          className="h-7 text-sm min-w-0"
-                          type="date"
-                          value={draft.date}
-                          onChange={(e) =>
-                            setDraft((f) => ({ ...f, date: e.target.value }))
-                          }
-                          onBlur={() => handleFieldBlur(source.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Escape') {
-                              e.stopPropagation()
-                              setEditing(null)
-                              setDraft(emptyForm)
-                            }
-                          }}
-                          autoFocus
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block font-mono text-xs"
-                          onClick={() => startFieldEdit(source, 'date')}
-                        >
-                          {source.date}
-                        </button>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-2.5 px-3 text-center">
-                      <input
-                        type="checkbox"
-                        aria-label="Recurring"
-                        checked={source.is_recurring}
-                        onChange={(e) => {
-                          const updatedDraft = { ...formFromSource(source), is_recurring: e.target.checked }
-                          const payload = {
-                            id: source.id,
-                            name: updatedDraft.name.trim(),
-                            category_id: updatedDraft.category_id ? parseInt(updatedDraft.category_id, 10) : null,
-                            income: parseFloat(updatedDraft.income) || 0,
-                            currency: updatedDraft.currency || 'USD',
-                            date: updatedDraft.date,
-                            is_recurring: updatedDraft.is_recurring,
-                          }
-                          const oldData = applyOptimisticUpdate(payload)
-                          showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="py-2.5 px-3 text-right">
+                    <TableCell className="py-2.5 px-3 text-right flex items-center justify-end gap-2">
+                      <IncomeModalExtraTools source={source} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => {
+                        const payload = {
+                          id: source.id,
+                          name: draft.name.trim(),
+                          category_id: draft.category_id ? parseInt(draft.category_id, 10) : null,
+                          income: parseFloat(draft.income) || 0,
+                          currency: draft.currency || 'USD',
+                          date: updates.date,
+                          is_recurring: updates.is_recurring,
+                        }
+                        const oldData = applyOptimisticUpdate(payload)
+                        showSaveToast(payload, () => { if (oldData) qc.setQueryData(['sources-of-income'], oldData) })
+                        setEditing(null)
+                        setDraft(emptyForm)
+                      }} />
                       <Button
                         variant="destructive"
                         size="icon"
@@ -507,35 +472,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ))}
                     </select>
                   </TableCell>
-                  <TableCell className="py-2.5 px-3">
-                    <Input
-                      className="h-7 text-sm min-w-0"
-                      type="date"
-                      value={addForm.date || periodDate}
-                      onChange={(e) =>
-                        setAddForm((f) => ({ ...f, date: e.target.value }))
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleAdd()
-                        if (e.key === 'Escape') {
-                          e.stopPropagation()
-                          setIsAdding(false)
-                          setAddForm(emptyForm)
-                        }
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell className="py-2.5 px-3 text-center">
-                    <input
-                      type="checkbox"
-                      aria-label="Recurring"
-                      checked={addForm.is_recurring}
-                      onChange={(e) =>
-                        setAddForm((f) => ({ ...f, is_recurring: e.target.checked }))
-                      }
-                    />
-                  </TableCell>
-                  <TableCell className="py-2.5 px-3">
+                  <TableCell className="py-2.5 px-3 text-right">
                     <div className="flex gap-2 items-center justify-end">
                       <Button
                         size="sm"
@@ -563,7 +500,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   aria-label="Add income"
                 >
                   <TableCell
-                    colSpan={7}
+                    colSpan={5}
                     className="py-2 px-3 text-center text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
                   >
                     <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -600,5 +537,65 @@ export function IncomeModal({ open, onClose }: Props) {
         )}
       </DialogContent>
     </Dialog>
+  )
+}
+
+function IncomeModalExtraTools({
+  source,
+  draft,
+  onDraftChange,
+  onUpdate,
+}: {
+  source: SourceOfIncome
+  draft: RowForm
+  onDraftChange: (form: RowForm) => void
+  onUpdate: (updates: { date: string; is_recurring: boolean }) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="icon" className="border-white text-white hover:bg-white/10">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64 text-gray-900 dark:text-[#d1fae5]">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Date</label>
+            <Input
+              type="date"
+              value={draft.date || source.date}
+              onChange={(e) => onDraftChange({ ...draft, date: e.target.value })}
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is_recurring_modal"
+              checked={draft.is_recurring}
+              onCheckedChange={(checked) => onDraftChange({ ...draft, is_recurring: Boolean(checked) })}
+            />
+            <label htmlFor="is_recurring_modal" className="text-sm font-medium cursor-pointer">
+              Recurring
+            </label>
+          </div>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() => {
+              onUpdate({
+                date: draft.date || source.date,
+                is_recurring: draft.is_recurring,
+              })
+              setOpen(false)
+            }}
+          >
+            Save
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }
