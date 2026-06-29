@@ -54,7 +54,7 @@ type ExpenseUpdatePayload = {
   recurring_months: number | null
   is_paid: boolean
   is_saved: boolean
-  payment_methods: { payment_method_id: number; partial_amount: number }[]
+  payment_methods?: { payment_method_id: number; partial_amount: number }[]
 }
 
 const emptyForm: RowForm = {
@@ -108,14 +108,18 @@ function formFromExpense(expense: Expense): RowForm {
   }
 }
 
-function formHasChanges(expense: Expense, form: RowForm) {
-  const amount = parseFloat(form.amount) || 0
-  const formPMIds = form.payment_methods.map((pm) => pm.payment_method_id).sort().join(',')
-  const expensePMIds = expense.payment_methods.map((pm) => pm.payment_method_id).sort().join(',')
-  const pmAmountsChanged = form.payment_methods.some((fpm) => {
-    const epm = expense.payment_methods.find((e) => e.payment_method_id === fpm.payment_method_id)
+function pmChanged(expense: Expense, form: RowForm): boolean {
+  const formPMIds = form.payment_methods.map((pm) => String(pm.payment_method_id)).sort().join(',')
+  const expensePMIds = expense.payment_methods.map((pm) => String(pm.payment_method_id)).sort().join(',')
+  if (formPMIds !== expensePMIds) return true
+  return form.payment_methods.some((fpm) => {
+    const epm = expense.payment_methods.find((e) => String(e.payment_method_id) === String(fpm.payment_method_id))
     return !epm || Math.abs((parseFloat(fpm.partial_amount) || 0) - epm.partial_amount) > 0.001
   })
+}
+
+function formHasChanges(expense: Expense, form: RowForm) {
+  const amount = parseFloat(form.amount) || 0
   const formRecurringMonths = form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null
 
   return (
@@ -127,13 +131,13 @@ function formHasChanges(expense: Expense, form: RowForm) {
     formRecurringMonths !== expense.recurring_months ||
     form.is_paid !== expense.is_paid ||
     form.is_saved !== expense.is_saved ||
-    formPMIds !== expensePMIds ||
-    pmAmountsChanged
+    pmChanged(expense, form)
   )
 }
 
 function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdatePayload {
   const amount = parseFloat(form.amount) || 0
+  const pmsChanged = pmChanged(expense, form)
   return {
     id,
     name: form.name.trim(),
@@ -144,12 +148,14 @@ function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdat
     recurring_months: form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null,
     is_paid: form.is_paid,
     is_saved: form.is_saved,
-    payment_methods: form.payment_methods
-      .filter((pm) => pm.payment_method_id)
-      .map((pm) => ({
-        payment_method_id: parseInt(pm.payment_method_id, 10),
-        partial_amount: parseFloat(pm.partial_amount) || 0,
-      })),
+    ...(pmsChanged ? {
+      payment_methods: form.payment_methods
+        .filter((pm) => pm.payment_method_id)
+        .map((pm) => ({
+          payment_method_id: parseInt(String(pm.payment_method_id), 10),
+          partial_amount: parseFloat(pm.partial_amount) || 0,
+        })),
+    } : {}),
   }
 }
 
@@ -159,13 +165,14 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
     ...expense,
     name: payload.name,
     amount: payload.amount,
+    period_amount: payload.amount,
     category_id: payload.category_id == null ? null : String(payload.category_id),
     date: payload.date,
     is_recurring: payload.is_recurring,
     recurring_months: payload.recurring_months,
     is_paid: payload.is_paid,
     is_saved: payload.is_saved,
-    payment_methods: payload.payment_methods.map((pm) => {
+    payment_methods: (payload.payment_methods ?? expense.payment_methods.map((pm) => ({ ...pm, payment_method_id: pm.payment_method_id }))).map((pm) => {
       const existing = pmMap.get(String(pm.payment_method_id))
       return {
         payment_method_id: String(pm.payment_method_id),
