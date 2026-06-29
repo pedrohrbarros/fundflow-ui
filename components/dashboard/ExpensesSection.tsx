@@ -423,7 +423,7 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
-                          <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => {
+                          <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
                             const merged = { ...formFromExpense(expense), ...updates }
                             commitChanges(expense, merged)
                           }} />
@@ -539,16 +539,13 @@ export function ExpensesSection() {
 
 function ExpenseExtraTools({
   expense,
-  draft,
-  onDraftChange,
   onUpdate,
 }: {
   expense: Expense
-  draft: RowForm
-  onDraftChange: (form: RowForm) => void
-  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean }) => void
+  onUpdate: (updates: { id: string; date: string; is_paid: boolean; is_saved: boolean; is_recurring: boolean }) => void
 }) {
   const [open, setOpen] = useState(false)
+  const [localDraft, setLocalDraft] = useState({ date: expense.date, is_paid: expense.is_paid, is_saved: expense.is_saved, is_recurring: expense.is_recurring })
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -561,16 +558,16 @@ function ExpenseExtraTools({
             <label className="block text-sm font-medium mb-2">Date</label>
             <Input
               type="date"
-              value={draft.date}
-              onChange={(e) => onDraftChange({ ...draft, date: e.target.value })}
+              value={localDraft.date}
+              onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id="is_paid"
-              checked={draft.is_paid}
-              onCheckedChange={(checked) => onDraftChange({ ...draft, is_paid: Boolean(checked) })}
+              checked={localDraft.is_paid}
+              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_paid: Boolean(checked) }))}
             />
             <label htmlFor="is_paid" className="text-sm font-medium cursor-pointer">
               Paid
@@ -579,11 +576,21 @@ function ExpenseExtraTools({
           <div className="flex items-center gap-2">
             <Checkbox
               id="is_saved"
-              checked={draft.is_saved}
-              onCheckedChange={(checked) => onDraftChange({ ...draft, is_saved: Boolean(checked) })}
+              checked={localDraft.is_saved}
+              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_saved: Boolean(checked) }))}
             />
             <label htmlFor="is_saved" className="text-sm font-medium cursor-pointer">
               Saved
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="is_recurring"
+              checked={localDraft.is_recurring}
+              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked) }))}
+            />
+            <label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
+              Recurring
             </label>
           </div>
           <Button
@@ -592,9 +599,10 @@ function ExpenseExtraTools({
             onClick={() => {
               onUpdate({
                 id: expense.id,
-                date: draft.date,
-                is_paid: draft.is_paid,
-                is_saved: draft.is_saved,
+                date: localDraft.date,
+                is_paid: localDraft.is_paid,
+                is_saved: localDraft.is_saved,
+                is_recurring: localDraft.is_recurring,
               })
               setOpen(false)
             }}
