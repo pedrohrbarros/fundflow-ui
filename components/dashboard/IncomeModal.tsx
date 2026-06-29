@@ -84,9 +84,6 @@ export function IncomeModal({ open, onClose }: Props) {
 
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
-  const total = sources.reduce((sum, s) => sum + s.period_amount, 0)
-  const distinctCurrencies = new Set(sources.map((source) => source.currency ?? 'USD'))
-  const totalCurrency = distinctCurrencies.size === 1 ? distinctCurrencies.values().next().value : null
   const isEmpty = !isLoading && !sources.length && !isAdding
 
   const categoryNameById = useMemo(() => {
@@ -524,17 +521,6 @@ export function IncomeModal({ open, onClose }: Props) {
           </>
           )}
         </div>
-
-        {sources.length > 0 && (
-          <div className="shrink-0 border-t border-green-700 dark:border-[#166534] bg-green-800 dark:bg-[#14532d] flex items-center justify-between px-3 py-2.5">
-            <span className="text-sm font-semibold text-white dark:text-[#bbf7d0]">
-              {totalCurrency ? 'TOTAL' : 'TOTAL (RAW, MIXED CURRENCIES)'}
-            </span>
-            <span className="text-sm font-mono font-semibold text-green-200 dark:text-[#4ade80]">
-              {totalCurrency ? fmtMoney(total, totalCurrency) : total.toFixed(2)}
-            </span>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   )
