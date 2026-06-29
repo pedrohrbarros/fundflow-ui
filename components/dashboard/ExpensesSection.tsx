@@ -182,6 +182,8 @@ export function ExpensesSection() {
       return copy
     })
     delete pendingToasts.current[id]
+    setDraft(emptyForm)
+    setEditing(null)
   }
 
   function showSaveToast(id: string, payload: ExpenseUpdatePayload) {
@@ -217,13 +219,10 @@ export function ExpensesSection() {
       setDraft(emptyForm)
       return
     }
-
     const updatedDraft = { ...draft, category_id: categoryId }
-    setDraft(updatedDraft)
-    if (formHasChanges(expense, updatedDraft)) {
-      const payload = buildPayload(expense.id, updatedDraft, expense)
-      showSaveToast(expense.id, payload)
-    }
+    setEditing(null)
+    setDraft(emptyForm)
+    commitChanges(expense, updatedDraft)
   }
 
   function handlePaymentMethodChange(expenseId: string, paymentMethodId: string) {
@@ -233,13 +232,10 @@ export function ExpensesSection() {
       setDraft(emptyForm)
       return
     }
-
     const updatedDraft = { ...draft, payment_method_id: paymentMethodId }
-    setDraft(updatedDraft)
-    if (formHasChanges(expense, updatedDraft)) {
-      const payload = buildPayload(expense.id, updatedDraft, expense)
-      showSaveToast(expense.id, payload)
-    }
+    setEditing(null)
+    setDraft(emptyForm)
+    commitChanges(expense, updatedDraft)
   }
 
   function handleFieldBlur(expenseId: string) {
@@ -249,14 +245,9 @@ export function ExpensesSection() {
       setDraft(emptyForm)
       return
     }
-
     setEditing(null)
-    if (formHasChanges(expense, draft)) {
-      const payload = buildPayload(expense.id, draft, expense)
-      showSaveToast(expense.id, payload)
-    } else {
-      setDraft(emptyForm)
-    }
+    setDraft(emptyForm)
+    commitChanges(expense, draft)
   }
 
   function handleAdd() {
@@ -334,14 +325,7 @@ export function ExpensesSection() {
                             <Input
                               className="min-w-0 text-[1rem]"
                               value={draft.name}
-                              onChange={(e) => {
-                                const updated = { ...draft, name: e.target.value }
-                                setDraft(updated)
-                                if (formHasChanges(expense, updated)) {
-                                  const payload = buildPayload(expense.id, updated, expense)
-                                  showSaveToast(expense.id, payload)
-                                }
-                              }}
+                              onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
                               onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Escape') {
@@ -355,10 +339,10 @@ export function ExpensesSection() {
                             <button
                               type="button"
                               className="w-full text-left truncate block hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                              title={draft.name || expense.name}
+                              title={expense.name}
                               onClick={() => startFieldEdit(expense, 'name')}
                             >
-                              {draft.name || expense.name}
+                              {expense.name}
                             </button>
                           )}
                         </TableCell>
@@ -390,14 +374,7 @@ export function ExpensesSection() {
                               type="number"
                               className="min-w-0 text-right text-[1rem]"
                               value={draft.amount}
-                              onChange={(e) => {
-                                const updated = { ...draft, amount: e.target.value }
-                                setDraft(updated)
-                                if (formHasChanges(expense, updated)) {
-                                  const payload = buildPayload(expense.id, updated, expense)
-                                  showSaveToast(expense.id, payload)
-                                }
-                              }}
+                              onChange={(e) => setDraft((f) => ({ ...f, amount: e.target.value }))}
                               onBlur={() => handleFieldBlur(expense.id)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Escape') {
@@ -447,8 +424,8 @@ export function ExpensesSection() {
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} draft={draft} onDraftChange={setDraft} onUpdate={(updates) => {
-                            const payload = buildPayload(expense.id, draft, expense)
-                            showSaveToast(expense.id, payload)
+                            const merged = { ...formFromExpense(expense), ...updates }
+                            commitChanges(expense, merged)
                           }} />
                           <Button
                             variant="destructive"
