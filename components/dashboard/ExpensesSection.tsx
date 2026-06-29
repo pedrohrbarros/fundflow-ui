@@ -750,7 +750,6 @@ function ExpensePmEditCell({
       </PopoverTrigger>
       <PopoverContent align="start" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-72 text-gray-900 dark:text-[#d1fae5]">
         <div className="space-y-3">
-          <p className="text-sm font-medium">Payment Methods</p>
           <div className="flex flex-col gap-1.5">
             {localPms.map((pm, i) => {
               const meta = paymentMethods.find((p) => String(p.id) === String(pm.payment_method_id))
