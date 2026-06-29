@@ -42,7 +42,7 @@ interface RowForm {
   recurring_months: string
 }
 
-type EditField = 'name' | 'category' | 'amount' | 'date'
+type EditField = 'name' | 'category' | 'amount' | 'date' | 'recurring_months'
 
 type ExpenseUpdatePayload = {
   id: string
@@ -75,11 +75,20 @@ function ExpensesTableColgroup() {
       <col style={{ width: '25%' }} />
       <col style={{ width: '11%' }} />
       <col style={{ width: '11%' }} />
-      <col style={{ width: '21%' }} />
+      <col style={{ width: '19%' }} />
       <col style={{ width: '9%' }} />
-      <col style={{ width: '23%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '17%' }} />
     </colgroup>
   )
+}
+
+function remainingMonths(expense: { date: string; recurring_months: number | null }, periodDate: string): number | null {
+  if (expense.recurring_months == null) return null
+  const [ey, em] = expense.date.split('-').map(Number)
+  const [py, pm] = periodDate.split('-').map(Number)
+  const monthsDiff = (py - ey) * 12 + (pm - em)
+  return Math.max(0, expense.recurring_months - monthsDiff)
 }
 
 function formFromExpense(expense: Expense): RowForm {
@@ -345,6 +354,9 @@ export function ExpensesSection() {
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
                     </TableHead>
+                    <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Remaining" align="center" />
+                    </TableHead>
                     <TableHead className="py-4 px-5 h-auto text-right" />
                   </TableRow>
                 </TableHeader>
@@ -446,18 +458,40 @@ export function ExpensesSection() {
                           </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <Checkbox
-                              checked={expense.is_recurring}
-                              onCheckedChange={(checked) => {
-                                const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
-                                commitChanges(expense, merged)
-                              }}
-                            />
-                            {expense.is_recurring && expense.recurring_months != null && (
-                              <span className="text-xs text-green-600 dark:text-[#86efac]/70 font-mono">{expense.recurring_months}mo</span>
-                            )}
-                          </div>
+                          <Checkbox
+                            checked={expense.is_recurring}
+                            onCheckedChange={(checked) => {
+                              const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
+                              commitChanges(expense, merged)
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell className="py-5 px-5 text-center">
+                          {expense.is_recurring && (
+                            isEditing && editing.field === 'recurring_months' ? (
+                              <Input
+                                type="number"
+                                className="w-16 text-center text-sm"
+                                min="1"
+                                placeholder="∞"
+                                value={draft.recurring_months}
+                                onChange={(e) => setDraft((f) => ({ ...f, recurring_months: e.target.value }))}
+                                onBlur={() => handleFieldBlur(expense.id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Escape') { setEditing(null); setDraft(emptyForm) }
+                                }}
+                                autoFocus
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                className="font-mono text-sm hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                                onClick={() => startFieldEdit(expense, 'recurring_months')}
+                              >
+                                {expense.recurring_months != null ? `${remainingMonths(expense, periodDate)}mo` : '∞'}
+                              </button>
+                            )
+                          )}
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
@@ -561,23 +595,23 @@ export function ExpensesSection() {
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <Checkbox
-                            checked={addForm.is_recurring}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                        <Checkbox
+                          checked={addForm.is_recurring}
+                          onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                        />
+                      </TableCell>
+                      <TableCell className="py-5 px-5 text-center">
+                        {addForm.is_recurring && (
+                          <Input
+                            type="number"
+                            className="w-16 text-center text-sm"
+                            min="1"
+                            placeholder="∞"
+                            value={addForm.recurring_months}
+                            onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
+                            title="Recurring months limit"
                           />
-                          {addForm.is_recurring && (
-                            <Input
-                              type="number"
-                              className="w-14 text-center text-xs px-1 py-0.5 h-6"
-                              min="1"
-                              placeholder="∞"
-                              value={addForm.recurring_months}
-                              onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
-                              title="Recurring months limit"
-                            />
-                          )}
-                        </div>
+                        )}
                       </TableCell>
                       <TableCell className="py-5 px-5 text-right">
                         <div className="flex gap-2 items-center justify-end">
@@ -605,7 +639,7 @@ export function ExpensesSection() {
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={6}
+                        colSpan={7}
                         className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
