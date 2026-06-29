@@ -753,7 +753,7 @@ function ExpensePmEditCell({
           <p className="text-sm font-medium">Payment Methods</p>
           <div className="flex flex-col gap-1.5">
             {localPms.map((pm, i) => {
-              const meta = paymentMethods.find((p) => String(p.id) === pm.payment_method_id)
+              const meta = paymentMethods.find((p) => String(p.id) === String(pm.payment_method_id))
               return (
                 <div key={pm.payment_method_id} className="flex items-center gap-1">
                   <span className="flex-1 text-xs truncate text-green-800 dark:text-[#d1fae5]">
@@ -884,7 +884,7 @@ function ExpenseExtraTools({
             <label className="block text-sm font-medium mb-2">Payment Methods</label>
             <div className="flex flex-col gap-1.5 mb-2">
               {localDraft.payment_methods.map((pm, i) => {
-                const meta = paymentMethods.find((p) => String(p.id) === pm.payment_method_id)
+                const meta = paymentMethods.find((p) => String(p.id) === String(pm.payment_method_id))
                 return (
                   <div key={pm.payment_method_id} className="flex items-center gap-1">
                     <span className="flex-1 text-xs truncate text-green-800 dark:text-[#d1fae5]">
