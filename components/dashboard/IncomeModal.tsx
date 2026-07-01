@@ -323,6 +323,10 @@ export function IncomeModal({ open, onClose }: Props) {
           <>
           {/* Mobile: tap-to-edit card list (no wide table) */}
           <div className="sm:hidden flex flex-col">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-[#166534] px-4 py-3 text-sm font-semibold text-white">
+              <span>Name</span>
+              <span>Amount</span>
+            </div>
             {sources.map((source) => (
               <button
                 key={source.id}
