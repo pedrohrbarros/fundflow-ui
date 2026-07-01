@@ -13,6 +13,7 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { fmtMoney } from '@/lib/format'
+import { useCategories } from '@/hooks/use-categories'
 import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,11 +70,15 @@ export function IncomeSection() {
   const pendingPayloads = useRef<Record<string, IncomePayload>>({})
   const sharedToastId = useRef<string | number | undefined>(undefined)
 
+  const { data: categoriesData } = useCategories()
+  const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
+
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
 
   function mergedForm(source: SourceOfIncome): RowForm {
-    return pendingEdits[source.id] ?? formFromSource(source)
+    const sourceId = String(source.id)
+    return pendingEdits[sourceId] ?? formFromSource(source)
   }
 
   function clearAllPending() {
@@ -107,8 +112,9 @@ export function IncomeSection() {
   function commitChanges(source: SourceOfIncome, form: RowForm) {
     if (!form.name.trim() || !formHasChanges(source, form)) return
 
+    const sourceId = String(source.id)
     const payload: IncomePayload = {
-      id: source.id,
+      id: sourceId,
       name: form.name.trim(),
       category_id: form.category_id ? parseInt(form.category_id, 10) : null,
       income: parseFloat(form.income) || 0,
@@ -117,14 +123,15 @@ export function IncomeSection() {
     }
 
     const pendingForm: RowForm = { ...form, date: form.date || source.date }
-    pendingPayloads.current = { ...pendingPayloads.current, [source.id]: payload }
-    setPendingEdits((prev) => ({ ...prev, [source.id]: pendingForm }))
+    pendingPayloads.current = { ...pendingPayloads.current, [sourceId]: payload }
+    setPendingEdits((prev) => ({ ...prev, [sourceId]: pendingForm }))
     showSharedToast(Object.values(pendingPayloads.current))
   }
 
   function startEdit(source: SourceOfIncome, field: EditField) {
-    setEditing({ id: source.id, field })
-    setDraft(pendingEdits[source.id] ?? formFromSource(source))
+    const sourceId = String(source.id)
+    setEditing({ id: sourceId, field })
+    setDraft(pendingEdits[sourceId] ?? formFromSource(source))
   }
 
   function handleFieldBlur(sourceId: string) {
@@ -247,7 +254,9 @@ export function IncomeSection() {
                         className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
                         onClick={() => startEdit(source, 'category')}
                       >
-                        {merged.category_id || <span className="text-green-300 dark:text-green-800">—</span>}
+                        {categoryNameById.get(String(merged.category_id)) ?? (
+                          <span className="text-green-300 dark:text-green-800">—</span>
+                        )}
                       </button>
                     )}
                   </TableCell>
@@ -272,7 +281,7 @@ export function IncomeSection() {
                         className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
                         onClick={() => startEdit(source, 'income')}
                       >
-                        {pendingEdits[source.id]
+                        {pendingEdits[String(source.id)]
                           ? fmtMoney(parseFloat(merged.income) || 0)
                           : fmtMoney(source.period_amount)}
                       </button>
@@ -283,7 +292,8 @@ export function IncomeSection() {
                       <IncomeExtraTools
                         source={{ id: source.id, date: merged.date, is_recurring: merged.is_recurring }}
                         onUpdate={(updates) => {
-                          const base = pendingEdits[source.id] ?? formFromSource(source)
+                          const sourceId = String(source.id)
+                          const base = pendingEdits[sourceId] ?? formFromSource(source)
                           commitChanges(source, { ...base, date: updates.date, is_recurring: updates.is_recurring })
                         }}
                       />

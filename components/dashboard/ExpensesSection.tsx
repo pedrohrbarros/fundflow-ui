@@ -75,10 +75,11 @@ function ExpensesTableColgroup() {
       <col style={{ width: '25%' }} />
       <col style={{ width: '11%' }} />
       <col style={{ width: '11%' }} />
-      <col style={{ width: '19%' }} />
-      <col style={{ width: '9%' }} />
+      <col style={{ width: '16%' }} />
       <col style={{ width: '8%' }} />
-      <col style={{ width: '17%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '9%' }} />
     </colgroup>
   )
 }
@@ -372,6 +373,9 @@ export function ExpensesSection() {
                       <ColumnHeader label="Payment Method" />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto">
+                      <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} />
+                    </TableHead>
+                    <TableHead className="py-4 px-5 h-auto text-center">
                       <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto">
@@ -469,13 +473,26 @@ export function ExpensesSection() {
                           />
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center">
-                          <Checkbox
-                            checked={expense.is_recurring}
-                            onCheckedChange={(checked) => {
-                              const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
-                              commitChanges(expense, merged)
-                            }}
-                          />
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={expense.is_paid}
+                              onCheckedChange={(checked) => {
+                                const merged = { ...formFromExpense(expense), is_paid: Boolean(checked) }
+                                commitChanges(expense, merged)
+                              }}
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-5 px-5 text-center">
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={expense.is_recurring}
+                              onCheckedChange={(checked) => {
+                                const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
+                                commitChanges(expense, merged)
+                              }}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center">
                           {expense.is_recurring && (
@@ -607,10 +624,20 @@ export function ExpensesSection() {
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center">
-                        <Checkbox
-                          checked={addForm.is_recurring}
-                          onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
-                        />
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={addForm.is_paid}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-5 px-5 text-center">
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={addForm.is_recurring}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center">
                         {addForm.is_recurring && (
@@ -651,7 +678,7 @@ export function ExpensesSection() {
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -859,38 +886,23 @@ function ExpenseExtraTools({
   expense: Expense
   onUpdate: (updates: {
     date: string
-    is_paid: boolean
     is_saved: boolean
     recurring_months: string
-    payment_methods: PmEntry[]
   }) => void
 }) {
   const [open, setOpen] = useState(false)
   const [localDraft, setLocalDraft] = useState({
     date: expense.date,
-    is_paid: expense.is_paid,
     is_saved: expense.is_saved,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
-    payment_methods: expense.payment_methods.map((pm) => ({
-      payment_method_id: pm.payment_method_id,
-      partial_amount: String(pm.partial_amount),
-    })),
   })
-
-  const { data: pmData } = usePaymentMethods()
-  const paymentMethods = pmData?.payment_methods ?? []
 
   function handleOpen(o: boolean) {
     if (o) {
       setLocalDraft({
         date: expense.date,
-        is_paid: expense.is_paid,
         is_saved: expense.is_saved,
         recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
-        payment_methods: expense.payment_methods.map((pm) => ({
-          payment_method_id: pm.payment_method_id,
-          partial_amount: String(pm.partial_amount),
-        })),
       })
     }
     setOpen(o)
@@ -925,72 +937,6 @@ function ExpenseExtraTools({
               />
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium mb-2">Payment Methods</label>
-            <div className="flex flex-col gap-1.5 mb-2">
-              {localDraft.payment_methods.map((pm, i) => {
-                const meta = paymentMethods.find((p) => String(p.id) === String(pm.payment_method_id))
-                return (
-                  <div key={pm.payment_method_id} className="flex items-center gap-1">
-                    <span className="flex-1 text-xs truncate text-green-800 dark:text-[#d1fae5]">
-                      {meta?.name ?? pm.payment_method_id}
-                      {meta?.origin ? <span className="text-green-500 dark:text-[#86efac]/60"> ({meta.origin})</span> : null}
-                    </span>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="amt"
-                      value={pm.partial_amount}
-                      onChange={(e) =>
-                        setLocalDraft((f) => ({
-                          ...f,
-                          payment_methods: f.payment_methods.map((p, j) =>
-                            j === i ? { ...p, partial_amount: e.target.value } : p
-                          ),
-                        }))
-                      }
-                      className="w-20 h-6 text-xs text-right px-1.5 bg-green-50 dark:bg-[#1a2e1a] border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
-                    />
-                    <button
-                      type="button"
-                      className="shrink-0 text-red-400 hover:text-red-300 text-xs px-1"
-                      onClick={() =>
-                        setLocalDraft((f) => ({
-                          ...f,
-                          payment_methods: f.payment_methods.filter((_, j) => j !== i),
-                        }))
-                      }
-                      aria-label="Remove payment method"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-            <PaymentMethodCombobox
-              value=""
-              onChange={(id) => {
-                if (!id || localDraft.payment_methods.some((pm) => pm.payment_method_id === id)) return
-                setLocalDraft((f) => ({
-                  ...f,
-                  payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: '' }],
-                }))
-              }}
-              placeholder="Add payment method"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`is_paid_${expense.id}`}
-              checked={localDraft.is_paid}
-              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_paid: Boolean(checked) }))}
-            />
-            <label htmlFor={`is_paid_${expense.id}`} className="text-sm font-medium cursor-pointer">
-              Paid
-            </label>
-          </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id={`is_saved_${expense.id}`}
@@ -1007,10 +953,8 @@ function ExpenseExtraTools({
             onClick={() => {
               onUpdate({
                 date: localDraft.date,
-                is_paid: localDraft.is_paid,
                 is_saved: localDraft.is_saved,
                 recurring_months: localDraft.recurring_months,
-                payment_methods: localDraft.payment_methods,
               })
               setOpen(false)
             }}
