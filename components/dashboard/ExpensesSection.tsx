@@ -357,6 +357,10 @@ export function ExpensesSection() {
           <>
             {/* Mobile: full-width name + amount list */}
             <div className="sm:hidden flex-1 min-h-0 overflow-auto">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-[#166534] px-4 py-3 text-sm font-semibold text-white">
+                <span>Name</span>
+                <span>Amount</span>
+              </div>
               {sortedExpenses.map((expense) => (
                 <div
                   key={expense.id}
