@@ -76,9 +76,10 @@ export function IncomeSection() {
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
 
-  function mergedForm(source: SourceOfIncome): RowForm {
-    const sourceId = String(source.id)
-    return pendingEdits[sourceId] ?? formFromSource(source)
+  function mergedForm(source: SourceOfIncome, sourceId?: string): RowForm {
+    const id = sourceId ?? String(source.id)
+    const pending = pendingEdits[id]
+    return pending ?? formFromSource(source)
   }
 
   function clearAllPending() {
@@ -211,7 +212,7 @@ export function IncomeSection() {
           <TableBody>
             {sources.map((source) => {
               const sourceId = String(source.id)
-              const merged = mergedForm(source)
+              const merged = mergedForm(source, sourceId)
               const isEditing = editing?.id === sourceId
               return (
                 <TableRow key={source.id} className="border-0">
