@@ -75,13 +75,13 @@ const emptyForm: RowForm = {
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '25%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '16%' }} />
-      <col style={{ width: '8%' }} />
-      <col style={{ width: '10%' }} />
-      <col style={{ width: '10%' }} />
+      <col style={{ width: '28%' }} />
+      <col style={{ width: '13%' }} />
+      <col style={{ width: '12%' }} />
+      <col style={{ width: '18%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '7%' }} />
+      <col style={{ width: '7%' }} />
       <col style={{ width: '9%' }} />
     </colgroup>
   )
