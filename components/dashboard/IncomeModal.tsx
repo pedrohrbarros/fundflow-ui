@@ -311,15 +311,17 @@ export function IncomeModal({ open, onClose }: Props) {
       >
         <DialogTitle className="sr-only">Income sources</DialogTitle>
 
-        {/* Mobile-only close */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="sm:hidden absolute top-2 right-2 z-20 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
-        >
-          <XIcon className="h-5 w-5" />
-        </button>
+        {/* Mobile-only top bar (above the table) holding the close button */}
+        <div className="sm:hidden relative h-11 shrink-0 border-b border-green-100 dark:border-[#166534]">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-1.5 right-2 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+          >
+            <XIcon className="h-5 w-5" />
+          </button>
+        </div>
 
         {/* Table area */}
         <div className="overflow-auto min-h-0 flex-1 relative">
