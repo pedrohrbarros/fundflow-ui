@@ -465,8 +465,8 @@ export function ExpensesSection() {
                     <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
                       <ColumnHeader label="Saved" align="center" sortKey="is_saved" sort={sort} onSort={toggleSort} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
-                      <ColumnHeader label="Remaining" align="center" />
+                    <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
+                      <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto text-right hidden sm:table-cell" />
                   </TableRow>
@@ -576,31 +576,17 @@ export function ExpensesSection() {
                           </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                          {expense.is_recurring && (
-                            isEditing && editing.field === 'recurring_months' ? (
-                              <Input
-                                type="number"
-                                className="w-16 text-center text-sm"
-                                min="1"
-                                placeholder="∞"
-                                value={draft.recurring_months}
-                                onChange={(e) => setDraft((f) => ({ ...f, recurring_months: e.target.value }))}
-                                onBlur={() => handleFieldBlur(expense.id)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Escape') { setEditing(null); setDraft(emptyForm) }
-                                }}
-                                autoFocus
-                              />
-                            ) : (
-                              <button
-                                type="button"
-                                className="font-mono text-sm hover:text-green-600 dark:hover:text-green-400 transition-colors"
-                                onClick={() => startFieldEdit(expense, 'recurring_months')}
-                              >
-                                {expense.recurring_months != null ? `${remainingMonths(expense, periodDate)}mo` : '∞'}
-                              </button>
-                            )
-                          )}
+                          <div className="flex justify-center">
+                            <Checkbox
+                              checked={expense.is_recurring}
+                              onCheckedChange={(checked) =>
+                                toggleCheckboxColumn(
+                                  expense,
+                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: null },
+                                )
+                              }
+                            />
+                          </div>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-right hidden sm:flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
@@ -722,13 +708,10 @@ export function ExpensesSection() {
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                         <div className="flex flex-col items-center gap-1">
-                          <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                            <Checkbox
-                              checked={addForm.is_recurring}
-                              onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
-                            />
-                            Recurring
-                          </label>
+                          <Checkbox
+                            checked={addForm.is_recurring}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                          />
                           {addForm.is_recurring && (
                             <Input
                               type="number"
@@ -1145,14 +1128,13 @@ function ExpenseExtraTools({
   expense: Expense
   onUpdate: (updates: {
     date: string
-    is_recurring: boolean
     recurring_months: string
   }) => void
 }) {
+  const { date: periodDate } = usePeriod()
   const [open, setOpen] = useState(false)
   const [localDraft, setLocalDraft] = useState({
     date: expense.date,
-    is_recurring: expense.is_recurring,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
   })
 
@@ -1160,12 +1142,13 @@ function ExpenseExtraTools({
     if (o) {
       setLocalDraft({
         date: expense.date,
-        is_recurring: expense.is_recurring,
         recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
       })
     }
     setOpen(o)
   }
+
+  const monthsLeft = remainingMonths(expense, periodDate)
 
   return (
     <Popover open={open} onOpenChange={handleOpen}>
@@ -1183,21 +1166,14 @@ function ExpenseExtraTools({
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`is_recurring_${expense.id}`}
-              checked={localDraft.is_recurring}
-              onCheckedChange={(checked) =>
-                setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))
-              }
-            />
-            <label htmlFor={`is_recurring_${expense.id}`} className="text-sm font-medium cursor-pointer">
-              Recurring
-            </label>
-          </div>
-          {localDraft.is_recurring && (
+          {expense.is_recurring && (
             <div>
-              <label className="block text-sm font-medium mb-2">Recurring months limit</label>
+              <label className="block text-sm font-medium mb-2">
+                Remaining months limit
+                {monthsLeft != null && (
+                  <span className="ml-1 font-normal text-green-600 dark:text-[#86efac]">({monthsLeft} left)</span>
+                )}
+              </label>
               <Input
                 type="number"
                 min="1"
@@ -1214,7 +1190,6 @@ function ExpenseExtraTools({
             onClick={() => {
               onUpdate({
                 date: localDraft.date,
-                is_recurring: localDraft.is_recurring,
                 recurring_months: localDraft.recurring_months,
               })
               setOpen(false)
