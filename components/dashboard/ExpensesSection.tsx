@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import {
@@ -12,7 +13,7 @@ import {
 } from '@/hooks/use-expenses'
 import { usePaymentMethods } from '@/hooks/use-payment-methods'
 import { fmtMoney } from '@/lib/format'
-import type { Expense } from '@/types'
+import type { Expense, ExpensesResponse } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
 import { ColumnHeader } from '@/components/dashboard/ColumnHeader'
@@ -223,6 +224,7 @@ export function ExpensesSection() {
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
+  const qc = useQueryClient()
   const { date: periodDate } = usePeriod()
 
   const [isAdding, setIsAdding] = useState(false)
@@ -277,6 +279,30 @@ export function ExpensesSection() {
     const nextPending = { ...pendingEdits, [expense.id]: payload }
     setPendingEdits(nextPending)
     showSharedToast(Object.values(nextPending))
+  }
+
+  // Checkbox columns persist immediately (no toast/Save needed). Other columns
+  // stay batched behind the toast Save.
+  function toggleCheckboxColumn(
+    expense: Expense,
+    patch: Partial<Pick<Expense, 'is_paid' | 'is_recurring' | 'recurring_months'>>,
+  ) {
+    update.mutate({ id: expense.id, ...patch })
+
+    // Optimistically flip the checkbox instantly across all expenses queries.
+    qc.setQueriesData<ExpensesResponse>({ queryKey: ['expenses'] }, (old) =>
+      old
+        ? { ...old, expenses: old.expenses.map((e) => (e.id === expense.id ? { ...e, ...patch } : e)) }
+        : old,
+    )
+
+    // If the row has unsaved (draft) edits, keep the overlay and the pending
+    // Save payload in sync so the toggle isn't reverted on Save.
+    if (pendingEdits[expense.id]) {
+      const updated = { ...pendingEdits, [expense.id]: { ...pendingEdits[expense.id], ...patch } }
+      setPendingEdits(updated)
+      showSharedToast(Object.values(updated))
+    }
   }
 
   function startFieldEdit(expense: Expense, field: EditField) {
@@ -537,10 +563,7 @@ export function ExpensesSection() {
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_paid}
-                              onCheckedChange={(checked) => {
-                                const merged = { ...formFromExpense(expense), is_paid: Boolean(checked) }
-                                commitChanges(expense, merged)
-                              }}
+                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_paid: Boolean(checked) })}
                             />
                           </div>
                         </TableCell>
@@ -548,10 +571,12 @@ export function ExpensesSection() {
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_recurring}
-                              onCheckedChange={(checked) => {
-                                const merged = { ...formFromExpense(expense), is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? formFromExpense(expense).recurring_months : '' }
-                                commitChanges(expense, merged)
-                              }}
+                              onCheckedChange={(checked) =>
+                                toggleCheckboxColumn(
+                                  expense,
+                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: null },
+                                )
+                              }
                             />
                           </div>
                         </TableCell>
