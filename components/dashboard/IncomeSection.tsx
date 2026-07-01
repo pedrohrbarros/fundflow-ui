@@ -279,9 +279,11 @@ export function IncomeSection() {
                         className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
                         onClick={() => startEdit(source, 'income')}
                       >
-                        {pendingEdits[sourceId]
-                          ? fmtMoney(parseFloat(merged.income) || 0)
-                          : fmtMoney(source.period_amount)}
+                        {fmtMoney(
+                          pendingEdits[sourceId]
+                            ? (parseFloat(merged.income) || 0)
+                            : source.period_amount
+                        )}
                       </button>
                     )}
                   </TableCell>
