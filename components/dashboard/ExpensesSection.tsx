@@ -72,14 +72,14 @@ const emptyForm: RowForm = {
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '25%' }} />
-      <col className="hidden sm:table-column" style={{ width: '11%' }} />
-      <col style={{ width: '11%' }} />
-      <col className="hidden sm:table-column" style={{ width: '16%' }} />
-      <col className="hidden sm:table-column" style={{ width: '8%' }} />
-      <col className="hidden sm:table-column" style={{ width: '10%' }} />
-      <col className="hidden sm:table-column" style={{ width: '10%' }} />
-      <col className="hidden sm:table-column" style={{ width: '9%' }} />
+      <col className="w-[70%] sm:w-[25%]" />
+      <col className="hidden sm:table-column sm:w-[11%]" />
+      <col className="w-[30%] sm:w-[11%]" />
+      <col className="hidden sm:table-column sm:w-[16%]" />
+      <col className="hidden sm:table-column sm:w-[8%]" />
+      <col className="hidden sm:table-column sm:w-[10%]" />
+      <col className="hidden sm:table-column sm:w-[10%]" />
+      <col className="hidden sm:table-column sm:w-[9%]" />
     </colgroup>
   )
 }
