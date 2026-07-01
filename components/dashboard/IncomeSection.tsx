@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -75,6 +75,24 @@ export function IncomeSection() {
 
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
+
+  const mergedSources = useMemo(
+    () =>
+      sources.map((source) => {
+        const sourceId = String(source.id)
+        if (!pendingEdits[sourceId]) return source
+        // Merge pending edits with source
+        return {
+          ...source,
+          name: pendingEdits[sourceId].name,
+          category_id: pendingEdits[sourceId].category_id ? parseInt(pendingEdits[sourceId].category_id, 10) : null,
+          income: parseFloat(pendingEdits[sourceId].income) || 0,
+          date: pendingEdits[sourceId].date || source.date,
+          is_recurring: pendingEdits[sourceId].is_recurring,
+        } as SourceOfIncome
+      }),
+    [sources, pendingEdits]
+  )
 
   function mergedForm(source: SourceOfIncome, sourceId?: string): RowForm {
     const id = sourceId ?? String(source.id)
@@ -210,7 +228,7 @@ export function IncomeSection() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sources.map((source) => {
+            {mergedSources.map((source) => {
               const sourceId = String(source.id)
               const merged = mergedForm(source, sourceId)
               const isEditing = editing?.id === sourceId
