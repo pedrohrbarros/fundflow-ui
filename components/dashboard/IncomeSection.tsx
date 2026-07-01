@@ -110,11 +110,11 @@ export function IncomeSection() {
   }
 
   function commitChanges(source: SourceOfIncome, form: RowForm) {
-    if (!formHasChanges(source, form)) return
-
     const sourceId = String(source.id)
-    const trimmedName = form.name.trim()
+    const trimmedName = form.name?.trim() || source.name
+
     if (!trimmedName) return
+    if (!formHasChanges(source, form)) return
 
     const payload: IncomePayload = {
       id: sourceId,
@@ -125,7 +125,7 @@ export function IncomeSection() {
       is_recurring: form.is_recurring,
     }
 
-    const pendingForm: RowForm = { ...form, date: form.date || source.date }
+    const pendingForm: RowForm = { ...form, name: trimmedName, date: form.date || source.date }
     pendingPayloads.current = { ...pendingPayloads.current, [sourceId]: payload }
     setPendingEdits((prev) => ({ ...prev, [sourceId]: pendingForm }))
     showSharedToast(Object.values(pendingPayloads.current))
@@ -143,7 +143,10 @@ export function IncomeSection() {
     setDraft(emptyForm)
 
     // Ensure name is present, fallback to source name if empty
-    const draftWithName = currentDraft.name.trim() ? currentDraft : { ...currentDraft, name: source.name }
+    const draftWithName = {
+      ...currentDraft,
+      name: (currentDraft.name?.trim() || source.name || ''),
+    }
     commitChanges(source, draftWithName)
   }
 
@@ -153,7 +156,10 @@ export function IncomeSection() {
     setDraft(emptyForm)
 
     // Ensure name is present, fallback to source name if empty
-    const draftWithName = updatedDraft.name.trim() ? updatedDraft : { ...updatedDraft, name: source.name }
+    const draftWithName = {
+      ...updatedDraft,
+      name: (updatedDraft.name?.trim() || source.name || ''),
+    }
     commitChanges(source, draftWithName)
   }
 
