@@ -134,8 +134,9 @@ export function IncomeSection() {
     setDraft(pendingEdits[sourceId] ?? formFromSource(source))
   }
 
-  function handleFieldBlur(sourceId: string) {
-    const source = sources.find((s) => s.id === sourceId)
+  function handleFieldBlur(sourceId: string | number) {
+    const sourceIdStr = String(sourceId)
+    const source = sources.find((s) => String(s.id) === sourceIdStr)
     if (!source) {
       setEditing(null)
       setDraft(emptyForm)
@@ -150,8 +151,9 @@ export function IncomeSection() {
     commitChanges(source, currentDraft)
   }
 
-  function handleCategoryChange(sourceId: string, newCategoryId: string) {
-    const source = sources.find((s) => s.id === sourceId)
+  function handleCategoryChange(sourceId: string | number, newCategoryId: string) {
+    const sourceIdStr = String(sourceId)
+    const source = sources.find((s) => String(s.id) === sourceIdStr)
     if (!source) {
       setEditing(null)
       setDraft(emptyForm)
@@ -213,8 +215,9 @@ export function IncomeSection() {
           </TableHeader>
           <TableBody>
             {sources.map((source) => {
+              const sourceId = String(source.id)
               const merged = mergedForm(source)
-              const isEditing = editing?.id === source.id
+              const isEditing = editing?.id === sourceId
               return (
                 <TableRow key={source.id} className="border-0">
                   <TableCell className="py-1 px-3">
@@ -281,7 +284,7 @@ export function IncomeSection() {
                         className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
                         onClick={() => startEdit(source, 'income')}
                       >
-                        {pendingEdits[String(source.id)]
+                        {pendingEdits[sourceId]
                           ? fmtMoney(parseFloat(merged.income) || 0)
                           : fmtMoney(source.period_amount)}
                       </button>
@@ -292,7 +295,6 @@ export function IncomeSection() {
                       <IncomeExtraTools
                         source={{ id: source.id, date: merged.date, is_recurring: merged.is_recurring }}
                         onUpdate={(updates) => {
-                          const sourceId = String(source.id)
                           const base = pendingEdits[sourceId] ?? formFromSource(source)
                           commitChanges(source, { ...base, date: updates.date, is_recurring: updates.is_recurring })
                         }}
