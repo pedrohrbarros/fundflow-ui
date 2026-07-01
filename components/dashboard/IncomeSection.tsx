@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -76,29 +76,20 @@ export function IncomeSection() {
   const sources = data ? data.sources_of_income.flatMap((g) => g.sources) : []
   const usedCategoryIds = new Set(sources.map((s) => String(s.category_id)))
 
-  const mergedSources = useMemo(
-    () =>
-      sources.map((source) => {
-        const sourceId = String(source.id)
-        if (!pendingEdits[sourceId]) return source
-        // Merge pending edits with source
-        return {
-          ...source,
-          name: pendingEdits[sourceId].name,
-          category_id: pendingEdits[sourceId].category_id ? parseInt(pendingEdits[sourceId].category_id, 10) : null,
-          income: parseFloat(pendingEdits[sourceId].income) || 0,
-          date: pendingEdits[sourceId].date || source.date,
-          is_recurring: pendingEdits[sourceId].is_recurring,
-        } as SourceOfIncome
-      }),
-    [sources, pendingEdits]
-  )
-
-  function mergedForm(source: SourceOfIncome, sourceId?: string): RowForm {
-    const id = sourceId ?? String(source.id)
-    const pending = pendingEdits[id]
-    return pending ?? formFromSource(source)
-  }
+  const mergedSources = sources.map((source) => {
+    const pending = pendingEdits[String(source.id)]
+    if (!pending) return source
+    const income = parseFloat(pending.income) || 0
+    return {
+      ...source,
+      name: pending.name,
+      category_id: pending.category_id || null,
+      income,
+      period_amount: income,
+      date: pending.date || source.date,
+      is_recurring: pending.is_recurring,
+    } as SourceOfIncome
+  })
 
   function clearAllPending() {
     setPendingEdits({})
@@ -230,11 +221,10 @@ export function IncomeSection() {
           <TableBody>
             {mergedSources.map((source) => {
               const sourceId = String(source.id)
-              const merged = mergedForm(source, sourceId)
               const isEditing = editing?.id === sourceId
               return (
                 <TableRow key={source.id} className="border-0">
-                  <TableCell className="py-1 px-3">
+                  <TableCell className="py-1 px-3 max-w-0">
                     {isEditing && editing.field === 'name' ? (
                       <Input
                         className="h-7 text-sm min-w-0"
@@ -246,39 +236,31 @@ export function IncomeSection() {
                         }}
                         autoFocus
                       />
-                    ) : pendingEdits[sourceId] ? (
-                      <Input
-                        className="h-7 text-sm min-w-0 bg-yellow-50 dark:bg-yellow-900/20"
-                        value={draft.name}
-                        onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
-                        onBlur={() => handleFieldBlur(source)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm); setPendingEdits((prev) => { const { [sourceId]: _, ...rest } = prev; return rest }) }
-                        }}
-                      />
                     ) : (
                       <button
                         type="button"
                         className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
+                        title={source.name}
                         onClick={() => startEdit(source, 'name')}
                       >
                         {source.name}
                       </button>
                     )}
                   </TableCell>
-                  <TableCell className="py-1 px-3">
-                    {isEditing && editing.field === 'category' || pendingEdits[sourceId] ? (
+                  <TableCell className="py-1 px-3 max-w-0">
+                    {isEditing && editing.field === 'category' ? (
                       <CategoryCombobox
                         value={draft.category_id}
                         onChange={(id) => handleCategoryChange(source, id)}
                         type="INCOME"
                         usedCategoryIds={usedCategoryIds}
-                        autoOpen={isEditing && editing.field === 'category'}
+                        autoOpen
                       />
                     ) : (
                       <button
                         type="button"
                         className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
+                        title={categoryNameById.get(String(source.category_id)) ?? undefined}
                         onClick={() => startEdit(source, 'category')}
                       >
                         {categoryNameById.get(String(source.category_id)) ?? (
@@ -302,24 +284,10 @@ export function IncomeSection() {
                         }}
                         autoFocus
                       />
-                    ) : pendingEdits[sourceId] ? (
-                      <Input
-                        type="number"
-                        className="h-7 text-sm min-w-0 text-right bg-yellow-50 dark:bg-yellow-900/20"
-                        min="0"
-                        step="0.01"
-                        value={draft.income}
-                        onChange={(e) => setDraft((f) => ({ ...f, income: e.target.value }))}
-                        onBlur={() => handleFieldBlur(source)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm); setPendingEdits((prev) => { const { [sourceId]: _, ...rest } = prev; return rest }) }
-                        }}
-                        autoFocus
-                      />
                     ) : (
                       <button
                         type="button"
-                        className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
+                        className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block truncate"
                         onClick={() => startEdit(source, 'income')}
                       >
                         {fmtMoney(source.period_amount)}
@@ -329,7 +297,7 @@ export function IncomeSection() {
                   <TableCell className="py-1 px-3 text-right">
                     <div className="flex gap-1 justify-end">
                       <IncomeExtraTools
-                        source={{ id: source.id, date: merged.date, is_recurring: merged.is_recurring }}
+                        source={{ id: source.id, date: source.date, is_recurring: source.is_recurring }}
                         onUpdate={(updates) => {
                           const base = pendingEdits[sourceId] ?? formFromSource(source)
                           commitChanges(source, { ...base, date: updates.date, is_recurring: updates.is_recurring })

@@ -37,7 +37,7 @@ export function Sidebar() {
     <nav
       className={cn(
         'shrink-0 border-r border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden',
-        collapsed ? 'w-16' : 'w-56'
+        collapsed ? 'w-16' : 'w-[60vw] sm:w-56'
       )}
     >
       <div className="flex flex-col gap-1 flex-1 min-h-0">
