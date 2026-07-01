@@ -905,7 +905,7 @@ function ExpenseRowFormModal({
             />
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="expense_row_paid"
@@ -922,6 +922,14 @@ function ExpenseRowFormModal({
               />
               <label htmlFor="expense_row_recurring" className="text-sm font-medium cursor-pointer">Recurring</label>
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="expense_row_saved"
+                checked={form.is_saved}
+                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
+              />
+              <label htmlFor="expense_row_saved" className="text-sm font-medium cursor-pointer">Saved</label>
+            </div>
           </div>
 
           {form.is_recurring && (
@@ -937,15 +945,6 @@ function ExpenseRowFormModal({
               />
             </div>
           )}
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="expense_row_saved"
-              checked={form.is_saved}
-              onCheckedChange={(checked) => setForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
-            />
-            <label htmlFor="expense_row_saved" className="text-sm font-medium cursor-pointer">Saved</label>
-          </div>
 
           <div className="flex gap-2 pt-1">
             <Button className="flex-1" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
