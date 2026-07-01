@@ -110,12 +110,15 @@ export function IncomeSection() {
   }
 
   function commitChanges(source: SourceOfIncome, form: RowForm) {
-    if (!form.name.trim() || !formHasChanges(source, form)) return
+    if (!formHasChanges(source, form)) return
 
     const sourceId = String(source.id)
+    const trimmedName = form.name.trim()
+    if (!trimmedName) return
+
     const payload: IncomePayload = {
       id: sourceId,
-      name: form.name.trim(),
+      name: trimmedName,
       category_id: form.category_id ? parseInt(form.category_id, 10) : null,
       income: parseFloat(form.income) || 0,
       date: form.date || source.date,
@@ -134,15 +137,7 @@ export function IncomeSection() {
     setDraft(pendingEdits[sourceId] ?? formFromSource(source))
   }
 
-  function handleFieldBlur(sourceId: string | number) {
-    const sourceIdStr = String(sourceId)
-    const source = sources.find((s) => String(s.id) === sourceIdStr)
-    if (!source) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-
+  function handleFieldBlur(source: SourceOfIncome) {
     const currentDraft = draft
     setEditing(null)
     setDraft(emptyForm)
@@ -151,15 +146,7 @@ export function IncomeSection() {
     commitChanges(source, currentDraft)
   }
 
-  function handleCategoryChange(sourceId: string | number, newCategoryId: string) {
-    const sourceIdStr = String(sourceId)
-    const source = sources.find((s) => String(s.id) === sourceIdStr)
-    if (!source) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-
+  function handleCategoryChange(source: SourceOfIncome, newCategoryId: string) {
     const updatedDraft = { ...draft, category_id: newCategoryId }
     setEditing(null)
     setDraft(emptyForm)
@@ -226,7 +213,7 @@ export function IncomeSection() {
                         className="h-7 text-sm min-w-0"
                         value={draft.name}
                         onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
-                        onBlur={() => handleFieldBlur(source.id)}
+                        onBlur={() => handleFieldBlur(source)}
                         onKeyDown={(e) => {
                           if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm) }
                         }}
@@ -246,7 +233,7 @@ export function IncomeSection() {
                     {isEditing && editing.field === 'category' ? (
                       <CategoryCombobox
                         value={draft.category_id}
-                        onChange={(id) => handleCategoryChange(source.id, id)}
+                        onChange={(id) => handleCategoryChange(source, id)}
                         type="INCOME"
                         usedCategoryIds={usedCategoryIds}
                         autoOpen
@@ -272,7 +259,7 @@ export function IncomeSection() {
                         step="0.01"
                         value={draft.income}
                         onChange={(e) => setDraft((f) => ({ ...f, income: e.target.value }))}
-                        onBlur={() => handleFieldBlur(source.id)}
+                        onBlur={() => handleFieldBlur(source)}
                         onKeyDown={(e) => {
                           if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm) }
                         }}
