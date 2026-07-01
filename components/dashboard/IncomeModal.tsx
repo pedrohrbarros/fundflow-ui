@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, MoreVertical } from 'lucide-react'
+import { Loader2, MoreVertical, XIcon } from 'lucide-react'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
@@ -14,7 +14,6 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { useCategories } from '@/hooks/use-categories'
-import { useIsMobile } from '@/hooks/use-is-mobile'
 import { usePeriod } from '@/providers/period-provider'
 import { fmtMoney } from '@/lib/format'
 import type { SourceOfIncome, SourcesOfIncomeResponse } from '@/types'
@@ -70,7 +69,6 @@ type SavePayload = { id: string; name: string; category_id: number | null; incom
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
-  const isMobile = useIsMobile()
   const { date: periodDate } = usePeriod()
   const { data, isLoading } = useSourcesOfIncome()
   const { data: categoriesData } = useCategories()
@@ -312,6 +310,16 @@ export function IncomeModal({ open, onClose }: Props) {
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Income sources</DialogTitle>
+
+        {/* Mobile-only close */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="sm:hidden absolute top-2 right-2 z-20 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+        >
+          <XIcon className="h-5 w-5" />
+        </button>
 
         {/* Table area */}
         <div className="overflow-auto min-h-0 flex-1 relative">
@@ -672,7 +680,20 @@ function IncomeRowFormModal({
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent className="income-modal-dark w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]">
+      <DialogContent
+        className="income-modal-dark w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]"
+        showCloseButton={false}
+      >
+        {/* Mobile-only close */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+        >
+          <XIcon className="h-5 w-5" />
+        </button>
+
         <DialogTitle>{mode === 'add' ? 'Add income' : 'Edit income'}</DialogTitle>
 
         <div className="flex flex-col gap-4">

@@ -23,6 +23,8 @@ import { usePeriod } from '@/providers/period-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { XIcon } from 'lucide-react'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface PmEntry {
@@ -231,6 +233,8 @@ export function ExpensesSection() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
   const sharedToastId = useRef<string | number | undefined>(undefined)
+  // Mobile-only: tap a row (or add) to edit all fields in one modal.
+  const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; expense: Expense } | null>(null)
 
   const expenses = data?.expenses ?? []
   const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
@@ -335,7 +339,37 @@ export function ExpensesSection() {
     )
   }
 
+  function submitRowForm(form: RowForm) {
+    if (rowForm?.mode === 'edit') {
+      commitChanges(rowForm.expense, form)
+      setRowForm(null)
+    } else {
+      if (!form.name.trim() || !form.amount) return
+      const amount = parseFloat(form.amount)
+      create.mutate(
+        {
+          name: form.name.trim(),
+          amount,
+          category_id: form.category_id ? parseInt(form.category_id, 10) : null,
+          date: form.date || periodDate,
+          is_recurring: form.is_recurring,
+          recurring_months: form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null,
+          is_paid: form.is_paid,
+          is_saved: form.is_saved,
+          payment_methods: form.payment_methods
+            .filter((pm) => pm.payment_method_id)
+            .map((pm) => ({
+              payment_method_id: parseInt(pm.payment_method_id, 10),
+              partial_amount: parseFloat(pm.partial_amount) || amount,
+            })),
+        },
+        { onSuccess: () => setRowForm(null) },
+      )
+    }
+  }
+
   return (
+    <>
     <section className="flex flex-col flex-1 min-h-0">
       <div className="border border-green-700 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
         {isLoading ? (
@@ -355,21 +389,30 @@ export function ExpensesSection() {
           </div>
         ) : (
           <>
-            {/* Mobile: full-width name + amount list */}
+            {/* Mobile: full-width name + amount list (tap a row to edit) */}
             <div className="sm:hidden flex-1 min-h-0 overflow-auto">
               <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-[#166534] px-4 py-3 text-sm font-semibold text-white">
                 <span>Name</span>
                 <span>Amount</span>
               </div>
               {sortedExpenses.map((expense) => (
-                <div
+                <button
                   key={expense.id}
-                  className="flex items-center justify-between gap-3 border-b border-green-100 dark:border-green-800 px-4 py-3"
+                  type="button"
+                  onClick={() => setRowForm({ mode: 'edit', expense })}
+                  className="w-full flex items-center justify-between gap-3 border-b border-green-100 dark:border-green-800 px-4 py-3 text-left active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
                 >
                   <span className="min-w-0 truncate text-gray-900 dark:text-[#d1fae5]">{expense.name}</span>
                   <span className="shrink-0 font-mono text-gray-900 dark:text-[#d1fae5]">{fmtMoney(expense.period_amount)}</span>
-                </div>
+                </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setRowForm({ mode: 'add' })}
+                className="w-full px-4 py-3 text-center text-green-700 dark:text-green-500 font-medium active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
+              >
+                + Add expense
+              </button>
             </div>
 
             {/* Desktop: full editable table */}
@@ -747,6 +790,176 @@ export function ExpensesSection() {
         )}
       </div>
     </section>
+
+    {rowForm && (
+      <ExpenseRowFormModal
+        mode={rowForm.mode}
+        expense={rowForm.mode === 'edit' ? rowForm.expense : null}
+        usedCategoryIds={usedCategoryIds}
+        periodDate={periodDate}
+        isSaving={create.isPending}
+        onDelete={
+          rowForm.mode === 'edit'
+            ? () => {
+                const id = (rowForm as { expense: Expense }).expense.id
+                setDeletingExpenseId(id)
+                del.mutate(id, { onSettled: () => setDeletingExpenseId(null) })
+                setRowForm(null)
+              }
+            : undefined
+        }
+        onClose={() => setRowForm(null)}
+        onSubmit={submitRowForm}
+      />
+    )}
+    </>
+  )
+}
+
+function ExpenseRowFormModal({
+  mode,
+  expense,
+  usedCategoryIds,
+  periodDate,
+  isSaving,
+  onDelete,
+  onClose,
+  onSubmit,
+}: {
+  mode: 'add' | 'edit'
+  expense: Expense | null
+  usedCategoryIds: Set<string>
+  periodDate: string
+  isSaving: boolean
+  onDelete?: () => void
+  onClose: () => void
+  onSubmit: (form: RowForm) => void
+}) {
+  const [form, setForm] = useState<RowForm>(
+    expense ? formFromExpense(expense) : { ...emptyForm, date: periodDate },
+  )
+
+  const canSave = form.name.trim().length > 0 && !!form.amount
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+      <DialogContent
+        className="w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]"
+        showCloseButton={false}
+      >
+        {/* Mobile-only close */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-gray-600 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+        >
+          <XIcon className="h-5 w-5" />
+        </button>
+
+        <DialogTitle>{mode === 'add' ? 'Add expense' : 'Edit expense'}</DialogTitle>
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Name</label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Expense name"
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Category</label>
+            <CategoryCombobox
+              value={form.category_id}
+              onChange={(id) => setForm((f) => ({ ...f, category_id: id }))}
+              type="EXPENSE"
+              usedCategoryIds={usedCategoryIds}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Amount</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              value={form.amount}
+              onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+              placeholder="0.00"
+              className="w-full text-right bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Date</label>
+            <Input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+            />
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="expense_row_paid"
+                checked={form.is_paid}
+                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_paid: Boolean(checked) }))}
+              />
+              <label htmlFor="expense_row_paid" className="text-sm font-medium cursor-pointer">Paid</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="expense_row_recurring"
+                checked={form.is_recurring}
+                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+              />
+              <label htmlFor="expense_row_recurring" className="text-sm font-medium cursor-pointer">Recurring</label>
+            </div>
+          </div>
+
+          {form.is_recurring && (
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Recurring months limit</label>
+              <Input
+                type="number"
+                min="1"
+                placeholder="Indefinite"
+                value={form.recurring_months}
+                onChange={(e) => setForm((f) => ({ ...f, recurring_months: e.target.value }))}
+                className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="expense_row_saved"
+              checked={form.is_saved}
+              onCheckedChange={(checked) => setForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
+            />
+            <label htmlFor="expense_row_saved" className="text-sm font-medium cursor-pointer">Saved</label>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button className="flex-1" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
+              {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
+            </Button>
+            {mode === 'edit' && onDelete && (
+              <Button variant="destructive" size="icon" aria-label="Delete expense" onClick={onDelete}>
+                ✕
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
