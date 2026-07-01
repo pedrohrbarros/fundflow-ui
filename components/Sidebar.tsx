@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, PanelLeft, PanelLeftClose, Receipt } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'sidebar-collapsed'
@@ -16,8 +17,12 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(true)
   const [mounted, setMounted] = useState(false)
+
+  // On mobile the sidebar stays a fixed icon rail — it must not expand.
+  const effectiveCollapsed = isMobile ? true : collapsed
 
   useEffect(() => {
     setMounted(true)
@@ -37,7 +42,7 @@ export function Sidebar() {
     <nav
       className={cn(
         'shrink-0 border-r border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden',
-        collapsed ? 'w-16' : 'w-[60vw] sm:w-56'
+        effectiveCollapsed ? 'w-16' : 'w-56'
       )}
     >
       <div className="flex flex-col gap-1 flex-1 min-h-0">
@@ -47,24 +52,24 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
-              title={collapsed ? label : undefined}
-              aria-label={collapsed ? label : undefined}
+              title={effectiveCollapsed ? label : undefined}
+              aria-label={effectiveCollapsed ? label : undefined}
               className={cn(
                 'flex items-center rounded-lg py-2 text-sm font-medium transition-colors',
-                collapsed ? 'justify-center px-2' : 'gap-3 px-3',
+                effectiveCollapsed ? 'justify-center px-2' : 'gap-3 px-3',
                 active
                   ? 'bg-green-100 dark:bg-[#14532d] text-green-900 dark:text-[#d1fae5]'
                   : 'text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]'
               )}
             >
               <Icon className="size-4 shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
+              {!effectiveCollapsed && <span className="truncate">{label}</span>}
             </Link>
           )
         })}
       </div>
 
-      {mounted && (
+      {mounted && !isMobile && (
         <Button
           type="button"
           variant="ghost"

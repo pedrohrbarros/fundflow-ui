@@ -14,6 +14,7 @@ import {
   useDeleteSourceOfIncome,
 } from '@/hooks/use-sources-of-income'
 import { useCategories } from '@/hooks/use-categories'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { usePeriod } from '@/providers/period-provider'
 import { fmtMoney } from '@/lib/format'
 import type { SourceOfIncome, SourcesOfIncomeResponse } from '@/types'
@@ -69,6 +70,7 @@ type SavePayload = { id: string; name: string; category_id: number | null; incom
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
+  const isMobile = useIsMobile()
   const { date: periodDate } = usePeriod()
   const { data, isLoading } = useSourcesOfIncome()
   const { data: categoriesData } = useCategories()
@@ -81,6 +83,8 @@ export function IncomeModal({ open, onClose }: Props) {
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
+  // Mobile-only: tap a row (or the add button) to edit all fields in one modal.
+  const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; source: SourceOfIncome } | null>(null)
 
   const originalSnapshot = useRef<SourcesOfIncomeResponse | undefined>(undefined)
   const pendingPayloads = useRef<Map<string, SavePayload>>(new Map())
@@ -113,6 +117,7 @@ export function IncomeModal({ open, onClose }: Props) {
       setAddForm(emptyForm)
       setEditing(null)
       setDraft(emptyForm)
+      setRowForm(null)
       originalSnapshot.current = undefined
       pendingPayloads.current = new Map()
       if (sharedToastId.current !== undefined) {
@@ -153,11 +158,12 @@ export function IncomeModal({ open, onClose }: Props) {
     const newGroups = old.sources_of_income.map((group) => ({
       ...group,
       sources: group.sources.map((s) =>
-        s.id === payload.id
+        String(s.id) === String(payload.id)
           ? {
               ...s,
               name: payload.name,
               income: payload.income,
+              period_amount: payload.income,
               currency: payload.currency,
               category_id: newCatId,
               date: payload.date,
@@ -271,7 +277,39 @@ export function IncomeModal({ open, onClose }: Props) {
     })
   }
 
+  function submitRowForm(form: RowForm) {
+    if (rowForm?.mode === 'edit') {
+      const source = rowForm.source
+      if (form.name.trim() && formHasChanges(source, form)) {
+        commitToSharedToast({
+          id: source.id,
+          name: form.name.trim(),
+          category_id: form.category_id ? parseInt(form.category_id, 10) : null,
+          income: parseFloat(form.income) || 0,
+          currency: form.currency || 'USD',
+          date: form.date || source.date,
+          is_recurring: form.is_recurring,
+        })
+      }
+      setRowForm(null)
+    } else {
+      if (!form.name.trim()) return
+      create.mutate(
+        {
+          name: form.name.trim(),
+          category_id: form.category_id ? parseInt(form.category_id, 10) : null,
+          income: parseFloat(form.income) || 0,
+          currency: form.currency || 'USD',
+          date: form.date || periodDate,
+          is_recurring: form.is_recurring,
+        },
+        { onSuccess: () => setRowForm(null) },
+      )
+    }
+  }
+
   return (
+    <>
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
         className="income-modal-dark sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] gap-0 overflow-hidden rounded-none sm:rounded-xl"
@@ -287,7 +325,36 @@ export function IncomeModal({ open, onClose }: Props) {
             </div>
           ) : (
           <>
-          <Table className="sheet-table table-fixed">
+          {/* Mobile: tap-to-edit card list (no wide table) */}
+          <div className="sm:hidden flex flex-col">
+            {sources.map((source) => (
+              <button
+                key={source.id}
+                type="button"
+                onClick={() => setRowForm({ mode: 'edit', source })}
+                className="flex items-center justify-between gap-3 border-b border-green-100 dark:border-[#166534] px-4 py-3 text-left active:bg-green-50 dark:active:bg-[#1a2e1a] transition-colors"
+              >
+                <span className="min-w-0 flex flex-col">
+                  <span className="truncate font-medium text-gray-900 dark:text-[#d1fae5]">{source.name}</span>
+                  <span className="truncate text-xs text-green-700 dark:text-[#86efac]">{getCategoryName(source)}</span>
+                </span>
+                <span className="shrink-0 flex flex-col items-end">
+                  <span className="font-mono text-sm text-gray-900 dark:text-[#d1fae5]">{fmtMoney(source.period_amount)}</span>
+                  <span className="text-[10px] font-mono text-green-700 dark:text-[#86efac]">{source.currency ?? 'USD'}</span>
+                </span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setRowForm({ mode: 'add' })}
+              className="px-4 py-3 text-center text-green-700 dark:text-[#4ade80] font-medium active:bg-green-50 dark:active:bg-[#1a2e1a] transition-colors"
+            >
+              + Add income
+            </button>
+          </div>
+
+          {/* Desktop: inline-editable table */}
+          <Table className="sheet-table table-fixed hidden sm:table">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead className="py-2 px-3 h-auto">Name</TableHead>
@@ -534,7 +601,7 @@ export function IncomeModal({ open, onClose }: Props) {
             </TableBody>
           </Table>
           {isEmpty && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 hidden sm:flex items-center justify-center">
               <button
                 type="button"
                 aria-label="Add income"
@@ -547,6 +614,148 @@ export function IncomeModal({ open, onClose }: Props) {
           )}
           </>
           )}
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {rowForm && (
+      <IncomeRowFormModal
+        mode={rowForm.mode}
+        source={rowForm.mode === 'edit' ? rowForm.source : null}
+        usedCategoryIds={usedCategoryIds}
+        periodDate={periodDate}
+        isSaving={create.isPending}
+        onDelete={
+          rowForm.mode === 'edit'
+            ? () => {
+                const id = (rowForm as { source: SourceOfIncome }).source.id
+                setDeletingSourceId(id)
+                deleteSource.mutate(id, { onSettled: () => setDeletingSourceId(null) })
+                setRowForm(null)
+              }
+            : undefined
+        }
+        onClose={() => setRowForm(null)}
+        onSubmit={submitRowForm}
+      />
+    )}
+    </>
+  )
+}
+
+function IncomeRowFormModal({
+  mode,
+  source,
+  usedCategoryIds,
+  periodDate,
+  isSaving,
+  onDelete,
+  onClose,
+  onSubmit,
+}: {
+  mode: 'add' | 'edit'
+  source: SourceOfIncome | null
+  usedCategoryIds: Set<string>
+  periodDate: string
+  isSaving: boolean
+  onDelete?: () => void
+  onClose: () => void
+  onSubmit: (form: RowForm) => void
+}) {
+  const [form, setForm] = useState<RowForm>(
+    source
+      ? { ...formFromSource(source), category_id: String(source.category_id ?? '') }
+      : { ...emptyForm, date: periodDate },
+  )
+
+  const canSave = form.name.trim().length > 0
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
+      <DialogContent className="income-modal-dark w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]">
+        <DialogTitle>{mode === 'add' ? 'Add income' : 'Edit income'}</DialogTitle>
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Name</label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Source name"
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Category</label>
+            <CategoryCombobox
+              value={form.category_id}
+              onChange={(id) => setForm((f) => ({ ...f, category_id: id }))}
+              type="INCOME"
+              usedCategoryIds={usedCategoryIds}
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium mb-1.5">Amount</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={form.income}
+                onChange={(e) => setForm((f) => ({ ...f, income: e.target.value }))}
+                placeholder="0.00"
+                className="w-full text-right bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              />
+            </div>
+            <div className="w-28">
+              <label className="block text-sm font-medium mb-1.5">Currency</label>
+              <select
+                className="h-9 w-full text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5"
+                value={form.currency}
+                onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
+              >
+                {COMMON_CURRENCIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Date</label>
+            <Input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="row_form_recurring"
+              checked={form.is_recurring}
+              onCheckedChange={(checked) => setForm((f) => ({ ...f, is_recurring: Boolean(checked) }))}
+            />
+            <label htmlFor="row_form_recurring" className="text-sm font-medium cursor-pointer">
+              Recurring
+            </label>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button className="flex-1" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
+              {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
+            </Button>
+            {mode === 'edit' && onDelete && (
+              <Button variant="destructive" size="icon" aria-label="Delete income source" onClick={onDelete}>
+                ✕
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
