@@ -126,13 +126,14 @@ describe('ExpensesSection', () => {
     fireEvent.change(input, { target: { value: 'Mortgage' } })
     fireEvent.blur(input)
 
-    // Edit is now in the overlay (pending changes).
-    expect(screen.getByText('Mortgage')).toBeTruthy()
+    // Edit is now in the overlay (pending changes). Rendered in both the
+    // desktop table and the mobile list, so there may be more than one match.
+    expect(screen.getAllByText('Mortgage').length).toBeGreaterThan(0)
 
     // Simulate a refetch that returns the original (unchanged) server data.
     rerender(<ExpensesSection />)
 
     // The overlay must survive: the edited name is still shown, not the server "Rent".
-    expect(screen.getByText('Mortgage')).toBeTruthy()
+    expect(screen.getAllByText('Mortgage').length).toBeGreaterThan(0)
   })
 })

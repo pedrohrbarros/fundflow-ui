@@ -72,14 +72,14 @@ const emptyForm: RowForm = {
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col className="w-[70%] sm:w-[25%]" />
-      <col className="hidden sm:table-column sm:w-[11%]" />
-      <col className="w-[30%] sm:w-[11%]" />
-      <col className="hidden sm:table-column sm:w-[16%]" />
-      <col className="hidden sm:table-column sm:w-[8%]" />
-      <col className="hidden sm:table-column sm:w-[10%]" />
-      <col className="hidden sm:table-column sm:w-[10%]" />
-      <col className="hidden sm:table-column sm:w-[9%]" />
+      <col style={{ width: '25%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '11%' }} />
+      <col style={{ width: '16%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '9%' }} />
     </colgroup>
   )
 }
@@ -355,7 +355,21 @@ export function ExpensesSection() {
           </div>
         ) : (
           <>
-            <div className="flex-1 min-h-0 overflow-auto">
+            {/* Mobile: full-width name + amount list */}
+            <div className="sm:hidden flex-1 min-h-0 overflow-auto">
+              {sortedExpenses.map((expense) => (
+                <div
+                  key={expense.id}
+                  className="flex items-center justify-between gap-3 border-b border-green-100 dark:border-green-800 px-4 py-3"
+                >
+                  <span className="min-w-0 truncate text-gray-900 dark:text-[#d1fae5]">{expense.name}</span>
+                  <span className="shrink-0 font-mono text-gray-900 dark:text-[#d1fae5]">{fmtMoney(expense.period_amount)}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: full editable table */}
+            <div className="hidden sm:block flex-1 min-h-0 overflow-auto">
               <table className="sheet-table table-fixed w-full">
                 <ExpensesTableColgroup />
                 <TableHeader className="sticky top-0 z-10">
@@ -689,7 +703,7 @@ export function ExpensesSection() {
               </table>
             </div>
             {expenses.length > 0 && (
-              <table className="sheet-table table-fixed w-full shrink-0">
+              <table className="sheet-table table-fixed w-full shrink-0 hidden sm:table">
                 <ExpensesTableColgroup />
               </table>
             )}
