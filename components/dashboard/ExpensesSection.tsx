@@ -285,7 +285,7 @@ export function ExpensesSection() {
   // stay batched behind the toast Save.
   function toggleCheckboxColumn(
     expense: Expense,
-    patch: Partial<Pick<Expense, 'is_paid' | 'is_recurring' | 'recurring_months'>>,
+    patch: Partial<Pick<Expense, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>>,
   ) {
     update.mutate({ id: expense.id, ...patch })
 
@@ -463,7 +463,7 @@ export function ExpensesSection() {
                       <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
-                      <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
+                      <ColumnHeader label="Saved" align="center" sortKey="is_saved" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
                       <ColumnHeader label="Remaining" align="center" />
@@ -570,13 +570,8 @@ export function ExpensesSection() {
                         <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                           <div className="flex justify-center">
                             <Checkbox
-                              checked={expense.is_recurring}
-                              onCheckedChange={(checked) =>
-                                toggleCheckboxColumn(
-                                  expense,
-                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: null },
-                                )
-                              }
+                              checked={expense.is_saved}
+                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_saved: Boolean(checked) })}
                             />
                           </div>
                         </TableCell>
@@ -720,23 +715,32 @@ export function ExpensesSection() {
                       <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                         <div className="flex justify-center">
                           <Checkbox
-                            checked={addForm.is_recurring}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                            checked={addForm.is_saved}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
                           />
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                        {addForm.is_recurring && (
-                          <Input
-                            type="number"
-                            className="w-16 text-center text-sm"
-                            min="1"
-                            placeholder="∞"
-                            value={addForm.recurring_months}
-                            onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
-                            title="Recurring months limit"
-                          />
-                        )}
+                        <div className="flex flex-col items-center gap-1">
+                          <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <Checkbox
+                              checked={addForm.is_recurring}
+                              onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                            />
+                            Recurring
+                          </label>
+                          {addForm.is_recurring && (
+                            <Input
+                              type="number"
+                              className="w-16 text-center text-sm"
+                              min="1"
+                              placeholder="∞"
+                              value={addForm.recurring_months}
+                              onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
+                              title="Recurring months limit"
+                            />
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-right hidden sm:table-cell">
                         <div className="flex gap-2 items-center justify-end">
@@ -1141,14 +1145,14 @@ function ExpenseExtraTools({
   expense: Expense
   onUpdate: (updates: {
     date: string
-    is_saved: boolean
+    is_recurring: boolean
     recurring_months: string
   }) => void
 }) {
   const [open, setOpen] = useState(false)
   const [localDraft, setLocalDraft] = useState({
     date: expense.date,
-    is_saved: expense.is_saved,
+    is_recurring: expense.is_recurring,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
   })
 
@@ -1156,7 +1160,7 @@ function ExpenseExtraTools({
     if (o) {
       setLocalDraft({
         date: expense.date,
-        is_saved: expense.is_saved,
+        is_recurring: expense.is_recurring,
         recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
       })
     }
@@ -1179,7 +1183,19 @@ function ExpenseExtraTools({
               className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
-          {expense.is_recurring && (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`is_recurring_${expense.id}`}
+              checked={localDraft.is_recurring}
+              onCheckedChange={(checked) =>
+                setLocalDraft((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))
+              }
+            />
+            <label htmlFor={`is_recurring_${expense.id}`} className="text-sm font-medium cursor-pointer">
+              Recurring
+            </label>
+          </div>
+          {localDraft.is_recurring && (
             <div>
               <label className="block text-sm font-medium mb-2">Recurring months limit</label>
               <Input
@@ -1192,23 +1208,13 @@ function ExpenseExtraTools({
               />
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`is_saved_${expense.id}`}
-              checked={localDraft.is_saved}
-              onCheckedChange={(checked) => setLocalDraft((f) => ({ ...f, is_saved: Boolean(checked) }))}
-            />
-            <label htmlFor={`is_saved_${expense.id}`} className="text-sm font-medium cursor-pointer">
-              Saved
-            </label>
-          </div>
           <Button
             size="sm"
             className="w-full"
             onClick={() => {
               onUpdate({
                 date: localDraft.date,
-                is_saved: localDraft.is_saved,
+                is_recurring: localDraft.is_recurring,
                 recurring_months: localDraft.recurring_months,
               })
               setOpen(false)
