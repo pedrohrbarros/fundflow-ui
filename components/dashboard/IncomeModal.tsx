@@ -769,13 +769,13 @@ function IncomeRowFormModal({
             </label>
           </div>
 
-          <div className="flex gap-2 pt-1">
-            <Button className="flex-1" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
+          <div className="flex flex-col gap-2 pt-1">
+            <Button className="w-full" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
               {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
             </Button>
             {mode === 'edit' && onDelete && (
-              <Button variant="destructive" size="icon" aria-label="Delete income source" onClick={onDelete}>
-                ✕
+              <Button variant="destructive" className="w-full" onClick={onDelete}>
+                Delete
               </Button>
             )}
           </div>
