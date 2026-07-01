@@ -246,24 +246,34 @@ export function IncomeSection() {
                         }}
                         autoFocus
                       />
+                    ) : pendingEdits[sourceId] ? (
+                      <Input
+                        className="h-7 text-sm min-w-0 bg-yellow-50 dark:bg-yellow-900/20"
+                        value={draft.name}
+                        onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
+                        onBlur={() => handleFieldBlur(source)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm); setPendingEdits((prev) => { const { [sourceId]: _, ...rest } = prev; return rest }) }
+                        }}
+                      />
                     ) : (
                       <button
                         type="button"
                         className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
                         onClick={() => startEdit(source, 'name')}
                       >
-                        {merged.name}
+                        {source.name}
                       </button>
                     )}
                   </TableCell>
                   <TableCell className="py-1 px-3">
-                    {isEditing && editing.field === 'category' ? (
+                    {isEditing && editing.field === 'category' || pendingEdits[sourceId] ? (
                       <CategoryCombobox
                         value={draft.category_id}
                         onChange={(id) => handleCategoryChange(source, id)}
                         type="INCOME"
                         usedCategoryIds={usedCategoryIds}
-                        autoOpen
+                        autoOpen={isEditing && editing.field === 'category'}
                       />
                     ) : (
                       <button
@@ -271,7 +281,7 @@ export function IncomeSection() {
                         className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
                         onClick={() => startEdit(source, 'category')}
                       >
-                        {categoryNameById.get(String(merged.category_id)) ?? (
+                        {categoryNameById.get(String(source.category_id)) ?? (
                           <span className="text-green-300 dark:text-green-800">—</span>
                         )}
                       </button>
@@ -292,17 +302,27 @@ export function IncomeSection() {
                         }}
                         autoFocus
                       />
+                    ) : pendingEdits[sourceId] ? (
+                      <Input
+                        type="number"
+                        className="h-7 text-sm min-w-0 text-right bg-yellow-50 dark:bg-yellow-900/20"
+                        min="0"
+                        step="0.01"
+                        value={draft.income}
+                        onChange={(e) => setDraft((f) => ({ ...f, income: e.target.value }))}
+                        onBlur={() => handleFieldBlur(source)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') { e.stopPropagation(); setEditing(null); setDraft(emptyForm); setPendingEdits((prev) => { const { [sourceId]: _, ...rest } = prev; return rest }) }
+                        }}
+                        autoFocus
+                      />
                     ) : (
                       <button
                         type="button"
                         className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono block"
                         onClick={() => startEdit(source, 'income')}
                       >
-                        {fmtMoney(
-                          pendingEdits[sourceId]
-                            ? (parseFloat(merged.income) || 0)
-                            : source.period_amount
-                        )}
+                        {fmtMoney(source.period_amount)}
                       </button>
                     )}
                   </TableCell>
