@@ -190,6 +190,9 @@ export function IncomeModal({ open, onClose }: Props) {
       toast.dismiss(sharedToastId.current)
       sharedToastId.current = undefined
     }
+    // Close any active inline editor now that pending edits are resolved.
+    setEditing(null)
+    setDraft(emptyForm)
   }
 
   function commitToSharedToast(payload: SavePayload) {
@@ -212,6 +215,8 @@ export function IncomeModal({ open, onClose }: Props) {
           originalSnapshot.current = undefined
           pendingPayloads.current = new Map()
           sharedToastId.current = undefined
+          setEditing(null)
+          setDraft(emptyForm)
         }}
         onRevert={() => clearAllPending()}
       />
@@ -233,8 +238,8 @@ export function IncomeModal({ open, onClose }: Props) {
     }
 
     const updatedDraft = { ...draft, category_id: newCategoryId }
-    setEditing(null)
-    setDraft(emptyForm)
+    // Keep the field active until the user saves/discards — just track the draft.
+    setDraft(updatedDraft)
 
     if (!formHasChanges(source, updatedDraft) || !updatedDraft.name.trim()) return
 
@@ -251,20 +256,11 @@ export function IncomeModal({ open, onClose }: Props) {
 
   function handleFieldBlur(sourceId: string) {
     const source = sources.find((s) => s.id === sourceId)
-    if (!source) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
+    if (!source) return
 
-    if (!formHasChanges(source, draft) || !draft.name.trim()) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-
-    setEditing(null)
-    setDraft(emptyForm)
+    // Keep the input active (do not close on blur). Only commit when there is
+    // an actual change; the editor closes on Escape or when Save/Discard is clicked.
+    if (!formHasChanges(source, draft) || !draft.name.trim()) return
 
     commitToSharedToast({
       id: sourceId,

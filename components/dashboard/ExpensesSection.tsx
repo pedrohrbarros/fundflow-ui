@@ -73,13 +73,13 @@ function ExpensesTableColgroup() {
   return (
     <colgroup>
       <col style={{ width: '25%' }} />
+      <col className="hidden sm:table-column" style={{ width: '11%' }} />
       <col style={{ width: '11%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '16%' }} />
-      <col style={{ width: '8%' }} />
-      <col style={{ width: '10%' }} />
-      <col style={{ width: '10%' }} />
-      <col style={{ width: '9%' }} />
+      <col className="hidden sm:table-column" style={{ width: '16%' }} />
+      <col className="hidden sm:table-column" style={{ width: '8%' }} />
+      <col className="hidden sm:table-column" style={{ width: '10%' }} />
+      <col className="hidden sm:table-column" style={{ width: '10%' }} />
+      <col className="hidden sm:table-column" style={{ width: '9%' }} />
     </colgroup>
   )
 }
@@ -363,25 +363,25 @@ export function ExpensesSection() {
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Name" sortKey="name" sort={sort} onSort={toggleSort} filter={{ field: 'name', type: 'text', value: filters.name ?? null, onChange: (n) => setColumnFilter('name', n) }} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
+                    <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
                       <ColumnHeader label="Category" />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Amount" align="right" sortKey="amount" sort={sort} onSort={toggleSort} filter={{ field: 'amount', type: 'number', value: filters.amount ?? null, onChange: (n) => setColumnFilter('amount', n) }} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
+                    <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
                       <ColumnHeader label="Payment Method" />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
+                    <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
                       <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-center">
+                    <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
                       <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto">
+                    <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
                       <ColumnHeader label="Remaining" align="center" />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-right" />
+                    <TableHead className="py-4 px-5 h-auto text-right hidden sm:table-cell" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -415,7 +415,7 @@ export function ExpensesSection() {
                             </button>
                           )}
                         </TableCell>
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
+                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
                           {isEditing && editing.field === 'category' ? (
                             <CategoryCombobox
                               value={draft.category_id}
@@ -463,7 +463,7 @@ export function ExpensesSection() {
                             </button>
                           )}
                         </TableCell>
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
+                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
                           <ExpensePmEditCell
                             expense={expense}
                             onSave={(pms) => {
@@ -472,7 +472,7 @@ export function ExpensesSection() {
                             }}
                           />
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
+                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_paid}
@@ -483,7 +483,7 @@ export function ExpensesSection() {
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
+                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_recurring}
@@ -494,7 +494,7 @@ export function ExpensesSection() {
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
+                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                           {expense.is_recurring && (
                             isEditing && editing.field === 'recurring_months' ? (
                               <Input
@@ -521,7 +521,7 @@ export function ExpensesSection() {
                             )
                           )}
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-right flex items-center justify-end gap-2">
+                        <TableCell className="py-5 px-5 text-right hidden sm:flex items-center justify-end gap-2">
                           <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
                             const merged = { ...formFromExpense(expense), ...updates }
                             commitChanges(expense, merged)
@@ -559,7 +559,7 @@ export function ExpensesSection() {
                           autoFocus
                         />
                       </TableCell>
-                      <TableCell className="py-5 px-5">
+                      <TableCell className="py-5 px-5 hidden sm:table-cell">
                         <CategoryCombobox
                           value={addForm.category_id}
                           onChange={(v) => setAddForm((f) => ({ ...f, category_id: v }))}
@@ -582,7 +582,7 @@ export function ExpensesSection() {
                           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                         />
                       </TableCell>
-                      <TableCell className="py-5 px-5">
+                      <TableCell className="py-5 px-5 hidden sm:table-cell">
                         <div className="flex flex-col gap-0.5">
                           {addForm.payment_methods.map((pm, i) => (
                             <AddFormPmRow
@@ -623,7 +623,7 @@ export function ExpensesSection() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="py-5 px-5 text-center">
+                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                         <div className="flex justify-center">
                           <Checkbox
                             checked={addForm.is_paid}
@@ -631,7 +631,7 @@ export function ExpensesSection() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="py-5 px-5 text-center">
+                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                         <div className="flex justify-center">
                           <Checkbox
                             checked={addForm.is_recurring}
@@ -639,7 +639,7 @@ export function ExpensesSection() {
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="py-5 px-5 text-center">
+                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                         {addForm.is_recurring && (
                           <Input
                             type="number"
@@ -652,7 +652,7 @@ export function ExpensesSection() {
                           />
                         )}
                       </TableCell>
-                      <TableCell className="py-5 px-5 text-right">
+                      <TableCell className="py-5 px-5 text-right hidden sm:table-cell">
                         <div className="flex gap-2 items-center justify-end">
                           {addForm.name.trim() && addForm.amount && (
                             <Button size="default" onClick={handleAdd}>
