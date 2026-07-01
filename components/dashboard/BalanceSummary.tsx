@@ -28,7 +28,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
           aria-label="Manage income sources"
           className="min-w-0 w-full bg-[#166534] dark:bg-green-950 border border-[#14532d] dark:border-green-800 rounded-lg p-3 sm:p-4 text-center transition-colors hover:bg-[#14532d] dark:hover:bg-green-900"
         >
-          <p className="text-[10px] sm:text-xs font-semibold text-[#86efac] dark:text-green-400 uppercase tracking-wide mb-1 truncate">
+          <p className="text-left text-[10px] sm:text-xs font-semibold text-[#86efac] dark:text-green-400 uppercase tracking-wide mb-1 truncate">
             Total Income
           </p>
           <p className="text-sm sm:text-2xl font-bold text-white dark:text-green-300 truncate">{fmtMoney(totalIncome, userCurrency)}</p>
