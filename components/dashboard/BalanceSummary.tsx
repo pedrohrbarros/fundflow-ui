@@ -28,7 +28,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
           aria-label="Manage income sources"
           className="min-w-0 w-full bg-[#166534] dark:bg-green-950 border border-[#14532d] dark:border-green-800 rounded-lg p-3 sm:p-4 text-center transition-colors hover:bg-[#14532d] dark:hover:bg-green-900"
         >
-          <p className="text-left text-[10px] sm:text-xs font-semibold text-[#86efac] dark:text-green-400 uppercase tracking-wide mb-1 truncate">
+          <p className="text-[10px] sm:text-xs font-semibold text-[#86efac] dark:text-green-400 uppercase tracking-wide mb-1 truncate">
             Total Income
           </p>
           <p className="text-sm sm:text-2xl font-bold text-white dark:text-green-300 truncate">{fmtMoney(totalIncome, userCurrency)}</p>
@@ -38,7 +38,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
         <button
           type="button"
           onClick={isMobile ? () => setValueModal({ title: 'Total Expenses', value: fmtMoney(totalExpenses, userCurrency) }) : undefined}
-          className="min-w-0 w-full text-left bg-[#991b1b] dark:bg-red-950 border border-[#7f1d1d] dark:border-red-900 rounded-lg p-3 sm:p-4 text-center sm:cursor-default"
+          className="min-w-0 w-full bg-[#991b1b] dark:bg-red-950 border border-[#7f1d1d] dark:border-red-900 rounded-lg p-3 sm:p-4 text-center sm:cursor-default"
         >
           <p className="text-[10px] sm:text-xs font-semibold text-[#fca5a5] dark:text-red-400 uppercase tracking-wide mb-1 truncate">
             Total Expenses
@@ -50,7 +50,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
         <button
           type="button"
           onClick={isMobile ? () => setValueModal({ title: 'Remaining', value: `${isNegative ? '-' : ''}${fmtMoney(Math.abs(remaining), userCurrency)}` }) : undefined}
-          className={`min-w-0 w-full text-left border rounded-lg p-3 sm:p-4 text-center sm:cursor-default ${
+          className={`min-w-0 w-full border rounded-lg p-3 sm:p-4 text-center sm:cursor-default ${
             isNegative
               ? 'bg-[#991b1b] dark:bg-red-950 border-[#7f1d1d] dark:border-red-900'
               : 'bg-[#166534] dark:bg-green-950 border-[#14532d] dark:border-green-800'
