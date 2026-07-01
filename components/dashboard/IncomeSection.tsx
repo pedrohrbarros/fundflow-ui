@@ -142,8 +142,9 @@ export function IncomeSection() {
     setEditing(null)
     setDraft(emptyForm)
 
-    if (!currentDraft.name.trim()) return
-    commitChanges(source, currentDraft)
+    // Ensure name is present, fallback to source name if empty
+    const draftWithName = currentDraft.name.trim() ? currentDraft : { ...currentDraft, name: source.name }
+    commitChanges(source, draftWithName)
   }
 
   function handleCategoryChange(source: SourceOfIncome, newCategoryId: string) {
@@ -151,8 +152,9 @@ export function IncomeSection() {
     setEditing(null)
     setDraft(emptyForm)
 
-    if (!updatedDraft.name.trim()) return
-    commitChanges(source, updatedDraft)
+    // Ensure name is present, fallback to source name if empty
+    const draftWithName = updatedDraft.name.trim() ? updatedDraft : { ...updatedDraft, name: source.name }
+    commitChanges(source, draftWithName)
   }
 
   function handleAdd() {
