@@ -33,7 +33,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-3">
-            <SidebarToggle />
             <ThemeToggle />
             <CountryPicker />
             <UserMenu />
