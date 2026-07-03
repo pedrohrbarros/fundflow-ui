@@ -21,11 +21,9 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  // On mobile the sidebar is completely hidden
-  if (isMobile) return null
-
+  // On mobile, sidebar is hidden by default (collapsed), but can be toggled visible
   // On desktop, use the collapsed state
-  const effectiveCollapsed = collapsed
+  const effectiveCollapsed = isMobile ? collapsed : collapsed
 
   useEffect(() => {
     setMounted(true)
@@ -52,7 +50,10 @@ export function Sidebar() {
     <nav
       className={cn(
         'shrink-0 border-r border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden',
-        effectiveCollapsed ? 'w-16' : 'w-56'
+        isMobile && effectiveCollapsed ? 'hidden' : '',
+        isMobile && !effectiveCollapsed ? 'fixed inset-y-16 left-0 z-50 w-56 border-r' : '',
+        !isMobile && effectiveCollapsed ? 'w-16' : '',
+        !isMobile && !effectiveCollapsed ? 'w-56' : ''
       )}
     >
       <div className="flex flex-col gap-1 flex-1 min-h-0">
