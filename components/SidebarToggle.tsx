@@ -33,7 +33,7 @@ export function SidebarToggle() {
       size="icon"
       onClick={toggleSidebar}
       aria-label={collapsed ? 'Open sidebar' : 'Close sidebar'}
-      className="sm:hidden text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-white/10"
+      className="text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-white/10"
     >
       {collapsed ? <Menu className="size-5" /> : <X className="size-5" />}
     </Button>

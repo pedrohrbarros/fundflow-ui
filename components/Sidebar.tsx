@@ -21,8 +21,11 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  // On mobile the sidebar stays a fixed icon rail — it must not expand.
-  const effectiveCollapsed = isMobile ? true : collapsed
+  // On mobile the sidebar is completely hidden
+  if (isMobile) return null
+
+  // On desktop, use the collapsed state
+  const effectiveCollapsed = collapsed
 
   useEffect(() => {
     setMounted(true)

@@ -18,7 +18,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="h-screen flex flex-col">
         <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-4 gap-3 border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 shrink-0">
           <div className="flex items-center gap-2 flex-1 min-w-0 sm:flex-1">
-            <SidebarToggle />
             <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} className="hidden sm:block" />
           </div>
           <div className="hidden sm:block">
@@ -27,12 +26,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="flex flex-col sm:hidden gap-3 items-center">
             <PeriodSelector />
             <div className="flex items-center gap-3">
+              <SidebarToggle />
               <ThemeToggle />
               <CountryPicker />
               <UserMenu />
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-3">
+            <SidebarToggle />
             <ThemeToggle />
             <CountryPicker />
             <UserMenu />
