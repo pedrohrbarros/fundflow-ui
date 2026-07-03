@@ -28,6 +28,13 @@ export function Sidebar() {
     setMounted(true)
     // Default to collapsed; only expand if the user explicitly expanded it before.
     setCollapsed(localStorage.getItem(STORAGE_KEY) !== 'false')
+
+    // Listen for sidebar toggle events from SidebarToggle component
+    const handleToggle = (event: CustomEvent) => {
+      setCollapsed(event.detail.collapsed)
+    }
+    window.addEventListener('sidebar-toggle', handleToggle as EventListener)
+    return () => window.removeEventListener('sidebar-toggle', handleToggle as EventListener)
   }, [])
 
   function toggleCollapsed() {

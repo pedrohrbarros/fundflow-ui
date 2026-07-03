@@ -32,13 +32,13 @@ export function PeriodSelector() {
         ))}
       </div>
       <div className="flex items-center gap-1">
-        <button type="button" aria-label="Previous period" onClick={prev} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]">
+        <button type="button" aria-label="Previous period" onClick={prev} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:text-white dark:hover:text-gray-900 hover:bg-gray-900 dark:hover:bg-white transition-colors">
           <ChevronLeft className="size-4" />
         </button>
         <span className="min-w-32 text-center text-sm font-semibold text-green-900 dark:text-[#d1fae5]">
           {formatPeriodLabel(date, granularity)}
         </span>
-        <button type="button" aria-label="Next period" onClick={next} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]">
+        <button type="button" aria-label="Next period" onClick={next} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:text-white dark:hover:text-gray-900 hover:bg-gray-900 dark:hover:bg-white transition-colors">
           <ChevronRight className="size-4" />
         </button>
       </div>

@@ -19,6 +19,8 @@ export function SidebarToggle() {
     setCollapsed((prev) => {
       const next = !prev
       localStorage.setItem(STORAGE_KEY, String(next))
+      // Dispatch custom event so Sidebar component syncs
+      window.dispatchEvent(new CustomEvent('sidebar-toggle', { detail: { collapsed: next } }))
       return next
     })
   }
