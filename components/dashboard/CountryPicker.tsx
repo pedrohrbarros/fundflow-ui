@@ -45,7 +45,7 @@ export function CountryPicker() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Select country and currency"
         title={currentCountry ? `${currentCountry.name} (${currentCountry.currency})` : 'Select country'}
-        className="flex items-center justify-center size-9 rounded-full border border-green-100 dark:border-green-800 bg-white dark:bg-gray-950 hover:bg-green-50 dark:hover:bg-green-950 transition-colors text-lg"
+        className="flex items-center justify-center size-8 rounded-full border border-green-100 dark:border-green-800 bg-white dark:bg-gray-950 hover:bg-green-50 dark:hover:bg-green-950 transition-colors text-lg"
       >
         {currentCountry?.flag ?? '🌍'}
       </button>

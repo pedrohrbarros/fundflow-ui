@@ -22,10 +22,10 @@ export function UserMenu() {
 
   return (
     <Popover>
-      <PopoverTrigger className="size-9 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold">
+      <PopoverTrigger className="size-8 rounded-full bg-green-600 text-white flex items-center justify-center font-semibold">
         {session?.user?.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={session.user.image} alt={email} className="size-9 rounded-full" />
+          <img src={session.user.image} alt={email} className="size-8 rounded-full" />
         ) : (
           initial
         )}
