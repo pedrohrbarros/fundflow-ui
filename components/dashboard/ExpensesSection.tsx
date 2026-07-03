@@ -968,6 +968,50 @@ function ExpenseRowFormModal({
             </div>
           )}
 
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Payment methods</label>
+            <div className="flex flex-col gap-2">
+              {form.payment_methods.map((pm, i) => (
+                <AddFormPmRow
+                  key={pm.payment_method_id}
+                  pmId={pm.payment_method_id}
+                  partialAmount={pm.partial_amount}
+                  onAmountChange={(val) =>
+                    setForm((f) => ({
+                      ...f,
+                      payment_methods: f.payment_methods.map((p, j) =>
+                        j === i ? { ...p, partial_amount: val } : p
+                      ),
+                    }))
+                  }
+                  onRemove={() =>
+                    setForm((f) => ({
+                      ...f,
+                      payment_methods: f.payment_methods.filter((_, j) => j !== i),
+                    }))
+                  }
+                  showAdd={i === form.payment_methods.length - 1}
+                  onAdd={() => {
+                    // Show the combobox by adding an empty PM
+                  }}
+                />
+              ))}
+              {form.payment_methods.length === 0 && (
+                <PaymentMethodCombobox
+                  value=""
+                  onChange={(id) => {
+                    if (!id) return
+                    setForm((f) => ({
+                      ...f,
+                      payment_methods: [{ payment_method_id: id, partial_amount: '' }],
+                    }))
+                  }}
+                  placeholder="Add payment method"
+                />
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2 pt-1">
             <Button className="w-full" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
               {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
