@@ -814,7 +814,7 @@ export function ExpensesSection() {
         expense={rowForm.mode === 'edit' ? rowForm.expense : null}
         usedCategoryIds={usedCategoryIds}
         periodDate={periodDate}
-        isSaving={create.isPending}
+        isSaving={rowForm.mode === 'edit' ? update.isPending : create.isPending}
         onDelete={
           rowForm.mode === 'edit'
             ? () => {
