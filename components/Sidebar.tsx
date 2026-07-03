@@ -21,8 +21,10 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  // Sidebar width is controlled by collapsed state on both mobile and desktop
-  const effectiveCollapsed = collapsed
+  // On mobile: always show icons only (w-16), hide when collapsed
+  // On desktop: expand/collapse width based on collapsed state
+  const effectiveCollapsed = isMobile ? true : collapsed
+  const isHidden = isMobile && collapsed
 
   useEffect(() => {
     setMounted(true)
@@ -49,6 +51,7 @@ export function Sidebar() {
     <nav
       className={cn(
         'shrink-0 border-r border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden',
+        isHidden && 'hidden',
         effectiveCollapsed ? 'w-16' : 'w-56'
       )}
     >
