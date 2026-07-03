@@ -367,8 +367,13 @@ export function ExpensesSection() {
 
   function submitRowForm(form: RowForm) {
     if (rowForm?.mode === 'edit') {
-      commitChanges(rowForm.expense, form)
-      setRowForm(null)
+      // Auto-save edit without toaster: directly mutate instead of commitChanges
+      const payload = buildPayload(rowForm.expense.id, form, rowForm.expense)
+      update.mutate(payload, {
+        onSuccess: () => {
+          setRowForm(null)
+        },
+      })
     } else {
       if (!form.name.trim() || !form.amount) return
       const amount = parseFloat(form.amount)
@@ -901,9 +906,14 @@ function ExpenseRowFormModal({
               step="0.01"
               inputMode="decimal"
               value={form.amount}
-              onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+              onChange={(e) => {
+                let val = e.target.value
+                // Support comma as decimal separator and convert to dot
+                val = val.replace(',', '.')
+                setForm((f) => ({ ...f, amount: val }))
+              }}
               placeholder="0.00"
-              className="w-full text-right bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full text-left bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
             />
           </div>
 
@@ -950,7 +960,7 @@ function ExpenseRowFormModal({
               <Input
                 type="number"
                 min="1"
-                placeholder="Indefinite"
+                placeholder="∞"
                 value={form.recurring_months}
                 onChange={(e) => setForm((f) => ({ ...f, recurring_months: e.target.value }))}
                 className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"

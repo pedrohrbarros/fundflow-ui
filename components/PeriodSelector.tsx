@@ -14,7 +14,7 @@ export function PeriodSelector() {
   const { granularity, date, setGranularity, next, prev } = usePeriod()
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-col items-center gap-2">
       <div className="flex rounded-lg border border-green-200 dark:border-[#166534] overflow-hidden">
         {GRANULARITIES.map(({ key, label }) => (
           <button

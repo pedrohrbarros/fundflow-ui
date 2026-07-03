@@ -275,7 +275,8 @@ export function IncomeModal({ open, onClose }: Props) {
     if (rowForm?.mode === 'edit') {
       const source = rowForm.source
       if (form.name.trim() && formHasChanges(source, form)) {
-        commitToSharedToast({
+        // Auto-save edit without toaster: directly mutate
+        update.mutate({
           id: source.id,
           name: form.name.trim(),
           category_id: form.category_id ? parseInt(form.category_id, 10) : null,
@@ -283,9 +284,12 @@ export function IncomeModal({ open, onClose }: Props) {
           currency: form.currency || 'USD',
           date: form.date || source.date,
           is_recurring: form.is_recurring,
+        }, {
+          onSuccess: () => setRowForm(null),
         })
+      } else {
+        setRowForm(null)
       }
-      setRowForm(null)
     } else {
       if (!form.name.trim()) return
       create.mutate(

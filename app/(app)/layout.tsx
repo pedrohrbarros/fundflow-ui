@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { UserMenu } from '@/components/UserMenu'
 import { PeriodSelector } from '@/components/PeriodSelector'
 import { PeriodProvider } from '@/providers/period-provider'
+import { SidebarToggle } from '@/components/SidebarToggle'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -16,7 +17,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <PeriodProvider>
       <div className="h-screen flex flex-col">
         <header className="flex justify-between items-center p-4 gap-3 h-16 border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 shrink-0">
-          <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <SidebarToggle />
+            <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} className="hidden sm:block" />
+          </div>
           <PeriodSelector />
           <div className="flex items-center gap-3">
             <ThemeToggle />
