@@ -16,23 +16,25 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <PeriodProvider>
       <div className="h-screen flex flex-col">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-center p-4 gap-3 border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 absolute left-4">
+        <header className="flex flex-col sm:flex-row sm:items-center border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 shrink-0">
+          <div className="hidden sm:flex items-center gap-2 p-4 shrink-0">
             <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
           </div>
-          <div className="hidden sm:block">
-            <PeriodSelector />
-          </div>
-          <div className="flex flex-col sm:hidden gap-3 items-center">
-            <PeriodSelector />
-            <div className="flex items-center gap-3">
-              <SidebarToggle />
-              <ThemeToggle />
-              <CountryPicker />
-              <UserMenu />
+          <div className="flex-1 flex justify-center p-4">
+            <div className="hidden sm:block">
+              <PeriodSelector />
+            </div>
+            <div className="flex flex-col sm:hidden gap-3 items-center">
+              <PeriodSelector />
+              <div className="flex items-center gap-3">
+                <SidebarToggle />
+                <ThemeToggle />
+                <CountryPicker />
+                <UserMenu />
+              </div>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-3 absolute right-4">
+          <div className="hidden sm:flex items-center gap-3 p-4 shrink-0">
             <ThemeToggle />
             <CountryPicker />
             <UserMenu />
