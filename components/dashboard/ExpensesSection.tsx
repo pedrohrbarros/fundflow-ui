@@ -855,6 +855,7 @@ function ExpenseRowFormModal({
   const [form, setForm] = useState<RowForm>(
     expense ? formFromExpense(expense) : { ...emptyForm, date: periodDate },
   )
+  const [pendingPmAmount, setPendingPmAmount] = useState('')
 
   const canSave = form.name.trim().length > 0 && !!form.amount
 
@@ -996,19 +997,38 @@ function ExpenseRowFormModal({
                   }}
                 />
               ))}
-              {form.payment_methods.length === 0 && (
-                <PaymentMethodCombobox
-                  value=""
-                  onChange={(id) => {
-                    if (!id) return
-                    setForm((f) => ({
-                      ...f,
-                      payment_methods: [{ payment_method_id: id, partial_amount: '' }],
-                    }))
-                  }}
-                  placeholder="Add payment method"
-                />
-              )}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <PaymentMethodCombobox
+                    value=""
+                    onChange={(id) => {
+                      if (!id) return
+                      setForm((f) => ({
+                        ...f,
+                        payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: pendingPmAmount }],
+                      }))
+                      setPendingPmAmount('')
+                    }}
+                    placeholder="Add payment method"
+                  />
+                </div>
+                <div className="w-24">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    placeholder="Amount"
+                    value={pendingPmAmount}
+                    onChange={(e) => {
+                      let val = e.target.value
+                      val = val.replace(',', '.')
+                      setPendingPmAmount(val)
+                    }}
+                    className="w-full text-left bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] text-sm"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
