@@ -440,7 +440,7 @@ export function ExpensesSection() {
               <button
                 type="button"
                 onClick={() => setRowForm({ mode: 'add' })}
-                className="w-full px-4 py-3 text-center text-green-700 dark:text-green-500 font-medium active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
+                className="w-full px-4 py-3 sm:py-3 pb-16 sm:pb-0 text-center text-green-700 dark:text-green-500 font-medium active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
               >
                 + Add expense
               </button>
