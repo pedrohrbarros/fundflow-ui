@@ -33,6 +33,12 @@ export async function apiRequest<T>(
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   })
 
+  if (response.status === 401) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
+  }
+
   const data = (await response.json()) as T
   return Object.assign(response, { parsedData: data })
 }

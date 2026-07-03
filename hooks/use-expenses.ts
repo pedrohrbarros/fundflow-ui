@@ -9,6 +9,7 @@ import type {
 } from '@/types'
 import { usePeriod } from '@/providers/period-provider'
 import { buildFilterQuery, type ExpenseFilter } from '@/lib/expense-filters'
+import { handleFetchResponse } from '@/lib/client-api'
 
 const KEY = ['expenses'] as const
 
@@ -31,6 +32,7 @@ export function useExpenses(opts?: { page?: number; limit?: number; filters?: Ex
       if (filterQuery) qs.set('filters', JSON.stringify(filterQuery))
       if (sort) qs.set('sort', JSON.stringify(sort))
       const res = await fetch(`/api/expenses?${qs}`)
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<ExpensesResponse>
     },
@@ -47,6 +49,7 @@ export function useCreateExpense() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Expense>
     },
@@ -64,6 +67,7 @@ export function useUpdateExpense() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Expense>
     },
@@ -77,6 +81,7 @@ export function useDeleteExpense() {
     mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Expense>
     },

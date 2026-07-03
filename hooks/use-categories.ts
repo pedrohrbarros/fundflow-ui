@@ -7,6 +7,7 @@ import type {
   CreateCategoryBody,
   UpdateCategoryBody,
 } from '@/types'
+import { handleFetchResponse } from '@/lib/client-api'
 
 const KEY = ['categories'] as const
 
@@ -16,6 +17,7 @@ export function useCategories() {
     meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/categories')
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<CategoriesResponse>
     },
@@ -32,6 +34,7 @@ export function useCreateCategory() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Category>
     },
@@ -49,6 +52,7 @@ export function useUpdateCategory() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Category>
     },
@@ -62,6 +66,7 @@ export function useDeleteCategory() {
     mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<Category>
     },

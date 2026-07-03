@@ -7,6 +7,7 @@ import type {
   PaymentMethodsResponse,
   UpdatePaymentMethodBody,
 } from '@/types'
+import { handleFetchResponse } from '@/lib/client-api'
 
 const KEY = ['payment-methods'] as const
 
@@ -16,6 +17,7 @@ export function usePaymentMethods() {
     meta: { showErrorToast: true },
     queryFn: async () => {
       const res = await fetch('/api/payment-methods')
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<PaymentMethodsResponse>
     },
@@ -32,6 +34,7 @@ export function useCreatePaymentMethod() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<PaymentMethod>
     },
@@ -49,6 +52,7 @@ export function useUpdatePaymentMethod() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<PaymentMethod>
     },
@@ -62,6 +66,7 @@ export function useDeletePaymentMethod() {
     mutationKey: KEY,
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/payment-methods/${id}`, { method: 'DELETE' })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<PaymentMethod>
     },

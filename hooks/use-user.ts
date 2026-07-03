@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { signOut } from 'next-auth/react'
 import type { User, UpdateUserCountryBody } from '@/types'
+import { handleFetchResponse } from '@/lib/client-api'
 
 const KEY = ['user'] as const
 
@@ -11,6 +12,7 @@ export function useCurrentUser() {
     queryKey: KEY,
     queryFn: async () => {
       const res = await fetch('/api/users/me')
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<User>
     },
@@ -27,6 +29,7 @@ export function useUpdateUserCountry() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
       return res.json() as Promise<User>
     },
@@ -38,6 +41,7 @@ export function useDeleteAccount() {
   return useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/users/me', { method: 'DELETE' })
+      handleFetchResponse(res)
       if (!res.ok) throw new Error(await res.text())
     },
     onSuccess: () => signOut({ redirectTo: '/' }),
