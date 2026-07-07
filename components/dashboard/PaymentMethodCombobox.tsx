@@ -16,9 +16,18 @@ interface Props {
   onChange: (paymentMethodId: string) => void
   placeholder?: string
   autoOpen?: boolean
+  amount?: string
+  onAmountChange?: (amount: string) => void
 }
 
-export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit Card', autoOpen = false }: Props) {
+export function PaymentMethodCombobox({
+  value,
+  onChange,
+  placeholder = 'Credit Card',
+  autoOpen = false,
+  amount,
+  onAmountChange,
+}: Props) {
   const { data } = usePaymentMethods()
   const createPm = useCreatePaymentMethod()
   const updatePm = useUpdatePaymentMethod()
@@ -105,6 +114,21 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-[min(94vw,20rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5] p-0 gap-0" showCloseButton={false}>
         <DialogTitle className="px-4 pt-4 pb-2">Select payment method</DialogTitle>
+        {onAmountChange && (
+          <div className="px-4 pb-3">
+            <label className="block text-xs font-medium mb-1 text-green-700 dark:text-[#86efac]">Amount</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={amount ?? ''}
+              onChange={(e) => onAmountChange(e.target.value.replace(',', '.'))}
+              className="w-full text-left bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+            />
+          </div>
+        )}
         <div className="max-h-72 overflow-y-auto">
           {paymentMethods.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No payment methods yet</p>

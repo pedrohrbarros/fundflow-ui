@@ -232,6 +232,7 @@ export function ExpensesSection() {
   const [isAdding, setIsAdding] = useState(false)
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
   const [addFormShowPmPicker, setAddFormShowPmPicker] = useState(false)
+  const [addFormPmAmount, setAddFormPmAmount] = useState('')
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
@@ -703,10 +704,13 @@ export function ExpensesSection() {
                                 if (!id || addForm.payment_methods.some((pm) => pm.payment_method_id === id)) return
                                 setAddForm((f) => ({
                                   ...f,
-                                  payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: '' }],
+                                  payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: addFormPmAmount }],
                                 }))
+                                setAddFormPmAmount('')
                                 setAddFormShowPmPicker(false)
                               }}
+                              amount={addFormPmAmount}
+                              onAmountChange={setAddFormPmAmount}
                               placeholder="Add payment method"
                             />
                           )}
@@ -1014,38 +1018,20 @@ function ExpenseRowFormModal({
                   }}
                 />
               ))}
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <PaymentMethodCombobox
-                    value=""
-                    onChange={(id) => {
-                      if (!id) return
-                      setForm((f) => ({
-                        ...f,
-                        payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: pendingPmAmount }],
-                      }))
-                      setPendingPmAmount('')
-                    }}
-                    placeholder="Add payment method"
-                  />
-                </div>
-                <div className="w-24">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    placeholder="Amount"
-                    value={pendingPmAmount}
-                    onChange={(e) => {
-                      let val = e.target.value
-                      val = val.replace(',', '.')
-                      setPendingPmAmount(val)
-                    }}
-                    className="w-full text-left bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] text-sm"
-                  />
-                </div>
-              </div>
+              <PaymentMethodCombobox
+                value=""
+                onChange={(id) => {
+                  if (!id) return
+                  setForm((f) => ({
+                    ...f,
+                    payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: pendingPmAmount }],
+                  }))
+                  setPendingPmAmount('')
+                }}
+                amount={pendingPmAmount}
+                onAmountChange={setPendingPmAmount}
+                placeholder="Add payment method"
+              />
             </div>
           </div>
 
@@ -1125,6 +1111,7 @@ function ExpensePmEditCell({
 }) {
   const [open, setOpen] = useState(false)
   const [localPms, setLocalPms] = useState<PmEntry[]>([])
+  const [newPmAmount, setNewPmAmount] = useState('')
   const { data: pmData } = usePaymentMethods()
   const paymentMethods = pmData?.payment_methods ?? []
 
@@ -1137,6 +1124,7 @@ function ExpensePmEditCell({
           payment_method_id: pm.payment_method_id,
           partial_amount: String(pm.partial_amount),
         })))
+        setNewPmAmount('')
       }
       setOpen(o)
     }}>
@@ -1192,8 +1180,11 @@ function ExpensePmEditCell({
             value=""
             onChange={(id) => {
               if (!id || localPms.some((pm) => pm.payment_method_id === id)) return
-              setLocalPms((prev) => [...prev, { payment_method_id: id, partial_amount: '' }])
+              setLocalPms((prev) => [...prev, { payment_method_id: id, partial_amount: newPmAmount }])
+              setNewPmAmount('')
             }}
+            amount={newPmAmount}
+            onAmountChange={setNewPmAmount}
             placeholder="Add payment method"
           />
           <Button
