@@ -733,22 +733,12 @@ export function ExpensesSection() {
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                        <div className="flex flex-col items-center gap-1">
+                        <div className="flex justify-center">
                           <Checkbox
                             checked={addForm.is_recurring}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: '' }))}
+                            title="Recurring months limit can be set afterwards from the row's extra tools"
                           />
-                          {addForm.is_recurring && (
-                            <Input
-                              type="number"
-                              className="w-16 text-center text-sm"
-                              min="1"
-                              placeholder="∞"
-                              value={addForm.recurring_months}
-                              onChange={(e) => setAddForm((f) => ({ ...f, recurring_months: e.target.value }))}
-                              title="Recurring months limit"
-                            />
-                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-right hidden sm:table-cell">
@@ -976,7 +966,9 @@ function ExpenseRowFormModal({
             </div>
           </div>
 
-          {form.is_recurring && (
+          {/* Only shown when editing an existing expense — for new expenses,
+              the months limit is set afterwards via the row's extra tools. */}
+          {mode === 'edit' && form.is_recurring && (
             <div>
               <label className="block text-sm font-medium mb-1.5">Recurring months limit</label>
               <Input
