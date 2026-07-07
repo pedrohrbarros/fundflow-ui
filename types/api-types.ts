@@ -809,6 +809,7 @@ export interface operations {
                     is_recurring?: boolean;
                     recurring_months?: (string | number) | null;
                     is_paid?: boolean;
+                    paid_period?: string | null;
                     is_saved?: boolean;
                     saving_location?: string | null;
                     payment_methods?: {
@@ -1079,6 +1080,7 @@ export interface operations {
                     is_recurring?: boolean;
                     recurring_months?: (string | number) | null;
                     is_paid?: boolean;
+                    paid_period?: string | null;
                     is_saved?: boolean;
                     saving_location?: string | null;
                     payment_methods?: {

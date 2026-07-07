@@ -56,6 +56,7 @@ type ExpenseUpdatePayload = {
   is_recurring: boolean
   recurring_months: number | null
   is_paid: boolean
+  paid_period?: string | null
   is_saved: boolean
   payment_methods?: { payment_method_id: number; partial_amount: number }[]
 }
@@ -139,18 +140,20 @@ function formHasChanges(expense: Expense, form: RowForm) {
   )
 }
 
-function buildPayload(id: string, form: RowForm, expense: Expense): ExpenseUpdatePayload {
+function buildPayload(id: string, form: RowForm, expense: Expense, periodDate: string): ExpenseUpdatePayload {
   const amount = parseFloat(form.amount) || 0
   const pmsChanged = pmChanged(expense, form)
+  const nextIsRecurring = form.is_recurring
   return {
     id,
     name: form.name.trim(),
     amount,
     category_id: form.category_id ? parseInt(form.category_id, 10) : null,
     date: form.date,
-    is_recurring: form.is_recurring,
-    recurring_months: form.is_recurring ? (parseInt(form.recurring_months, 10) || null) : null,
+    is_recurring: nextIsRecurring,
+    recurring_months: nextIsRecurring ? (parseInt(form.recurring_months, 10) || null) : null,
     is_paid: form.is_paid,
+    paid_period: nextIsRecurring ? (form.is_paid ? periodDate.slice(0, 7) : null) : undefined,
     is_saved: form.is_saved,
     ...(pmsChanged ? {
       payment_methods: form.payment_methods
@@ -275,7 +278,7 @@ export function ExpensesSection() {
 
   function commitChanges(expense: Expense, form: RowForm) {
     if (!form.name.trim() || !formHasChanges(expense, form)) return
-    const payload = buildPayload(expense.id, form, expense)
+    const payload = buildPayload(expense.id, form, expense, periodDate)
     const nextPending = { ...pendingEdits, [expense.id]: payload }
     setPendingEdits(nextPending)
     showSharedToast(Object.values(nextPending))
@@ -285,7 +288,7 @@ export function ExpensesSection() {
   // stay batched behind the toast Save.
   function toggleCheckboxColumn(
     expense: Expense,
-    patch: Partial<Pick<Expense, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>>,
+    patch: Partial<Pick<Expense, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>> & { paid_period?: string | null },
   ) {
     update.mutate({ id: expense.id, ...patch })
 
@@ -368,7 +371,7 @@ export function ExpensesSection() {
   function submitRowForm(form: RowForm) {
     if (rowForm?.mode === 'edit') {
       // Auto-save edit without toaster: directly mutate instead of commitChanges
-      const payload = buildPayload(rowForm.expense.id, form, rowForm.expense)
+      const payload = buildPayload(rowForm.expense.id, form, rowForm.expense, periodDate)
       update.mutate(payload, {
         onSuccess: () => {
           setRowForm(null)
@@ -568,7 +571,13 @@ export function ExpensesSection() {
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_paid}
-                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_paid: Boolean(checked) })}
+                              onCheckedChange={(checked) => {
+                                const isPaid = Boolean(checked)
+                                toggleCheckboxColumn(expense, {
+                                  is_paid: isPaid,
+                                  ...(expense.is_recurring ? { paid_period: isPaid ? periodDate.slice(0, 7) : null } : {}),
+                                })
+                              }}
                             />
                           </div>
                         </TableCell>
