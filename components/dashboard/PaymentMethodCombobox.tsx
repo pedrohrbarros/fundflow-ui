@@ -7,7 +7,7 @@ import {
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
 } from '@/hooks/use-payment-methods'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
@@ -77,29 +77,35 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
   }
 
   return (
-    <Popover className="w-full" open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="w-full min-w-0 text-left bg-transparent dark:bg-[#1a2e1a] border border-green-100 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2">
-        <span className={selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}>
-          {selected?.name ?? placeholder}
-        </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`shrink-0 text-green-500 dark:text-[#86efac] transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </PopoverTrigger>
+    <>
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="w-full min-w-0 text-left bg-transparent dark:bg-[#1a2e1a] border border-green-100 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2"
+    >
+      <span className={selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}>
+        {selected?.name ?? placeholder}
+      </span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="shrink-0 text-green-500 dark:text-[#86efac]"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
 
-      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-0 w-64">
-        <div className="max-h-52 overflow-y-auto">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="w-[min(94vw,20rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5] p-0 gap-0" showCloseButton={false}>
+        <DialogTitle className="px-4 pt-4 pb-2">Select payment method</DialogTitle>
+        <div className="max-h-72 overflow-y-auto">
           {paymentMethods.length === 0 && (
             <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No payment methods yet</p>
           )}
@@ -243,7 +249,8 @@ export function PaymentMethodCombobox({ value, onChange, placeholder = 'Credit C
             </button>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

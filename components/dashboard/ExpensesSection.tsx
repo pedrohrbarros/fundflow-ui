@@ -1251,7 +1251,7 @@ function ExpenseExtraTools({
               <Input
                 type="number"
                 min="1"
-                placeholder="Indefinite"
+                placeholder="∞"
                 value={localDraft.recurring_months}
                 onChange={(e) => setLocalDraft((f) => ({ ...f, recurring_months: e.target.value }))}
                 className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
