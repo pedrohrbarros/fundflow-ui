@@ -136,4 +136,27 @@ describe('ExpensesSection', () => {
     // The overlay must survive: the edited name is still shown, not the server "Rent".
     expect(screen.getAllByText('Mortgage').length).toBeGreaterThan(0)
   })
+
+  it('queues a checkbox toggle as a draft instead of saving immediately', () => {
+    const mutateAsync = vi.fn(() => new Promise<void>(() => {}))
+    vi.mocked(useExpenses).mockReturnValue({
+      data: { expenses: [sampleExpense], total: 1200, pagination: { page: 1, limit: 20, total: 1 } },
+      isLoading: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    vi.mocked(useUpdateExpense).mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    render(<ExpensesSection />)
+
+    const [paidCheckbox] = screen.getAllByRole('checkbox')
+    fireEvent.click(paidCheckbox)
+
+    // The toggle shows up optimistically as a draft instead of persisting right away.
+    expect(mutateAsync).not.toHaveBeenCalled()
+    expect(paidCheckbox).toHaveAttribute('aria-checked', 'true')
+  })
 })

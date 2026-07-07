@@ -1,8 +1,7 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Loader2, MoreVertical } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import {
@@ -13,7 +12,7 @@ import {
 } from '@/hooks/use-expenses'
 import { usePaymentMethods } from '@/hooks/use-payment-methods'
 import { fmtMoney } from '@/lib/format'
-import type { Expense, ExpensesResponse } from '@/types'
+import type { Expense } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
 import { ColumnHeader } from '@/components/dashboard/ColumnHeader'
@@ -193,6 +192,7 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
 }
 
 const PAGE_LIMIT = 100
+const AUTO_SAVE_DELAY_MS = 2500
 
 export function ExpensesSection() {
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
@@ -227,7 +227,6 @@ export function ExpensesSection() {
   const create = useCreateExpense()
   const update = useUpdateExpense()
   const del = useDeleteExpense()
-  const qc = useQueryClient()
   const { date: periodDate } = usePeriod()
 
   const [isAdding, setIsAdding] = useState(false)
@@ -238,6 +237,7 @@ export function ExpensesSection() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
   const sharedToastId = useRef<string | number | undefined>(undefined)
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // Mobile-only: tap a row (or add) to edit all fields in one modal.
   const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; expense: Expense } | null>(null)
 
@@ -249,7 +249,21 @@ export function ExpensesSection() {
   const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
   const usedCategoryIds = new Set(expenses.map((e) => String(e.category_id)))
 
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimer.current !== undefined) clearTimeout(autoSaveTimer.current)
+    }
+  }, [])
+
+  function clearAutoSaveTimer() {
+    if (autoSaveTimer.current !== undefined) {
+      clearTimeout(autoSaveTimer.current)
+      autoSaveTimer.current = undefined
+    }
+  }
+
   function clearAllPending() {
+    clearAutoSaveTimer()
     setPendingEdits({})
     if (sharedToastId.current !== undefined) {
       toast.dismiss(sharedToastId.current)
@@ -257,6 +271,11 @@ export function ExpensesSection() {
     }
     setDraft(emptyForm)
     setEditing(null)
+  }
+
+  async function performSave(payloads: ExpenseUpdatePayload[]) {
+    await Promise.all(payloads.map((p) => update.mutateAsync(p)))
+    clearAllPending()
   }
 
   function showSharedToast(payloads: ExpenseUpdatePayload[]) {
@@ -267,13 +286,21 @@ export function ExpensesSection() {
         t={t}
         successMessage={count === 1 ? 'Expense saved' : `${count} expenses saved`}
         onSave={async () => {
-          await Promise.all(payloads.map((p) => update.mutateAsync(p)))
-          clearAllPending()
+          clearAutoSaveTimer()
+          await performSave(payloads)
         }}
         onRevert={() => clearAllPending()}
       />
     ), { duration: Infinity })
     sharedToastId.current = tid
+
+    // Debounce: keep pushing the auto-save out while the user keeps editing;
+    // once they pause, persist everything pending without needing a click.
+    clearAutoSaveTimer()
+    autoSaveTimer.current = setTimeout(() => {
+      autoSaveTimer.current = undefined
+      performSave(payloads).catch(() => toast.error('Failed to save changes'))
+    }, AUTO_SAVE_DELAY_MS)
   }
 
   function commitChanges(expense: Expense, form: RowForm) {
@@ -284,28 +311,15 @@ export function ExpensesSection() {
     showSharedToast(Object.values(nextPending))
   }
 
-  // Checkbox columns persist immediately (no toast/Save needed). Other columns
-  // stay batched behind the toast Save.
+  // Checkbox columns are drafts like any other field: queue the change and
+  // let the shared toast's Save/auto-save timer persist it. `expense` here is
+  // already the pending-merged display row, so this layers on top correctly.
   function toggleCheckboxColumn(
     expense: Expense,
-    patch: Partial<Pick<Expense, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>> & { paid_period?: string | null },
+    patch: Partial<Pick<RowForm, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>>,
   ) {
-    update.mutate({ id: expense.id, ...patch })
-
-    // Optimistically flip the checkbox instantly across all expenses queries.
-    qc.setQueriesData<ExpensesResponse>({ queryKey: ['expenses'] }, (old) =>
-      old
-        ? { ...old, expenses: old.expenses.map((e) => (e.id === expense.id ? { ...e, ...patch } : e)) }
-        : old,
-    )
-
-    // If the row has unsaved (draft) edits, keep the overlay and the pending
-    // Save payload in sync so the toggle isn't reverted on Save.
-    if (pendingEdits[expense.id]) {
-      const updated = { ...pendingEdits, [expense.id]: { ...pendingEdits[expense.id], ...patch } }
-      setPendingEdits(updated)
-      showSharedToast(Object.values(updated))
-    }
+    const merged = { ...formFromExpense(expense), ...patch }
+    commitChanges(expense, merged)
   }
 
   function startFieldEdit(expense: Expense, field: EditField) {
@@ -571,13 +585,7 @@ export function ExpensesSection() {
                           <div className="flex justify-center">
                             <Checkbox
                               checked={expense.is_paid}
-                              onCheckedChange={(checked) => {
-                                const isPaid = Boolean(checked)
-                                toggleCheckboxColumn(expense, {
-                                  is_paid: isPaid,
-                                  ...(expense.is_recurring ? { paid_period: isPaid ? periodDate.slice(0, 7) : null } : {}),
-                                })
-                              }}
+                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_paid: Boolean(checked) })}
                             />
                           </div>
                         </TableCell>
@@ -596,7 +604,7 @@ export function ExpensesSection() {
                               onCheckedChange={(checked) =>
                                 toggleCheckboxColumn(
                                   expense,
-                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: null },
+                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: '' },
                                 )
                               }
                             />
