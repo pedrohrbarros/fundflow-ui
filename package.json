@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "generate:api": "bun run scripts/generate-api.ts"
+    "generate:api": "bun run scripts/generate-api.ts",
+    "doctor": "react-doctor"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -42,6 +43,7 @@
     "eslint-config-next": "16.2.4",
     "jsdom": "^29.1.1",
     "openapi-typescript": "^7.13.0",
+    "react-doctor": "^0.7.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.9"
