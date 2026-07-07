@@ -459,7 +459,7 @@ export function ExpensesSection() {
                       <ColumnHeader label="Name" sortKey="name" sort={sort} onSort={toggleSort} filter={{ field: 'name', type: 'text', value: filters.name ?? null, onChange: (n) => setColumnFilter('name', n) }} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto hidden sm:table-cell">
-                      <ColumnHeader label="Category" />
+                      <ColumnHeader label="Category" sortKey="category_name" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Amount" align="right" sortKey="amount" sort={sort} onSort={toggleSort} filter={{ field: 'amount', type: 'number', value: filters.amount ?? null, onChange: (n) => setColumnFilter('amount', n) }} />
