@@ -574,13 +574,27 @@ export function ExpensesSection() {
                           )}
                         </TableCell>
                         <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
-                          <ExpensePmEditCell
-                            expense={expense}
-                            onSave={(pms) => {
-                              const merged = { ...formFromExpense(expense), payment_methods: pms }
-                              commitChanges(expense, merged)
-                            }}
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setRowForm({ mode: 'edit', expense })}
+                            className="w-full text-left truncate text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors block"
+                            title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
+                          >
+                            {(expense.payment_methods ?? []).length > 0
+                              ? (expense.payment_methods ?? []).map((pm, i) => (
+                                  <span key={pm.payment_method_id}>
+                                    {i > 0 ? ', ' : ''}{pm.name}
+                                    {pm.origin ? (
+                                      <>
+                                        {' '}
+                                        <span className="text-xs text-green-400/70 dark:text-[#86efac]/50">({pm.origin})</span>
+                                      </>
+                                    ) : null}
+                                  </span>
+                                ))
+                              : <span className="text-green-300 dark:text-green-800">—</span>
+                            }
+                          </button>
                         </TableCell>
                         <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
                           <div className="flex justify-center">
@@ -679,8 +693,6 @@ export function ExpensesSection() {
                               key={pm.payment_method_id}
                               pmId={pm.payment_method_id}
                               partialAmount={pm.partial_amount}
-                              showAdd={i === addForm.payment_methods.length - 1 && !addFormShowPmPicker}
-                              onAdd={() => setAddFormShowPmPicker(true)}
                               onAmountChange={(val) =>
                                 setAddForm((f) => ({
                                   ...f,
@@ -697,6 +709,16 @@ export function ExpensesSection() {
                               }
                             />
                           ))}
+                          {addForm.payment_methods.length > 0 && !addFormShowPmPicker && (
+                            <button
+                              type="button"
+                              className="self-start text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-xs font-medium"
+                              onClick={() => setAddFormShowPmPicker(true)}
+                              aria-label="Add payment method"
+                            >
+                              + Add another
+                            </button>
+                          )}
                           {(addForm.payment_methods.length === 0 || addFormShowPmPicker) && (
                             <PaymentMethodCombobox
                               value=""
@@ -1004,10 +1026,6 @@ function ExpenseRowFormModal({
                       payment_methods: f.payment_methods.filter((_, j) => j !== i),
                     }))
                   }
-                  showAdd={i === form.payment_methods.length - 1}
-                  onAdd={() => {
-                    // Show the combobox by adding an empty PM
-                  }}
                 />
               ))}
               <PaymentMethodCombobox
@@ -1048,30 +1066,37 @@ function AddFormPmRow({
   partialAmount,
   onAmountChange,
   onRemove,
-  showAdd,
-  onAdd,
+  editable = true,
 }: {
   pmId: string
   partialAmount: string
   onAmountChange: (val: string) => void
   onRemove: () => void
-  showAdd?: boolean
-  onAdd?: () => void
+  editable?: boolean
 }) {
   const { data } = usePaymentMethods()
   const pm = data?.payment_methods.find((p) => String(p.id) === pmId)
   return (
     <div className="flex items-center gap-1 text-xs">
-      <span className="flex-1 truncate text-green-700 dark:text-green-400">{pm?.name ?? pmId}</span>
-      <Input
-        type="number"
-        className="w-16 h-5 text-xs text-right px-1 py-0"
-        min="0"
-        step="0.01"
-        placeholder="amt"
-        value={partialAmount}
-        onChange={(e) => onAmountChange(e.target.value)}
-      />
+      <span className="flex-1 truncate text-green-700 dark:text-green-400">
+        {pm?.name ?? pmId}
+        {pm?.origin ? (
+          <span className="text-green-500 dark:text-[#86efac]/60"> ({pm.origin})</span>
+        ) : null}
+      </span>
+      {editable ? (
+        <Input
+          type="number"
+          className="w-20 h-6 text-xs text-right px-1.5 py-0"
+          min="0"
+          step="0.01"
+          placeholder="amt"
+          value={partialAmount}
+          onChange={(e) => onAmountChange(e.target.value)}
+        />
+      ) : (
+        <span className="font-mono text-green-700 dark:text-green-400">{partialAmount || '—'}</span>
+      )}
       <button
         type="button"
         className="text-red-400 hover:text-red-300 shrink-0"
@@ -1080,118 +1105,7 @@ function AddFormPmRow({
       >
         ✕
       </button>
-      {showAdd && (
-        <button
-          type="button"
-          className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 shrink-0 font-medium"
-          onClick={onAdd}
-          aria-label="Add payment method"
-        >
-          +
-        </button>
-      )}
     </div>
-  )
-}
-
-function ExpensePmEditCell({
-  expense,
-  onSave,
-}: {
-  expense: Expense
-  onSave: (pms: PmEntry[]) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [localPms, setLocalPms] = useState<PmEntry[]>([])
-  const [newPmAmount, setNewPmAmount] = useState('')
-  const { data: pmData } = usePaymentMethods()
-  const paymentMethods = pmData?.payment_methods ?? []
-
-  const displayPms = expense.payment_methods ?? []
-
-  return (
-    <Popover open={open} onOpenChange={(o) => {
-      if (o) {
-        setLocalPms(displayPms.map((pm) => ({
-          payment_method_id: pm.payment_method_id,
-          partial_amount: String(pm.partial_amount),
-        })))
-        setNewPmAmount('')
-      }
-      setOpen(o)
-    }}>
-      <PopoverTrigger
-        className="w-full text-left truncate text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors block"
-        title={displayPms.map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
-      >
-        {displayPms.length > 0
-          ? displayPms.map((pm, i) => (
-              <span key={pm.payment_method_id}>
-                {i > 0 ? ', ' : ''}{pm.name}
-                {pm.origin ? <span className="text-xs text-green-400/70 dark:text-[#86efac]/50"> ({pm.origin})</span> : null}
-              </span>
-            ))
-          : <span className="text-green-300 dark:text-green-800">—</span>
-        }
-      </PopoverTrigger>
-      <PopoverContent align="start" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-72 text-gray-900 dark:text-[#d1fae5]">
-        <div className="space-y-3">
-          <div className="flex flex-col gap-1.5">
-            {localPms.map((pm, i) => {
-              const meta = paymentMethods.find((p) => String(p.id) === String(pm.payment_method_id))
-              return (
-                <div key={pm.payment_method_id} className="flex items-center gap-1">
-                  <span className="flex-1 text-xs truncate text-green-800 dark:text-[#d1fae5]">
-                    {meta?.name ?? pm.payment_method_id}
-                    {meta?.origin ? <span className="text-green-500 dark:text-[#86efac]/60"> ({meta.origin})</span> : null}
-                  </span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="amt"
-                    value={pm.partial_amount}
-                    onChange={(e) =>
-                      setLocalPms((prev) => prev.map((p, j) => j === i ? { ...p, partial_amount: e.target.value } : p))
-                    }
-                    className="w-20 h-6 text-xs text-right px-1.5 bg-green-50 dark:bg-[#1a2e1a] border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
-                  />
-                  <button
-                    type="button"
-                    className="shrink-0 text-red-400 hover:text-red-300 text-xs px-1"
-                    onClick={() => setLocalPms((prev) => prev.filter((_, j) => j !== i))}
-                    aria-label="Remove payment method"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-          <PaymentMethodCombobox
-            value=""
-            onChange={(id) => {
-              if (!id || localPms.some((pm) => pm.payment_method_id === id)) return
-              setLocalPms((prev) => [...prev, { payment_method_id: id, partial_amount: newPmAmount }])
-              setNewPmAmount('')
-            }}
-            amount={newPmAmount}
-            onAmountChange={setNewPmAmount}
-            placeholder="Add payment method"
-          />
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={() => {
-              onSave(localPms)
-              setOpen(false)
-            }}
-          >
-            Save
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
 

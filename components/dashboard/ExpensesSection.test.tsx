@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ExpensesSection } from './ExpensesSection'
 import { useExpenses, useUpdateExpense } from '@/hooks/use-expenses'
+import { usePaymentMethods } from '@/hooks/use-payment-methods'
 
 const createMutate = vi.fn()
 
@@ -48,7 +49,7 @@ vi.mock('@/components/dashboard/PaymentMethodCombobox', () => ({
 }))
 
 vi.mock('@/hooks/use-payment-methods', () => ({
-  usePaymentMethods: () => ({ data: { payment_methods: [] } }),
+  usePaymentMethods: vi.fn(() => ({ data: { payment_methods: [] } })),
 }))
 
 const sampleExpense = {
@@ -158,5 +159,36 @@ describe('ExpensesSection', () => {
     // The toggle shows up optimistically as a draft instead of persisting right away.
     expect(mutateAsync).not.toHaveBeenCalled()
     expect(paidCheckbox).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('opens the expense form modal from the desktop payment-method cell, showing origin and an editable amount', () => {
+    vi.mocked(usePaymentMethods).mockReturnValue({
+      data: { payment_methods: [{ id: 'pm-1', name: 'Visa', origin: 'Bank' }] },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    vi.mocked(useExpenses).mockReturnValue({
+      data: {
+        expenses: [{
+          ...sampleExpense,
+          payment_methods: [{ payment_method_id: 'pm-1', partial_amount: 50, name: 'Visa', origin: 'Bank' }],
+        }],
+        total: 1200,
+        pagination: { page: 1, limit: 20, total: 1 },
+      },
+      isLoading: false,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    render(<ExpensesSection />)
+
+    // The desktop payment-method cell shows "Visa (Bank)" and opens the full form modal.
+    fireEvent.click(screen.getByRole('button', { name: /visa \(bank\)/i }))
+
+    // A full modal (not an in-place popover) opens.
+    expect(screen.getByText('Edit expense')).toBeInTheDocument()
+    // The method's amount is editable inside the modal, prefilled from the expense.
+    expect(screen.getByDisplayValue('50')).toBeInTheDocument()
+    // Origin is visible in the modal's method list.
+    expect(screen.getAllByText(/\(bank\)/i).length).toBeGreaterThan(0)
   })
 })
