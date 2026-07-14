@@ -81,6 +81,10 @@ describe('ExpensesSection', () => {
       mutateAsync: vi.fn(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
+    vi.mocked(usePaymentMethods).mockReturnValue({
+      data: { payment_methods: [] },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
   })
 
   it('creates an expense without requiring a category', () => {

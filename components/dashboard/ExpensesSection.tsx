@@ -231,7 +231,6 @@ export function ExpensesSection() {
 
   const [isAdding, setIsAdding] = useState(false)
   const [addForm, setAddForm] = useState<RowForm>(emptyForm)
-  const [addFormShowPmPicker, setAddFormShowPmPicker] = useState(false)
   const [addFormPmAmount, setAddFormPmAmount] = useState('')
   const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
   const [draft, setDraft] = useState<RowForm>(emptyForm)
@@ -377,7 +376,6 @@ export function ExpensesSection() {
         onSuccess: () => {
           setAddForm(emptyForm)
           setIsAdding(false)
-          setAddFormShowPmPicker(false)
         },
       }
     )
@@ -658,7 +656,7 @@ export function ExpensesSection() {
                           }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleAdd()
-                            if (e.key === 'Escape') { setIsAdding(false); setAddForm(emptyForm); setAddFormShowPmPicker(false) }
+                            if (e.key === 'Escape') { setIsAdding(false); setAddForm(emptyForm) }
                           }}
                           autoFocus
                         />
@@ -693,14 +691,8 @@ export function ExpensesSection() {
                               key={pm.payment_method_id}
                               pmId={pm.payment_method_id}
                               partialAmount={pm.partial_amount}
-                              onAmountChange={(val) =>
-                                setAddForm((f) => ({
-                                  ...f,
-                                  payment_methods: f.payment_methods.map((p, j) =>
-                                    j === i ? { ...p, partial_amount: val } : p
-                                  ),
-                                }))
-                              }
+                              editable={false}
+                              onAmountChange={() => {}}
                               onRemove={() =>
                                 setAddForm((f) => ({
                                   ...f,
@@ -709,33 +701,20 @@ export function ExpensesSection() {
                               }
                             />
                           ))}
-                          {addForm.payment_methods.length > 0 && !addFormShowPmPicker && (
-                            <button
-                              type="button"
-                              className="self-start text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-xs font-medium"
-                              onClick={() => setAddFormShowPmPicker(true)}
-                              aria-label="Add payment method"
-                            >
-                              + Add another
-                            </button>
-                          )}
-                          {(addForm.payment_methods.length === 0 || addFormShowPmPicker) && (
-                            <PaymentMethodCombobox
-                              value=""
-                              onChange={(id) => {
-                                if (!id || addForm.payment_methods.some((pm) => pm.payment_method_id === id)) return
-                                setAddForm((f) => ({
-                                  ...f,
-                                  payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: addFormPmAmount }],
-                                }))
-                                setAddFormPmAmount('')
-                                setAddFormShowPmPicker(false)
-                              }}
-                              amount={addFormPmAmount}
-                              onAmountChange={setAddFormPmAmount}
-                              placeholder="Add payment method"
-                            />
-                          )}
+                          <PaymentMethodCombobox
+                            value=""
+                            onChange={(id) => {
+                              if (!id || addForm.payment_methods.some((pm) => pm.payment_method_id === id)) return
+                              setAddForm((f) => ({
+                                ...f,
+                                payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: addFormPmAmount }],
+                              }))
+                              setAddFormPmAmount('')
+                            }}
+                            amount={addFormPmAmount}
+                            onAmountChange={setAddFormPmAmount}
+                            placeholder="Add payment method"
+                          />
                         </div>
                       </TableCell>
                       <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
@@ -773,7 +752,7 @@ export function ExpensesSection() {
                           <Button
                             variant="destructive"
                             size="icon"
-                            onClick={() => { setIsAdding(false); setAddForm(emptyForm); setAddFormShowPmPicker(false) }}
+                            onClick={() => { setIsAdding(false); setAddForm(emptyForm) }}
                             aria-label="Cancel"
                           >
                             ✕
