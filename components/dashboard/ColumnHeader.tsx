@@ -35,7 +35,7 @@ export function ColumnHeader({ label, align = 'left', sortKey, sort, onSort, fil
         <button
           type="button"
           onClick={() => onSort!(sortKey!)}
-          className="inline-flex items-center gap-1 min-w-0 hover:text-white/90 transition-colors"
+          className="inline-flex items-center gap-1 min-w-0 hover:text-foreground transition-colors"
         >
           <span className="text-sm truncate">{label}</span>
           {sortActive ? (
@@ -98,15 +98,15 @@ function ColumnFilter({ config, active }: { config: FilterConfig; active: boolea
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        className={`shrink-0 rounded p-0.5 transition-colors ${active ? 'text-[#4ade80]' : 'text-white/50 hover:text-white/80'}`}
+        className={`shrink-0 rounded p-0.5 transition-colors ${active ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground'}`}
         aria-label={`Filter ${config.field}`}
       >
         <ListFilter className="size-3.5" />
       </PopoverTrigger>
-      <PopoverContent align="start" side="bottom" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-2 w-56 flex flex-col gap-2">
+      <PopoverContent align="start" side="bottom" className="bg-popover border border-border p-2 w-56 flex flex-col gap-2">
         {config.type === 'boolean' ? (
           <select
-            className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2 w-full"
+            className="h-8 text-sm bg-background border border-input text-foreground rounded px-2 w-full"
             value={bool}
             onChange={(e) => setBool(e.target.value)}
           >
@@ -117,7 +117,7 @@ function ColumnFilter({ config, active }: { config: FilterConfig; active: boolea
         ) : (
           <>
             <select
-              className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2 w-full"
+              className="h-8 text-sm bg-background border border-input text-foreground rounded px-2 w-full"
               value={op}
               onChange={(e) => setOp(e.target.value)}
             >
@@ -128,7 +128,7 @@ function ColumnFilter({ config, active }: { config: FilterConfig; active: boolea
             ) : op === 'is_between' ? (
               <div className="flex items-center gap-1">
                 <Input className="h-8 text-sm" type="number" value={num} onChange={(e) => setNum(e.target.value)} placeholder="min" />
-                <span className="text-xs text-green-500">–</span>
+                <span className="text-xs text-muted-foreground">–</span>
                 <Input className="h-8 text-sm" type="number" value={num2} onChange={(e) => setNum2(e.target.value)} placeholder="max" />
               </div>
             ) : (

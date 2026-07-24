@@ -91,9 +91,9 @@ export function CategoryCombobox({
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="w-full text-left bg-transparent dark:bg-[#1a2e1a] border border-green-100 dark:border-[#166534] hover:border-green-400 dark:hover:border-[#4ade80] text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2"
+      className="w-full text-left bg-transparent border border-input hover:border-ring text-[1rem] h-8 px-2.5 rounded outline-none transition-colors flex items-center justify-between gap-2"
     >
-      <span className={`flex-1 min-w-0 truncate ${selected ? 'text-green-900 dark:text-[#d1fae5]' : 'text-green-400/70 dark:text-[#86efac]/50'}`}>
+      <span className={`flex-1 min-w-0 truncate ${selected ? 'text-foreground' : 'text-muted-foreground'}`}>
         {selected?.name ?? placeholder}
       </span>
       <svg
@@ -106,24 +106,24 @@ export function CategoryCombobox({
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className="shrink-0 text-green-500 dark:text-[#86efac]"
+        className="shrink-0 text-muted-foreground"
       >
         <polyline points="6 9 12 15 18 9" />
       </svg>
     </button>
 
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="w-[min(94vw,22rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5] p-0 gap-0" showCloseButton={false}>
+      <DialogContent className="w-[min(94vw,22rem)] p-0 gap-0" showCloseButton={false}>
         <DialogTitle className="px-4 pt-4 pb-2">Select category</DialogTitle>
         <div className="max-h-72 overflow-y-auto">
           {categories.length === 0 && (
-            <p className="text-green-400 dark:text-[#86efac]/50 text-xs italic px-3 py-3">No categories yet</p>
+            <p className="text-muted-foreground text-xs italic px-3 py-3">No categories yet</p>
           )}
           <div
-            className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer transition-colors ${value === '' ? 'bg-green-50 dark:bg-[#14532d]' : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'}`}
+            className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer transition-colors ${value === '' ? 'bg-accent' : 'hover:bg-accent/60'}`}
             onClick={() => selectCategory('')}
           >
-            <span className="flex-1 min-w-0 truncate text-sm italic text-green-500 dark:text-[#86efac]/70">No category</span>
+            <span className="flex-1 min-w-0 truncate text-sm italic text-muted-foreground">No category</span>
           </div>
           {categories.map((cat) => {
             const catId = String(cat.id)
@@ -132,15 +132,15 @@ export function CategoryCombobox({
               key={catId}
               className={`flex items-center gap-1 px-2 py-1.5 cursor-pointer group transition-colors ${
                 catId === value
-                  ? 'bg-green-50 dark:bg-[#14532d]'
-                  : 'hover:bg-green-50/60 dark:hover:bg-[#1a3a1a]'
+                  ? 'bg-accent'
+                  : 'hover:bg-accent/60'
               }`}
               onClick={() => editingId !== catId && selectCategory(catId)}
             >
               {editingId === catId ? (
                 <>
                   <Input
-                    className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5]"
+                    className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
@@ -153,7 +153,7 @@ export function CategoryCombobox({
                   />
                   <Button
                     size="icon-xs"
-                    className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
+                    className="shrink-0 bg-transparent border-0 text-primary hover:text-primary-foreground hover:bg-primary"
                     onClick={(e) => { e.stopPropagation(); saveEdit(catId) }}
                     disabled={updateCat.isPending}
                     title="Save"
@@ -163,7 +163,7 @@ export function CategoryCombobox({
                   <Button
                     size="icon-xs"
                     variant="ghost"
-                    className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
+                    className="shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent"
                     onClick={(e) => { e.stopPropagation(); setEditingId(null) }}
                     title="Cancel"
                   >
@@ -172,13 +172,13 @@ export function CategoryCombobox({
                 </>
               ) : (
                 <>
-                  <span className="flex-1 min-w-0 text-sm text-green-900 dark:text-[#d1fae5] truncate">
+                  <span className="flex-1 min-w-0 text-sm text-foreground truncate">
                     {cat.name}
                   </span>
                   {!isBusy && (
                     <button
                       onClick={(e) => startEdit(catId, cat.name, e)}
-                      className="shrink-0 opacity-0 group-hover:opacity-100 text-green-500 dark:text-[#86efac] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534] text-xs px-1.5 py-0.5 rounded transition-all"
+                      className="shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-primary-foreground hover:bg-primary text-xs px-1.5 py-0.5 rounded transition-all"
                       title="Rename"
                     >
                       ✎
@@ -188,7 +188,7 @@ export function CategoryCombobox({
                     <button
                       onClick={(e) => handleDelete(catId, e)}
                       disabled={deleteCat.isPending}
-                      className={`shrink-0 text-red-400 hover:text-red-200 hover:bg-red-950/40 text-xs px-1.5 py-0.5 rounded transition-all ${
+                      className={`shrink-0 text-destructive hover:bg-destructive/20 text-xs px-1.5 py-0.5 rounded transition-all ${
                         deletingId === catId ? '' : 'opacity-0 group-hover:opacity-100'
                       }`}
                       title="Delete"
@@ -203,11 +203,11 @@ export function CategoryCombobox({
           })}
         </div>
 
-        <div className="border-t border-green-100 dark:border-[#166534]">
+        <div className="border-t border-border">
           {showNew ? (
             <div className="flex items-center gap-1 px-2 py-1.5">
               <Input
-                className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1 dark:bg-[#1a2e1a] dark:border-[#4ade80] dark:text-[#d1fae5] placeholder:text-green-300 dark:placeholder:text-[#86efac]/40"
+                className="h-7 text-sm focus-visible:ring-0 min-w-0 flex-1"
                 placeholder="Category name…"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -220,7 +220,7 @@ export function CategoryCombobox({
               />
               <Button
                 size="icon-xs"
-                className="shrink-0 bg-transparent border-0 text-green-600 dark:text-[#4ade80] hover:text-white hover:bg-green-600 dark:hover:bg-[#166534]"
+                className="shrink-0 bg-transparent border-0 text-primary hover:text-primary-foreground hover:bg-primary"
                 onClick={handleCreate}
                 disabled={createCat.isPending || !newName.trim()}
                 title="Create"
@@ -231,7 +231,7 @@ export function CategoryCombobox({
                 <Button
                   size="icon-xs"
                   variant="ghost"
-                  className="shrink-0 text-green-400 dark:text-[#86efac]/60 hover:text-foreground dark:hover:text-white dark:hover:bg-[#1a2e1a]"
+                  className="shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent"
                   onClick={() => { setShowNew(false); setNewName('') }}
                   title="Cancel"
                 >
@@ -242,7 +242,7 @@ export function CategoryCombobox({
           ) : !isBusy ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowNew(true); setEditingId(null) }}
-              className="w-full text-left text-xs text-green-600 dark:text-[#86efac] hover:text-green-900 dark:hover:text-white hover:bg-green-50 dark:hover:bg-[#1a3a1a] px-3 py-2 transition-colors"
+              className="w-full text-left text-xs text-primary hover:text-foreground hover:bg-accent px-3 py-2 transition-colors"
             >
               + New category
             </button>
