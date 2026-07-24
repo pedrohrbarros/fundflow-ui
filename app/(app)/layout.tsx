@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <PeriodProvider>
       <div className="h-screen flex flex-col">
-        <header className="flex flex-col sm:flex-row sm:items-center border-b border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 shrink-0">
+        <header className="flex flex-col sm:flex-row sm:items-center border-b border-border bg-card shrink-0">
           <div className="hidden sm:flex items-center gap-2 p-4 shrink-0">
             <Image src="/logo.png" alt="FundFlow" width={120} height={32} priority style={{ height: 'auto' }} />
           </div>

@@ -15,7 +15,7 @@ export function PeriodSelector() {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <div className="flex rounded-lg border border-green-200 dark:border-[#166534] overflow-hidden">
+      <div className="flex rounded-lg border border-border overflow-hidden">
         {GRANULARITIES.map(({ key, label }) => (
           <button
             key={key}
@@ -23,8 +23,8 @@ export function PeriodSelector() {
             onClick={() => setGranularity(key)}
             className={`px-2.5 py-1 text-xs font-medium transition-colors ${
               granularity === key
-                ? 'bg-green-600 text-white'
-                : 'bg-transparent text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground'
             }`}
           >
             {label}
@@ -32,13 +32,13 @@ export function PeriodSelector() {
         ))}
       </div>
       <div className="flex items-center gap-1">
-        <button type="button" aria-label="Previous period" onClick={prev} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:text-white dark:hover:text-gray-900 hover:bg-gray-900 dark:hover:bg-white transition-colors">
+        <button type="button" aria-label="Previous period" onClick={prev} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronLeft className="size-4" />
         </button>
-        <span className="min-w-32 text-center text-sm font-semibold text-green-900 dark:text-[#d1fae5]">
+        <span className="min-w-32 text-center text-sm font-semibold text-foreground">
           {formatPeriodLabel(date, granularity)}
         </span>
-        <button type="button" aria-label="Next period" onClick={next} className="p-1 rounded text-green-700 dark:text-[#86efac] hover:text-white dark:hover:text-gray-900 hover:bg-gray-900 dark:hover:bg-white transition-colors">
+        <button type="button" aria-label="Next period" onClick={next} className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
           <ChevronRight className="size-4" />
         </button>
       </div>

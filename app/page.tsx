@@ -76,7 +76,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => signIn('google', { redirectTo: '/expenses' })}
-              className="w-full h-11 rounded-lg border border-green-200 dark:border-[#166534] bg-white dark:bg-[#1a2e1a] text-green-900 dark:text-[#d1fae5] font-medium flex items-center justify-center gap-3 hover:bg-green-50 dark:hover:bg-[#14532d] transition-colors"
+              className="w-full h-11 rounded-lg border border-border bg-card text-foreground font-medium flex items-center justify-center gap-3 hover:bg-accent transition-colors motion-reduce:transition-none"
             >
               <GoogleIcon /> Sign in with Google
             </button>
