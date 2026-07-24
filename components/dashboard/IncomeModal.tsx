@@ -310,18 +310,18 @@ export function IncomeModal({ open, onClose }: Props) {
     <>
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="income-modal-dark sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] gap-0 overflow-hidden rounded-none sm:rounded-xl"
+        className="sm:max-w-6xl w-[min(98vw,72rem)] h-[min(92dvh,52rem)] flex flex-col p-0 gap-0 overflow-hidden rounded-none sm:rounded-xl"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Income sources</DialogTitle>
 
         {/* Mobile-only top bar (above the table) holding the close button */}
-        <div className="sm:hidden relative h-11 shrink-0 border-b border-green-100 dark:border-[#166534]">
+        <div className="sm:hidden relative h-11 shrink-0 border-b border-border">
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-1.5 right-2 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+            className="absolute top-1.5 right-2 p-1.5 rounded-md text-muted-foreground hover:bg-accent"
           >
             <XIcon className="h-5 w-5" />
           </button>
@@ -331,13 +331,13 @@ export function IncomeModal({ open, onClose }: Props) {
         <div className="overflow-auto min-h-0 flex-1 relative">
           {isLoading ? (
             <div className="flex items-center justify-center py-16" role="status" aria-label="Loading">
-              <Loader2 className="size-6 animate-spin text-green-700 dark:text-[#86efac]" />
+              <Loader2 className="size-6 animate-spin text-primary" />
             </div>
           ) : (
           <>
           {/* Mobile: tap-to-edit card list (no wide table) */}
           <div className="sm:hidden flex flex-col">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-[#166534] px-4 py-3 text-sm font-semibold text-white">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <span>Name</span>
               <span>Amount</span>
             </div>
@@ -346,22 +346,22 @@ export function IncomeModal({ open, onClose }: Props) {
                 key={source.id}
                 type="button"
                 onClick={() => setRowForm({ mode: 'edit', source })}
-                className="flex items-center justify-between gap-3 border-b border-green-100 dark:border-[#166534] px-4 py-3 text-left active:bg-green-50 dark:active:bg-[#1a2e1a] transition-colors"
+                className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 text-left active:bg-accent transition-colors motion-reduce:transition-none"
               >
                 <span className="min-w-0 flex flex-col">
-                  <span className="truncate font-medium text-gray-900 dark:text-[#d1fae5]">{source.name}</span>
-                  <span className="truncate text-xs text-green-700 dark:text-[#86efac]">{getCategoryName(source)}</span>
+                  <span className="truncate font-medium text-foreground">{source.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">{getCategoryName(source)}</span>
                 </span>
                 <span className="shrink-0 flex flex-col items-end">
-                  <span className="font-mono text-sm text-gray-900 dark:text-[#d1fae5]">{fmtMoney(source.period_amount)}</span>
-                  <span className="text-[10px] font-mono text-green-700 dark:text-[#86efac]">{source.currency ?? 'USD'}</span>
+                  <span className="tabular-nums text-sm text-foreground">{fmtMoney(source.period_amount)}</span>
+                  <span className="text-[10px] tabular-nums text-muted-foreground">{source.currency ?? 'USD'}</span>
                 </span>
               </button>
             ))}
             <button
               type="button"
               onClick={() => setRowForm({ mode: 'add' })}
-              className="px-4 py-3 text-center text-green-700 dark:text-[#4ade80] font-medium active:bg-green-50 dark:active:bg-[#1a2e1a] transition-colors"
+              className="px-4 py-3 text-center text-primary font-medium active:bg-accent transition-colors motion-reduce:transition-none"
             >
               + Add income
             </button>
@@ -404,7 +404,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="w-full text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate block"
+                          className="w-full text-left cursor-pointer hover:text-primary transition-colors truncate block"
                           onClick={() => startFieldEdit(source, 'name')}
                         >
                           {source.name}
@@ -424,7 +424,7 @@ export function IncomeModal({ open, onClose }: Props) {
                         <div className="flex items-center gap-1 min-w-0">
                           <button
                             type="button"
-                            className="flex-1 min-w-0 text-left cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors truncate"
+                            className="flex-1 min-w-0 text-left cursor-pointer hover:text-primary transition-colors truncate"
                             onClick={() => startFieldEdit(source, 'category')}
                           >
                             {getCategoryName(source)}
@@ -456,7 +456,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="w-full text-right cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors font-mono"
+                          className="w-full text-right cursor-pointer hover:text-primary transition-colors tabular-nums"
                           onClick={() => startFieldEdit(source, 'income')}
                         >
                           {fmtMoney(source.period_amount)}
@@ -466,7 +466,7 @@ export function IncomeModal({ open, onClose }: Props) {
                     <TableCell className="py-2.5 px-3">
                       {isEditing && editing.field === 'currency' ? (
                         <select
-                          className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5 w-full"
+                          className="h-8 text-sm bg-background border border-input text-foreground rounded px-2.5 w-full"
                           value={draft.currency}
                           onChange={(e) => setDraft((f) => ({ ...f, currency: e.target.value }))}
                           onBlur={() => handleFieldBlur(source.id)}
@@ -479,7 +479,7 @@ export function IncomeModal({ open, onClose }: Props) {
                       ) : (
                         <button
                           type="button"
-                          className="text-xs font-mono text-green-700 dark:text-[#86efac] cursor-pointer hover:text-green-600 dark:hover:text-[#4ade80] transition-colors"
+                          className="text-xs tabular-nums text-muted-foreground cursor-pointer hover:text-primary transition-colors"
                           onClick={() => startFieldEdit(source, 'currency')}
                         >
                           {source.currency ?? 'USD'}
@@ -568,7 +568,7 @@ export function IncomeModal({ open, onClose }: Props) {
                   </TableCell>
                   <TableCell className="py-2.5 px-3">
                     <select
-                      className="h-8 text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5 w-full"
+                      className="h-8 text-sm bg-background border border-input text-foreground rounded px-2.5 w-full"
                       value={addForm.currency}
                       onChange={(e) => setAddForm((f) => ({ ...f, currency: e.target.value }))}
                     >
@@ -606,7 +606,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 >
                   <TableCell
                     colSpan={5}
-                    className="py-2 px-3 text-center text-green-700/40 dark:text-[#4ade80]/40 select-none group-hover:text-green-600/70 dark:group-hover:text-[#4ade80]/70 transition-colors"
+                    className="py-2 px-3 text-center text-muted-foreground/40 select-none group-hover:text-primary/70 transition-colors"
                   >
                     <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
                   </TableCell>
@@ -620,7 +620,7 @@ export function IncomeModal({ open, onClose }: Props) {
                 type="button"
                 aria-label="Add income"
                 onClick={() => setIsAdding(true)}
-                className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-[#166534] text-green-700/50 dark:text-[#4ade80]/50 text-2xl flex items-center justify-center hover:border-green-600 dark:hover:border-[#4ade80] hover:text-green-600 dark:hover:text-[#4ade80] hover:bg-green-50 dark:hover:bg-[#1a2e1a] transition-all duration-150"
+                className="w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground text-2xl flex items-center justify-center hover:border-primary hover:text-primary hover:bg-accent transition-all duration-150 motion-reduce:transition-none"
               >
                 +
               </button>
@@ -687,7 +687,7 @@ function IncomeRowFormModal({
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="income-modal-dark w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]"
+        className="w-[min(94vw,26rem)]"
         showCloseButton={false}
       >
         {/* Mobile-only close */}
@@ -695,7 +695,7 @@ function IncomeRowFormModal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-gray-700 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:bg-accent"
         >
           <XIcon className="h-5 w-5" />
         </button>
@@ -709,7 +709,7 @@ function IncomeRowFormModal({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Source name"
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full"
               autoFocus
             />
           </div>
@@ -735,13 +735,13 @@ function IncomeRowFormModal({
                 value={form.income}
                 onChange={(e) => setForm((f) => ({ ...f, income: e.target.value }))}
                 placeholder="0.00"
-                className="w-full text-right bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+                className="w-full text-right"
               />
             </div>
             <div className="w-28">
               <label className="block text-sm font-medium mb-1.5">Currency</label>
               <select
-                className="h-9 w-full text-sm bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] rounded px-2.5"
+                className="h-9 w-full text-sm bg-background border border-input text-foreground rounded px-2.5"
                 value={form.currency}
                 onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
               >
@@ -758,7 +758,7 @@ function IncomeRowFormModal({
               type="date"
               value={form.date}
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full"
             />
           </div>
 
@@ -804,10 +804,10 @@ function IncomeModalExtraTools({
       if (o) setLocalDraft({ date: source.date, is_recurring: source.is_recurring })
       setOpen(o)
     }}>
-      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2.5 py-1.5">
+      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors px-2.5 py-1.5">
         <MoreVertical className="h-4 w-4" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-64 text-gray-900 dark:text-[#d1fae5]">
+      <PopoverContent align="end" className="bg-popover border border-border p-4 w-64 text-popover-foreground">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Date</label>
@@ -815,7 +815,7 @@ function IncomeModalExtraTools({
               type="date"
               value={localDraft.date}
               onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full"
             />
           </div>
           <div className="flex items-center gap-2">
