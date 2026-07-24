@@ -23,7 +23,7 @@ export function ThemeToggle({ inverted = false, disabled = false }: ThemeToggleP
 
   const colors = inverted
     ? 'border border-green-400 dark:border-green-700 text-green-400 dark:text-green-700 hover:bg-green-900 dark:hover:bg-green-100'
-    : 'border border-green-700 dark:border-green-400 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900'
+    : 'border border-border text-foreground hover:bg-accent'
 
   return (
     <Button

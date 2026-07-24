@@ -45,48 +45,48 @@ export function CountryPicker() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Select country and currency"
         title={currentCountry ? `${currentCountry.name} (${currentCountry.currency})` : 'Select country'}
-        className="flex items-center justify-center size-8 rounded-full border border-green-100 dark:border-green-800 bg-white dark:bg-gray-950 hover:bg-green-50 dark:hover:bg-green-950 transition-colors text-lg"
+        className="flex items-center justify-center size-8 rounded-full border border-border bg-card hover:bg-accent transition-colors text-lg motion-reduce:transition-none"
       >
         {currentCountry?.flag ?? '🌍'}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-72 rounded-xl border border-green-100 dark:border-green-800 bg-white dark:bg-gray-900 shadow-xl overflow-hidden">
+        <div className="absolute right-0 top-11 z-50 w-72 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
           {/* Search */}
-          <div className="p-2 border-b border-green-100 dark:border-green-800">
+          <div className="p-2 border-b border-border">
             <input
               autoFocus
               type="text"
               placeholder="Search country or currency…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full text-sm px-3 py-1.5 rounded-lg border border-green-100 dark:border-green-700 bg-green-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 outline-none focus:border-green-500"
+              className="w-full text-sm px-3 py-1.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground outline-none focus:border-ring"
             />
           </div>
 
           {/* Country list */}
           <div className="max-h-72 overflow-y-auto">
             {filtered.length === 0 && (
-              <p className="text-sm text-gray-400 px-3 py-4 text-center italic">No countries found</p>
+              <p className="text-sm text-muted-foreground px-3 py-4 text-center italic">No countries found</p>
             )}
             {filtered.map((country) => (
               <button
                 key={country.code}
                 type="button"
                 onClick={() => handleSelect(country.code)}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-green-50 dark:hover:bg-green-950 transition-colors ${
-                  country.code === currentCode ? 'bg-green-100 dark:bg-green-900' : ''
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent transition-colors motion-reduce:transition-none ${
+                  country.code === currentCode ? 'bg-primary/10' : ''
                 }`}
               >
                 <span className="text-base shrink-0">{country.flag}</span>
-                <span className="flex-1 min-w-0 truncate text-gray-900 dark:text-gray-100">
+                <span className="flex-1 min-w-0 truncate text-foreground">
                   {country.name}
                 </span>
-                <span className="shrink-0 text-xs font-mono text-gray-500 dark:text-gray-400">
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
                   {country.currency}
                 </span>
                 {country.code === currentCode && (
-                  <span className="shrink-0 text-green-600 dark:text-green-400 text-xs">✓</span>
+                  <span className="shrink-0 text-primary text-xs">✓</span>
                 )}
               </button>
             ))}
