@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { SessionProvider } from 'next-auth/react'
-import { News_Cycle, Amiko, Rubik, Geist } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import { QueryProvider } from '@/providers/query-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
 import { Toaster } from 'sonner'
@@ -9,24 +9,6 @@ import './globals.css'
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-family-sans' })
-
-const newsCycle = News_Cycle({
-  weight: '700',
-  variable: '--font-title',
-  subsets: ['latin'],
-})
-
-const amiko = Amiko({
-  weight: '600',
-  variable: '--font-subtitle',
-  subsets: ['latin'],
-})
-
-const rubik = Rubik({
-  weight: '400',
-  variable: '--font-body',
-  subsets: ['latin'],
-})
 
 export const metadata: Metadata = {
   title: 'FundFlow',
@@ -43,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={cn("dark font-sans", geist.variable)}>
-      <body className={`${newsCycle.variable} ${amiko.variable} ${rubik.variable} antialiased`}>
+      <body className="antialiased">
         <ThemeProvider>
           <SessionProvider>
             <QueryProvider>
