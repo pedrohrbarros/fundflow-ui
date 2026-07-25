@@ -37,7 +37,7 @@ export function ColumnHeader({ label, align = 'left', sortKey, sort, onSort, fil
           onClick={() => onSort!(sortKey!)}
           className="inline-flex items-center gap-1 min-w-0 hover:text-foreground transition-colors"
         >
-          <span className="text-sm truncate">{label}</span>
+          <span className="text-sm truncate normal-case">{label}</span>
           {sortActive ? (
             sort!.dir === 'asc' ? <ArrowUp className="size-3 shrink-0" /> : <ArrowDown className="size-3 shrink-0" />
           ) : (
@@ -45,7 +45,10 @@ export function ColumnHeader({ label, align = 'left', sortKey, sort, onSort, fil
           )}
         </button>
       ) : (
-        <span className="text-sm truncate">{label}</span>
+        // `normal-case` matches the sortable variant: browsers reset
+        // text-transform inside <button>, so the th's uppercase would
+        // otherwise only hit non-sortable labels.
+        <span className="text-sm truncate normal-case">{label}</span>
       )}
 
       {filter && (
