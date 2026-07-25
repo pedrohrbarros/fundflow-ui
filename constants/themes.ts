@@ -1,17 +1,8 @@
-export const themes = {
-  dark: {
-    background_color: '#0C1618',
-    background_color_switched: '#EDFFEC',
-    container_color: '#0C1618',
-    text_color: '#ffffff',
-  },
-  light: {
-    background_color: '#EDFFEC',
-    background_color_switched: '#0C1618',
-    container_color: '#EDFFEC',
-    text_color: '#000000',
-  },
-  brand: {
-    primary: '#16a34a',
-  },
+// Landing-page palette. The app itself is dark-only (tokens live in
+// app/globals.css); the sign-in split keeps one light panel behind the dark
+// card as contrast, not as a second theme.
+export const landingTheme = {
+  background_color: '#0C1618',
+  background_color_switched: '#EDFFEC',
+  container_color: '#0C1618',
 } as const

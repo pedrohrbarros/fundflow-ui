@@ -7,7 +7,6 @@ vi.mock('next-auth/react', () => ({
   signIn,
 }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
-vi.mock('next-themes', () => ({ useTheme: () => ({ resolvedTheme: 'dark' }) }))
 
 import Home from './page'
 

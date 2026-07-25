@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { CountryPicker } from '@/components/dashboard/CountryPicker'
 import { Sidebar } from '@/components/Sidebar'
 import { UserMenu } from '@/components/UserMenu'
@@ -28,14 +27,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <PeriodSelector />
               <div className="flex items-center gap-3">
                 <SidebarToggle />
-                <ThemeToggle />
                 <CountryPicker />
                 <UserMenu />
               </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-3 p-4 shrink-0">
-            <ThemeToggle />
             <CountryPicker />
             <UserMenu />
           </div>

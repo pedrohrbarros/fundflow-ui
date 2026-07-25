@@ -2,9 +2,7 @@ import type { Metadata } from 'next'
 import { SessionProvider } from 'next-auth/react'
 import { Geist } from 'next/font/google'
 import { QueryProvider } from '@/providers/query-provider'
-import { ThemeProvider } from '@/providers/theme-provider'
 import { Toaster } from 'sonner'
-import '@/lib/suppress-warnings'
 import './globals.css'
 import { cn } from "@/lib/utils";
 
@@ -24,16 +22,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("dark font-sans", geist.variable)}>
+    <html lang="en" className={cn("dark font-sans", geist.variable)}>
       <body className="antialiased">
-        <ThemeProvider>
-          <SessionProvider>
-            <QueryProvider>
-              {children}
-              <Toaster richColors position="bottom-right" />
-            </QueryProvider>
-          </SessionProvider>
-        </ThemeProvider>
+        <SessionProvider>
+          <QueryProvider>
+            {children}
+            <Toaster theme="dark" richColors position="bottom-right" />
+          </QueryProvider>
+        </SessionProvider>
       </body>
     </html>
   )
