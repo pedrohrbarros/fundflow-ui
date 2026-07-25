@@ -28,7 +28,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
           aria-label="Manage income sources"
           className="min-w-0 w-full bg-primary/5 border border-primary/20 rounded-lg p-3 sm:p-4 text-center shadow-sm transition-colors hover:bg-primary/10 motion-reduce:transition-none"
         >
-          <p className="text-[10px] sm:text-xs font-semibold text-primary/80 uppercase tracking-wide mb-1 truncate">
+          <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wide mb-1 truncate">
             Total Income
           </p>
           <p className="text-sm sm:text-2xl font-bold text-primary tabular-nums truncate">{fmtMoney(totalIncome, userCurrency)}</p>
@@ -40,7 +40,7 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
           onClick={isMobile ? () => setValueModal({ title: 'Total Expenses', value: fmtMoney(totalExpenses, userCurrency) }) : undefined}
           className="min-w-0 w-full bg-destructive/5 border border-destructive/20 rounded-lg p-3 sm:p-4 text-center shadow-sm sm:cursor-default"
         >
-          <p className="text-[10px] sm:text-xs font-semibold text-destructive/80 uppercase tracking-wide mb-1 truncate">
+          <p className="text-[10px] sm:text-xs font-semibold text-destructive uppercase tracking-wide mb-1 truncate">
             Total Expenses
           </p>
           <p className="text-sm sm:text-2xl font-bold text-destructive tabular-nums truncate">{fmtMoney(totalExpenses, userCurrency)}</p>
@@ -59,8 +59,8 @@ export function BalanceSummary({ totalIncome, totalExpenses, userCurrency = 'USD
           <p
             className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1 truncate ${
               isNegative
-                ? 'text-destructive/80'
-                : 'text-primary/80'
+                ? 'text-destructive'
+                : 'text-primary'
             }`}
           >
             Remaining
