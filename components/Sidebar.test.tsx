@@ -8,6 +8,6 @@ describe('Sidebar', () => {
   it('marks the active route', () => {
     render(<Sidebar />)
     const expenses = screen.getByRole('link', { name: /expenses/i })
-    expect(expenses.className).toMatch(/bg-green-100|#14532d/)
+    expect(expenses.className).toMatch(/bg-primary/)
   })
 })

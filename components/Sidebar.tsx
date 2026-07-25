@@ -50,7 +50,7 @@ export function Sidebar() {
   return (
     <nav
       className={cn(
-        'shrink-0 border-r border-green-100 dark:border-green-900 bg-white dark:bg-gray-950 p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden',
+        'shrink-0 border-r border-sidebar-border bg-sidebar p-3 flex flex-col gap-2 transition-[width] duration-200 ease-in-out overflow-hidden motion-reduce:transition-none',
         isHidden && 'hidden',
         effectiveCollapsed ? 'w-16' : 'w-56'
       )}
@@ -68,8 +68,8 @@ export function Sidebar() {
                 'flex items-center rounded-lg py-2 text-sm font-medium transition-colors',
                 effectiveCollapsed ? 'justify-center px-2' : 'gap-3 px-3',
                 active
-                  ? 'bg-green-100 dark:bg-[#14532d] text-green-900 dark:text-[#d1fae5]'
-                  : 'text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
               )}
             >
               <Icon className="size-4 shrink-0" />
@@ -87,7 +87,7 @@ export function Sidebar() {
           onClick={toggleCollapsed}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className={cn(
-            'shrink-0 text-green-700 dark:text-[#86efac] hover:bg-green-50 dark:hover:bg-[#1a2e1a]',
+            'shrink-0 text-muted-foreground hover:bg-accent hover:text-foreground',
             collapsed ? 'mx-auto' : 'self-end'
           )}
         >

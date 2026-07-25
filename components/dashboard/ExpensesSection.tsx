@@ -418,10 +418,10 @@ export function ExpensesSection() {
   return (
     <>
     <section className="flex flex-col flex-1 min-h-0">
-      <div className="border border-green-700 dark:border-green-800 rounded-lg flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div className="border border-border rounded-xl bg-card shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-16 flex-1" role="status" aria-label="Loading">
-            <Loader2 className="size-6 animate-spin text-green-600 dark:text-green-400" />
+            <Loader2 className="size-6 animate-spin text-primary" />
           </div>
         ) : isEmpty ? (
           <div className="flex-1 flex items-center justify-center">
@@ -429,7 +429,7 @@ export function ExpensesSection() {
               type="button"
               aria-label="Add expense"
               onClick={() => { setIsAdding(true); setAddForm((f) => ({ ...f, date: periodDate })) }}
-              className="w-12 h-12 rounded-full border-2 border-dashed border-green-700 dark:border-green-800 text-green-700 dark:text-green-700 text-2xl flex items-center justify-center hover:border-green-500 dark:hover:border-green-600 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 transition-all duration-150"
+              className="w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground text-2xl flex items-center justify-center hover:border-primary hover:text-primary hover:bg-accent transition-all duration-150 motion-reduce:transition-none"
             >
               +
             </button>
@@ -438,7 +438,7 @@ export function ExpensesSection() {
           <>
             {/* Mobile: full-width name + amount list (tap a row to edit) */}
             <div className="sm:hidden flex-1 min-h-0 overflow-auto">
-              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-[#166534] px-4 py-3 text-sm font-semibold text-white">
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-3 bg-muted px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 <span>Name</span>
                 <span>Amount</span>
               </div>
@@ -447,16 +447,16 @@ export function ExpensesSection() {
                   key={expense.id}
                   type="button"
                   onClick={() => setRowForm({ mode: 'edit', expense })}
-                  className="w-full flex items-center justify-between gap-3 border-b border-green-100 dark:border-green-800 px-4 py-3 text-left active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 border-b border-border px-4 py-3 text-left active:bg-accent transition-colors motion-reduce:transition-none"
                 >
-                  <span className="min-w-0 truncate text-gray-900 dark:text-[#d1fae5]">{expense.name}</span>
-                  <span className="shrink-0 font-mono text-gray-900 dark:text-[#d1fae5]">{fmtMoney(expense.period_amount)}</span>
+                  <span className="min-w-0 truncate text-foreground">{expense.name}</span>
+                  <span className="shrink-0 tabular-nums text-foreground">{fmtMoney(expense.period_amount)}</span>
                 </button>
               ))}
               <button
                 type="button"
                 onClick={() => setRowForm({ mode: 'add' })}
-                className="w-full px-4 py-3 sm:py-3 pb-16 sm:pb-0 text-center text-green-700 dark:text-green-500 font-medium active:bg-green-50 dark:active:bg-green-950/40 transition-colors"
+                className="w-full px-4 py-3 sm:py-3 pb-16 sm:pb-0 text-center text-primary font-medium active:bg-accent transition-colors motion-reduce:transition-none"
               >
                 + Add expense
               </button>
@@ -466,7 +466,7 @@ export function ExpensesSection() {
             <div className="hidden sm:block flex-1 min-h-0 overflow-auto">
               <table className="sheet-table table-fixed w-full">
                 <ExpensesTableColgroup />
-                <TableHeader className="sticky top-0 z-10">
+                <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
                   <TableRow className="hover:bg-transparent border-0">
                     <TableHead className="py-4 px-5 h-auto">
                       <ColumnHeader label="Name" sortKey="name" sort={sort} onSort={toggleSort} filter={{ field: 'name', type: 'text', value: filters.name ?? null, onChange: (n) => setColumnFilter('name', n) }} />
@@ -515,7 +515,7 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-left truncate block hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                              className="w-full text-left truncate block hover:text-primary transition-colors"
                               title={expense.name}
                               onClick={() => startFieldEdit(expense, 'name')}
                             >
@@ -535,12 +535,12 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-left truncate block text-green-700 dark:text-green-400 hover:text-green-600 dark:hover:text-green-300 transition-colors"
+                              className="w-full text-left truncate block text-primary hover:text-primary/80 transition-colors"
                               title={categoryNameById.get(String(expense.category_id)) ?? undefined}
                               onClick={() => startFieldEdit(expense, 'category')}
                             >
                               {categoryNameById.get(String(expense.category_id)) ?? (
-                                <span className="text-green-300 dark:text-green-800">—</span>
+                                <span className="text-muted-foreground/50">—</span>
                               )}
                             </button>
                           )}
@@ -564,7 +564,7 @@ export function ExpensesSection() {
                           ) : (
                             <button
                               type="button"
-                              className="w-full text-right font-mono hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                              className="w-full text-right tabular-nums hover:text-primary transition-colors"
                               onClick={() => startFieldEdit(expense, 'amount')}
                             >
                               {fmtMoney(expense.period_amount)}
@@ -575,7 +575,7 @@ export function ExpensesSection() {
                           <button
                             type="button"
                             onClick={() => setRowForm({ mode: 'edit', expense })}
-                            className="w-full text-left truncate text-green-700 dark:text-green-400 text-sm hover:text-green-600 dark:hover:text-green-300 transition-colors block"
+                            className="w-full text-left truncate text-primary text-sm hover:text-primary/80 transition-colors block"
                             title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
                           >
                             {(expense.payment_methods ?? []).length > 0
@@ -585,12 +585,12 @@ export function ExpensesSection() {
                                     {pm.origin ? (
                                       <>
                                         {' '}
-                                        <span className="text-xs text-green-400/70 dark:text-[#86efac]/50">({pm.origin})</span>
+                                        <span className="text-xs text-muted-foreground">({pm.origin})</span>
                                       </>
                                     ) : null}
                                   </span>
                                 ))
-                              : <span className="text-green-300 dark:text-green-800">—</span>
+                              : <span className="text-muted-foreground/50">—</span>
                             }
                           </button>
                         </TableCell>
@@ -769,7 +769,7 @@ export function ExpensesSection() {
                     >
                       <TableCell
                         colSpan={8}
-                        className="py-3 px-5 text-center text-green-400/60 dark:text-green-700 select-none group-hover:text-green-600 dark:group-hover:text-green-500 transition-colors"
+                        className="py-3 px-5 text-center text-muted-foreground/60 select-none group-hover:text-primary transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
                       </TableCell>
@@ -784,8 +784,8 @@ export function ExpensesSection() {
               </table>
             )}
             {data && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-green-700 dark:border-green-800 shrink-0">
-                <span className="text-xs text-green-600 dark:text-green-500">
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border shrink-0">
+                <span className="text-xs text-muted-foreground">
                   {data.pagination.total === 0
                     ? '0 expenses'
                     : `${(page - 1) * PAGE_LIMIT + 1}–${Math.min(page * PAGE_LIMIT, data.pagination.total)} of ${data.pagination.total}`}
@@ -794,19 +794,19 @@ export function ExpensesSection() {
                   <Button
                     variant="outline"
                     size="xs"
-                    className="text-gray-900 dark:text-white"
+                    className="text-foreground"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
                   >
                     ‹ Prev
                   </Button>
-                  <span className="text-xs text-green-600 dark:text-green-500 px-2">
+                  <span className="text-xs text-muted-foreground px-2">
                     {page} / {Math.max(1, Math.ceil(data.pagination.total / PAGE_LIMIT))}
                   </span>
                   <Button
                     variant="outline"
                     size="xs"
-                    className="text-gray-900 dark:text-white"
+                    className="text-foreground"
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * PAGE_LIMIT >= data.pagination.total}
                   >
@@ -874,7 +874,7 @@ function ExpenseRowFormModal({
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
       <DialogContent
-        className="w-[min(94vw,26rem)] bg-white dark:bg-[#0f1a0f] ring-green-700 dark:ring-[#166534] text-gray-900 dark:text-[#d1fae5]"
+        className="w-[min(94vw,26rem)]"
         showCloseButton={false}
       >
         {/* Mobile-only close */}
@@ -882,7 +882,7 @@ function ExpenseRowFormModal({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-gray-600 dark:text-[#86efac] hover:bg-gray-100 dark:hover:bg-white/10"
+          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:bg-accent"
         >
           <XIcon className="h-5 w-5" />
         </button>
@@ -896,7 +896,7 @@ function ExpenseRowFormModal({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Expense name"
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full"
               autoFocus
             />
           </div>
@@ -926,7 +926,7 @@ function ExpenseRowFormModal({
                 setForm((f) => ({ ...f, amount: val }))
               }}
               placeholder="0.00"
-              className="w-full text-left bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full text-left"
             />
           </div>
 
@@ -936,7 +936,7 @@ function ExpenseRowFormModal({
               type="date"
               value={form.date}
               onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5] text-sm sm:text-base"
+              className="w-full text-sm sm:text-base"
             />
           </div>
 
@@ -978,7 +978,7 @@ function ExpenseRowFormModal({
                 placeholder="∞"
                 value={form.recurring_months}
                 onChange={(e) => setForm((f) => ({ ...f, recurring_months: e.target.value }))}
-                className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+                className="w-full"
               />
             </div>
           )}
@@ -1057,10 +1057,10 @@ function AddFormPmRow({
   const pm = data?.payment_methods.find((p) => String(p.id) === pmId)
   return (
     <div className="flex items-center gap-1 text-xs">
-      <span className="flex-1 truncate text-green-700 dark:text-green-400">
+      <span className="flex-1 truncate text-primary">
         {pm?.name ?? pmId}
         {pm?.origin ? (
-          <span className="text-green-500 dark:text-[#86efac]/60"> ({pm.origin})</span>
+          <span className="text-muted-foreground"> ({pm.origin})</span>
         ) : null}
       </span>
       {editable ? (
@@ -1074,11 +1074,11 @@ function AddFormPmRow({
           onChange={(e) => onAmountChange(e.target.value)}
         />
       ) : (
-        <span className="font-mono text-green-700 dark:text-green-400">{partialAmount || '—'}</span>
+        <span className="tabular-nums text-primary">{partialAmount || '—'}</span>
       )}
       <button
         type="button"
-        className="text-red-400 hover:text-red-300 shrink-0"
+        className="text-destructive hover:text-destructive/80 shrink-0"
         onClick={onRemove}
         aria-label="Remove"
       >
@@ -1119,10 +1119,10 @@ function ExpenseExtraTools({
 
   return (
     <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-gray-400 dark:border-white text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors px-2.5 py-1.5">
+      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors px-2.5 py-1.5">
         <MoreVertical className="h-4 w-4" />
       </PopoverTrigger>
-      <PopoverContent align="end" className="bg-white dark:bg-[#0f1a0f] border border-green-100 dark:border-[#166534] p-4 w-72 text-gray-900 dark:text-[#d1fae5]">
+      <PopoverContent align="end" className="bg-popover border border-border p-4 w-72 text-popover-foreground">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Date</label>
@@ -1130,7 +1130,7 @@ function ExpenseExtraTools({
               type="date"
               value={localDraft.date}
               onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
-              className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+              className="w-full"
             />
           </div>
           {expense.is_recurring && (
@@ -1138,7 +1138,7 @@ function ExpenseExtraTools({
               <label className="block text-sm font-medium mb-2">
                 Remaining months limit
                 {monthsLeft != null && (
-                  <span className="ml-1 font-normal text-green-600 dark:text-[#86efac]">({monthsLeft} left)</span>
+                  <span className="ml-1 font-normal text-muted-foreground">({monthsLeft} left)</span>
                 )}
               </label>
               <Input
@@ -1147,7 +1147,7 @@ function ExpenseExtraTools({
                 placeholder="∞"
                 value={localDraft.recurring_months}
                 onChange={(e) => setLocalDraft((f) => ({ ...f, recurring_months: e.target.value }))}
-                className="w-full bg-green-50 dark:bg-[#1a2e1a] border border-green-700 dark:border-[#166534] text-gray-900 dark:text-[#d1fae5]"
+                className="w-full"
               />
             </div>
           )}

@@ -39,7 +39,7 @@ export function DashboardClient() {
   const showBalanceSummary = totalIncome !== null && !hasConversionError
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-green-50 dark:bg-gray-950 flex flex-col">
+    <div className="h-[calc(100vh-4rem)] overflow-hidden bg-background flex flex-col">
       <div className="w-full px-4 md:px-6 py-3 flex flex-col gap-3 flex-1 min-h-0">
         {showBalanceSummary ? (
           <BalanceSummary
@@ -49,7 +49,7 @@ export function DashboardClient() {
             onManageIncome={() => setIsIncomeModalOpen(true)}
           />
         ) : (
-          <div className="rounded-lg border border-green-100 dark:border-green-900 bg-white dark:bg-gray-900 p-4 text-sm text-green-900 dark:text-green-200">
+          <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
             {isRatesLoading
               ? 'Loading balance summary…'
               : 'Balance summary unavailable while exchange rates are incomplete.'}
