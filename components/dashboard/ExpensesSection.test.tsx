@@ -5,6 +5,7 @@ import { useExpenses, useUpdateExpense } from '@/hooks/use-expenses'
 import { usePaymentMethods } from '@/hooks/use-payment-methods'
 
 const createMutate = vi.fn()
+const deleteMutate = vi.fn()
 
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query')
@@ -28,7 +29,7 @@ vi.mock('@/hooks/use-expenses', () => ({
   })),
   useCreateExpense: () => ({ mutate: createMutate, isPending: false }),
   useUpdateExpense: vi.fn(() => ({ mutate: vi.fn() })),
-  useDeleteExpense: () => ({ mutate: vi.fn() }),
+  useDeleteExpense: () => ({ mutate: deleteMutate }),
 }))
 
 vi.mock('@/hooks/use-categories', () => ({
@@ -71,6 +72,7 @@ const sampleExpense = {
 describe('ExpensesSection', () => {
   beforeEach(() => {
     createMutate.mockClear()
+    deleteMutate.mockClear()
     vi.mocked(useExpenses).mockReturnValue({
       data: { expenses: [], total: 0, pagination: { page: 1, limit: 20, total: 0 } },
       isLoading: false,
@@ -90,13 +92,13 @@ describe('ExpensesSection', () => {
   it('creates an expense without requiring a category', () => {
     render(<ExpensesSection />)
 
-    // Open the add row (empty-state round button has aria-label "Add expense")
+    // Open the expense modal (empty-state round button has aria-label "Add expense")
     fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
 
-    fireEvent.change(screen.getByPlaceholderText('Work'), { target: { value: 'Rent' } })
+    fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
 
-    // Save is shown without choosing a category; date is set automatically to the period date
+    // Save is enabled without choosing a category; date defaults to the period date
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(createMutate).toHaveBeenCalledTimes(1)
@@ -109,8 +111,8 @@ describe('ExpensesSection', () => {
     })
   })
 
-  it('keeps an unsaved inline name edit visible after a refetch returns unchanged data', () => {
-    // Server always returns the original "Rent" expense, even after a refetch.
+  it('keeps an unsaved checkbox toggle visible after a refetch returns unchanged data', () => {
+    // Server always returns the original unpaid expense, even after a refetch.
     vi.mocked(useExpenses).mockReturnValue({
       data: { expenses: [sampleExpense], total: 1200, pagination: { page: 1, limit: 20, total: 1 } },
       isLoading: false,
@@ -125,21 +127,15 @@ describe('ExpensesSection', () => {
 
     const { rerender } = render(<ExpensesSection />)
 
-    // Enter edit mode on the name cell, change it, then blur to commit to the overlay via toast.
-    fireEvent.click(screen.getByRole('button', { name: 'Rent' }))
-    const input = screen.getByDisplayValue('Rent')
-    fireEvent.change(input, { target: { value: 'Mortgage' } })
-    fireEvent.blur(input)
-
-    // Edit is now in the overlay (pending changes). Rendered in both the
-    // desktop table and the mobile list, so there may be more than one match.
-    expect(screen.getAllByText('Mortgage').length).toBeGreaterThan(0)
+    const [paidCheckbox] = screen.getAllByRole('checkbox')
+    fireEvent.click(paidCheckbox)
+    expect(paidCheckbox).toHaveAttribute('aria-checked', 'true')
 
     // Simulate a refetch that returns the original (unchanged) server data.
     rerender(<ExpensesSection />)
 
-    // The overlay must survive: the edited name is still shown, not the server "Rent".
-    expect(screen.getAllByText('Mortgage').length).toBeGreaterThan(0)
+    // The overlay must survive: the toggle is still on, not reset to the server value.
+    expect(screen.getAllByRole('checkbox')[0]).toHaveAttribute('aria-checked', 'true')
   })
 
   it('queues a checkbox toggle as a draft instead of saving immediately', () => {
@@ -165,7 +161,7 @@ describe('ExpensesSection', () => {
     expect(paidCheckbox).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('opens the expense form modal from the desktop payment-method cell, showing origin and an editable amount', () => {
+  it('opens the expense modal from a row, with every field and a delete button', () => {
     vi.mocked(usePaymentMethods).mockReturnValue({
       data: { payment_methods: [{ id: 'pm-1', name: 'Visa', origin: 'Bank' }] },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,14 +181,19 @@ describe('ExpensesSection', () => {
 
     render(<ExpensesSection />)
 
-    // The desktop payment-method cell shows "Visa (Bank)" and opens the full form modal.
-    fireEvent.click(screen.getByRole('button', { name: /visa \(bank\)/i }))
+    // The table has no delete control of its own — deletion lives in the modal.
+    expect(screen.queryByRole('button', { name: 'Delete expense' })).not.toBeInTheDocument()
 
-    // A full modal (not an in-place popover) opens.
+    // Clicking the row opens the full form modal.
+    fireEvent.click(screen.getAllByRole('button', { name: 'Rent' })[0])
+
     expect(screen.getByText('Edit expense')).toBeInTheDocument()
     // The method's amount is editable inside the modal, prefilled from the expense.
     expect(screen.getByDisplayValue('50')).toBeInTheDocument()
-    // Origin is visible in the modal's method list.
-    expect(screen.getAllByText(/\(bank\)/i).length).toBeGreaterThan(0)
+    // Fields that used to live outside the modal are now part of it.
+    expect(screen.getByDisplayValue('2026-06-01')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(deleteMutate).toHaveBeenCalledWith('e1')
   })
 })

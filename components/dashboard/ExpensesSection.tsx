@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Loader2, MoreVertical } from 'lucide-react'
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useExpenses,
@@ -24,7 +23,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { XIcon } from 'lucide-react'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface PmEntry {
@@ -43,8 +41,6 @@ interface RowForm {
   is_recurring: boolean
   recurring_months: string
 }
-
-type EditField = 'name' | 'category' | 'amount' | 'date' | 'recurring_months'
 
 type ExpenseUpdatePayload = {
   id: string
@@ -75,14 +71,12 @@ const emptyForm: RowForm = {
 function ExpensesTableColgroup() {
   return (
     <colgroup>
-      <col style={{ width: '28%' }} />
-      <col style={{ width: '11%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '18%' }} />
-      <col style={{ width: '6%' }} />
-      <col style={{ width: '9%' }} />
-      <col style={{ width: '7%' }} />
-      <col style={{ width: '9%' }} />
+      <col style={{ width: '32%' }} />
+      <col style={{ width: '16%' }} />
+      <col style={{ width: '14%' }} />
+      <col style={{ width: '22%' }} />
+      <col style={{ width: '8%' }} />
+      <col style={{ width: '8%' }} />
     </colgroup>
   )
 }
@@ -229,21 +223,16 @@ export function ExpensesSection() {
   const del = useDeleteExpense()
   const { date: periodDate } = usePeriod()
 
-  const [isAdding, setIsAdding] = useState(false)
-  const [addForm, setAddForm] = useState<RowForm>(emptyForm)
-  const [addFormPmAmount, setAddFormPmAmount] = useState('')
-  const [editing, setEditing] = useState<{ id: string; field: EditField } | null>(null)
-  const [draft, setDraft] = useState<RowForm>(emptyForm)
-  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
   const sharedToastId = useRef<string | number | undefined>(undefined)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  // Mobile-only: tap a row (or add) to edit all fields in one modal.
+  // Every field of an expense is edited in one modal — opened by clicking a
+  // row (or the add affordance). The table only keeps the quick checkboxes.
   const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; expense: Expense } | null>(null)
 
   const expenses = data?.expenses ?? []
   const sortedExpenses = expenses.map((e) => (pendingEdits[e.id] ? mergePendingExpense(e, pendingEdits[e.id]) : e))
-  const isEmpty = !isLoading && !expenses.length && !isAdding
+  const isEmpty = !isLoading && !expenses.length
 
   const { data: categoriesData } = useCategories()
   const categoryNameById = new Map((categoriesData?.categories ?? []).map((c) => [String(c.id), c.name]))
@@ -269,8 +258,6 @@ export function ExpensesSection() {
       toast.dismiss(sharedToastId.current)
       sharedToastId.current = undefined
     }
-    setDraft(emptyForm)
-    setEditing(null)
   }
 
   async function performSave(payloads: ExpenseUpdatePayload[]) {
@@ -316,69 +303,10 @@ export function ExpensesSection() {
   // already the pending-merged display row, so this layers on top correctly.
   function toggleCheckboxColumn(
     expense: Expense,
-    patch: Partial<Pick<RowForm, 'is_paid' | 'is_saved' | 'is_recurring' | 'recurring_months'>>,
+    patch: Partial<Pick<RowForm, 'is_paid' | 'is_recurring' | 'recurring_months'>>,
   ) {
     const merged = { ...formFromExpense(expense), ...patch }
     commitChanges(expense, merged)
-  }
-
-  function startFieldEdit(expense: Expense, field: EditField) {
-    setEditing({ id: expense.id, field })
-    setDraft(formFromExpense(expense))
-  }
-
-  function handleCategoryChange(expenseId: string, categoryId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-    const updatedDraft = { ...draft, category_id: categoryId }
-    setEditing(null)
-    setDraft(emptyForm)
-    commitChanges(expense, updatedDraft)
-  }
-
-  function handleFieldBlur(expenseId: string) {
-    const expense = sortedExpenses.find((e) => e.id === expenseId)
-    if (!expense) {
-      setEditing(null)
-      setDraft(emptyForm)
-      return
-    }
-    setEditing(null)
-    setDraft(emptyForm)
-    commitChanges(expense, draft)
-  }
-
-  function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount) return
-    const amount = parseFloat(addForm.amount)
-    create.mutate(
-      {
-        name: addForm.name.trim(),
-        amount,
-        category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
-        date: addForm.date,
-        is_recurring: addForm.is_recurring,
-        recurring_months: addForm.is_recurring ? (parseInt(addForm.recurring_months, 10) || null) : null,
-        is_paid: addForm.is_paid,
-        is_saved: addForm.is_saved,
-        payment_methods: addForm.payment_methods
-          .filter((pm) => pm.payment_method_id)
-          .map((pm) => ({
-            payment_method_id: parseInt(pm.payment_method_id, 10),
-            partial_amount: parseFloat(pm.partial_amount) || amount,
-          })),
-      },
-      {
-        onSuccess: () => {
-          setAddForm(emptyForm)
-          setIsAdding(false)
-        },
-      }
-    )
   }
 
   function submitRowForm(form: RowForm) {
@@ -428,7 +356,7 @@ export function ExpensesSection() {
             <button
               type="button"
               aria-label="Add expense"
-              onClick={() => { setIsAdding(true); setAddForm((f) => ({ ...f, date: periodDate })) }}
+              onClick={() => setRowForm({ mode: 'add' })}
               className="w-12 h-12 rounded-full border-2 border-dashed border-border text-muted-foreground text-2xl flex items-center justify-center hover:border-primary hover:text-primary hover:bg-accent transition-all duration-150 motion-reduce:transition-none"
             >
               +
@@ -484,291 +412,99 @@ export function ExpensesSection() {
                       <ColumnHeader label="Paid" align="center" sortKey="is_paid" sort={sort} onSort={toggleSort} />
                     </TableHead>
                     <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
-                      <ColumnHeader label="Saved" align="center" sortKey="is_saved" sort={sort} onSort={toggleSort} />
-                    </TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-center hidden sm:table-cell">
                       <ColumnHeader label="Recurring" align="center" sortKey="is_recurring" sort={sort} onSort={toggleSort} />
                     </TableHead>
-                    <TableHead className="py-4 px-5 h-auto text-right hidden sm:table-cell" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedExpenses.map((expense) => {
-                    const isEditing = editing?.id === expense.id
-                    return (
-                      <TableRow key={expense.id} className="border-0">
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
-                          {isEditing && editing.field === 'name' ? (
-                            <Input
-                              className="min-w-0 text-[1rem]"
-                              value={draft.name}
-                              onChange={(e) => setDraft((f) => ({ ...f, name: e.target.value }))}
-                              onBlur={() => handleFieldBlur(expense.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditing(null)
-                                  setDraft(emptyForm)
-                                }
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="w-full text-left truncate block hover:text-primary transition-colors"
-                              title={expense.name}
-                              onClick={() => startFieldEdit(expense, 'name')}
-                            >
-                              {expense.name}
-                            </button>
+                  {sortedExpenses.map((expense) => (
+                    <TableRow
+                      key={expense.id}
+                      className="border-0 cursor-pointer"
+                      onClick={() => setRowForm({ mode: 'edit', expense })}
+                    >
+                      <TableCell className="py-5 px-5 max-w-0 overflow-hidden">
+                        <button
+                          type="button"
+                          className="w-full text-left truncate block hover:text-primary transition-colors"
+                          title={expense.name}
+                        >
+                          {expense.name}
+                        </button>
+                      </TableCell>
+                      <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
+                        <span
+                          className="block truncate text-primary"
+                          title={categoryNameById.get(String(expense.category_id)) ?? undefined}
+                        >
+                          {categoryNameById.get(String(expense.category_id)) ?? (
+                            <span className="text-muted-foreground/50">—</span>
                           )}
-                        </TableCell>
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
-                          {isEditing && editing.field === 'category' ? (
-                            <CategoryCombobox
-                              value={draft.category_id}
-                              onChange={(v) => handleCategoryChange(expense.id, v)}
-                              type="EXPENSE"
-                              usedCategoryIds={usedCategoryIds}
-                              autoOpen
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="w-full text-left truncate block text-primary hover:text-primary/80 transition-colors"
-                              title={categoryNameById.get(String(expense.category_id)) ?? undefined}
-                              onClick={() => startFieldEdit(expense, 'category')}
-                            >
-                              {categoryNameById.get(String(expense.category_id)) ?? (
-                                <span className="text-muted-foreground/50">—</span>
-                              )}
-                            </button>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-right">
-                          {isEditing && editing.field === 'amount' ? (
-                            <Input
-                              type="number"
-                              className="min-w-0 text-right text-[1rem]"
-                              value={draft.amount}
-                              onChange={(e) => setDraft((f) => ({ ...f, amount: e.target.value }))}
-                              onBlur={() => handleFieldBlur(expense.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Escape') {
-                                  setEditing(null)
-                                  setDraft(emptyForm)
-                                }
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              className="w-full text-right tabular-nums hover:text-primary transition-colors"
-                              onClick={() => startFieldEdit(expense, 'amount')}
-                            >
-                              {fmtMoney(expense.period_amount)}
-                            </button>
-                          )}
-                        </TableCell>
-                        <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
-                          <button
-                            type="button"
-                            onClick={() => setRowForm({ mode: 'edit', expense })}
-                            className="w-full text-left truncate text-primary text-sm hover:text-primary/80 transition-colors block"
-                            title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
-                          >
-                            {(expense.payment_methods ?? []).length > 0
-                              ? (expense.payment_methods ?? []).map((pm, i) => (
-                                  <span key={pm.payment_method_id}>
-                                    {i > 0 ? ', ' : ''}{pm.name}
-                                    {pm.origin ? (
-                                      <>
-                                        {' '}
-                                        <span className="text-xs text-muted-foreground">({pm.origin})</span>
-                                      </>
-                                    ) : null}
-                                  </span>
-                                ))
-                              : <span className="text-muted-foreground/50">—</span>
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-5 px-5 text-right tabular-nums">
+                        {fmtMoney(expense.period_amount)}
+                      </TableCell>
+                      <TableCell className="py-5 px-5 max-w-0 overflow-hidden hidden sm:table-cell">
+                        <span
+                          className="block truncate text-primary text-sm"
+                          title={(expense.payment_methods ?? []).map((pm) => pm.origin ? `${pm.name} (${pm.origin})` : pm.name).join(', ') || undefined}
+                        >
+                          {(expense.payment_methods ?? []).length > 0
+                            ? (expense.payment_methods ?? []).map((pm, i) => (
+                                <span key={pm.payment_method_id}>
+                                  {i > 0 ? ', ' : ''}{pm.name}
+                                  {pm.origin ? (
+                                    <>
+                                      {' '}
+                                      <span className="text-xs text-muted-foreground">({pm.origin})</span>
+                                    </>
+                                  ) : null}
+                                </span>
+                              ))
+                            : <span className="text-muted-foreground/50">—</span>
+                          }
+                        </span>
+                      </TableCell>
+                      {/* Checkboxes stay inline as quick toggles, so their
+                          clicks must not also open the expense modal. */}
+                      <TableCell
+                        className="py-5 px-5 text-center hidden sm:table-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={expense.is_paid}
+                            onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_paid: Boolean(checked) })}
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell
+                        className="py-5 px-5 text-center hidden sm:table-cell"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex justify-center">
+                          <Checkbox
+                            checked={expense.is_recurring}
+                            onCheckedChange={(checked) =>
+                              toggleCheckboxColumn(
+                                expense,
+                                checked ? { is_recurring: true } : { is_recurring: false, recurring_months: '' },
+                              )
                             }
-                          </button>
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={expense.is_paid}
-                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_paid: Boolean(checked) })}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={expense.is_saved}
-                              onCheckedChange={(checked) => toggleCheckboxColumn(expense, { is_saved: Boolean(checked) })}
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={expense.is_recurring}
-                              onCheckedChange={(checked) =>
-                                toggleCheckboxColumn(
-                                  expense,
-                                  checked ? { is_recurring: true } : { is_recurring: false, recurring_months: '' },
-                                )
-                              }
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-5 px-5 text-right hidden sm:flex items-center justify-end gap-2">
-                          <ExpenseExtraTools expense={expense} onUpdate={(updates) => {
-                            const merged = { ...formFromExpense(expense), ...updates }
-                            commitChanges(expense, merged)
-                          }} />
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => {
-                              setDeletingExpenseId(expense.id)
-                              del.mutate(expense.id, { onSettled: () => setDeletingExpenseId(null) })
-                            }}
-                            disabled={del.isPending}
-                            aria-label="Delete expense"
-                          >
-                            {deletingExpenseId === expense.id ? <Loader2 className="animate-spin" /> : '✕'}
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                  {isAdding && (
-                    <TableRow className="add-row border-0">
-                      <TableCell className="py-5 px-5">
-                        <Input
-                          className="min-w-0 text-[1rem]"
-                          placeholder="Work"
-                          value={addForm.name}
-                          onChange={(e) =>
-                            setAddForm((f) => ({ ...f, name: e.target.value }))
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleAdd()
-                            if (e.key === 'Escape') { setIsAdding(false); setAddForm(emptyForm) }
-                          }}
-                          autoFocus
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 px-5 hidden sm:table-cell">
-                        <CategoryCombobox
-                          value={addForm.category_id}
-                          onChange={(v) => setAddForm((f) => ({ ...f, category_id: v }))}
-                          type="EXPENSE"
-                          usedCategoryIds={usedCategoryIds}
-                          autoOpen={false}
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 px-5">
-                        <Input
-                          type="number"
-                          className="min-w-0 text-right text-[1rem]"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={addForm.amount}
-                          onChange={(e) =>
-                            setAddForm((f) => ({ ...f, amount: e.target.value }))
-                          }
-                          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                        />
-                      </TableCell>
-                      <TableCell className="py-5 px-5 hidden sm:table-cell">
-                        <div className="flex flex-col gap-0.5">
-                          {addForm.payment_methods.map((pm, i) => (
-                            <AddFormPmRow
-                              key={pm.payment_method_id}
-                              pmId={pm.payment_method_id}
-                              partialAmount={pm.partial_amount}
-                              editable={false}
-                              onAmountChange={() => {}}
-                              onRemove={() =>
-                                setAddForm((f) => ({
-                                  ...f,
-                                  payment_methods: f.payment_methods.filter((_, j) => j !== i),
-                                }))
-                              }
-                            />
-                          ))}
-                          <PaymentMethodCombobox
-                            value=""
-                            onChange={(id) => {
-                              if (!id || addForm.payment_methods.some((pm) => pm.payment_method_id === id)) return
-                              setAddForm((f) => ({
-                                ...f,
-                                payment_methods: [...f.payment_methods, { payment_method_id: id, partial_amount: addFormPmAmount }],
-                              }))
-                              setAddFormPmAmount('')
-                            }}
-                            amount={addFormPmAmount}
-                            onAmountChange={setAddFormPmAmount}
-                            placeholder="Add payment method"
                           />
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                        <div className="flex justify-center">
-                          <Checkbox
-                            checked={addForm.is_paid}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))}
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                        <div className="flex justify-center">
-                          <Checkbox
-                            checked={addForm.is_saved}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-5 px-5 text-center hidden sm:table-cell">
-                        <div className="flex justify-center">
-                          <Checkbox
-                            checked={addForm.is_recurring}
-                            onCheckedChange={(checked) => setAddForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: '' }))}
-                            title="Recurring months limit can be set afterwards from the row's extra tools"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-5 px-5 text-right hidden sm:table-cell">
-                        <div className="flex gap-2 items-center justify-end">
-                          {addForm.name.trim() && addForm.amount && (
-                            <Button size="default" onClick={handleAdd}>
-                              Save
-                            </Button>
-                          )}
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => { setIsAdding(false); setAddForm(emptyForm) }}
-                            aria-label="Cancel"
-                          >
-                            ✕
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
-                  )}
-                  {!isAdding && expenses.length > 0 && (
+                  ))}
+                  {expenses.length > 0 && (
                     <TableRow
                       className="border-0 cursor-pointer group add-hint"
-                      onClick={() => { setIsAdding(true); setAddForm((f) => ({ ...f, date: periodDate })) }}
+                      onClick={() => setRowForm({ mode: 'add' })}
                       aria-label="Add expense"
                     >
                       <TableCell
-                        colSpan={8}
+                        colSpan={6}
                         className="py-3 px-5 text-center text-muted-foreground/60 select-none group-hover:text-primary transition-colors"
                       >
                         <span className="text-xl leading-none font-light" aria-hidden="true">+</span>
@@ -830,9 +566,7 @@ export function ExpensesSection() {
         onDelete={
           rowForm.mode === 'edit'
             ? () => {
-                const id = (rowForm as { expense: Expense }).expense.id
-                setDeletingExpenseId(id)
-                del.mutate(id, { onSettled: () => setDeletingExpenseId(null) })
+                del.mutate(rowForm.expense.id)
                 setRowForm(null)
               }
             : undefined
@@ -870,23 +604,11 @@ function ExpenseRowFormModal({
   const [pendingPmAmount, setPendingPmAmount] = useState('')
 
   const canSave = form.name.trim().length > 0 && !!form.amount
+  const monthsLeft = expense?.is_recurring ? remainingMonths(expense, periodDate) : null
 
   return (
     <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose() }}>
-      <DialogContent
-        className="w-[min(94vw,26rem)]"
-        showCloseButton={false}
-      >
-        {/* Mobile-only close */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="sm:hidden absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground hover:bg-accent"
-        >
-          <XIcon className="h-5 w-5" />
-        </button>
-
+      <DialogContent className="w-[min(94vw,30rem)] sm:max-w-[30rem] max-h-[90vh] overflow-y-auto">
         <DialogTitle>{mode === 'add' ? 'Add expense' : 'Edit expense'}</DialogTitle>
 
         <div className="flex flex-col gap-4">
@@ -901,6 +623,35 @@ function ExpenseRowFormModal({
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Amount</label>
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={form.amount}
+                onChange={(e) => {
+                  // Support comma as decimal separator and convert to dot
+                  const val = e.target.value.replace(',', '.')
+                  setForm((f) => ({ ...f, amount: val }))
+                }}
+                placeholder="0.00"
+                className="w-full text-left"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5">Date</label>
+              <Input
+                type="date"
+                value={form.date}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                className="w-full text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1.5">Category</label>
             <CategoryCombobox
@@ -910,78 +661,6 @@ function ExpenseRowFormModal({
               usedCategoryIds={usedCategoryIds}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Amount</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              value={form.amount}
-              onChange={(e) => {
-                let val = e.target.value
-                // Support comma as decimal separator and convert to dot
-                val = val.replace(',', '.')
-                setForm((f) => ({ ...f, amount: val }))
-              }}
-              placeholder="0.00"
-              className="w-full text-left"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Date</label>
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="w-full text-sm sm:text-base"
-            />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="expense_row_paid"
-                checked={form.is_paid}
-                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_paid: Boolean(checked) }))}
-              />
-              <label htmlFor="expense_row_paid" className="text-sm font-medium cursor-pointer">Paid</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="expense_row_recurring"
-                checked={form.is_recurring}
-                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
-              />
-              <label htmlFor="expense_row_recurring" className="text-sm font-medium cursor-pointer">Recurring</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="expense_row_saved"
-                checked={form.is_saved}
-                onCheckedChange={(checked) => setForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
-              />
-              <label htmlFor="expense_row_saved" className="text-sm font-medium cursor-pointer">Saved</label>
-            </div>
-          </div>
-
-          {/* Only shown when editing an existing expense — for new expenses,
-              the months limit is set afterwards via the row's extra tools. */}
-          {mode === 'edit' && form.is_recurring && (
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Recurring months limit</label>
-              <Input
-                type="number"
-                min="1"
-                placeholder="∞"
-                value={form.recurring_months}
-                onChange={(e) => setForm((f) => ({ ...f, recurring_months: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-          )}
 
           <div>
             <label className="block text-sm font-medium mb-1.5">Payment methods</label>
@@ -1024,15 +703,64 @@ function ExpenseRowFormModal({
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 pt-1">
-            <Button className="w-full" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
-              {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
-            </Button>
+          <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="expense_row_paid"
+                  checked={form.is_paid}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, is_paid: Boolean(checked) }))}
+                />
+                <label htmlFor="expense_row_paid" className="text-sm font-medium cursor-pointer">Paid</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="expense_row_recurring"
+                  checked={form.is_recurring}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, is_recurring: Boolean(checked), recurring_months: Boolean(checked) ? f.recurring_months : '' }))}
+                />
+                <label htmlFor="expense_row_recurring" className="text-sm font-medium cursor-pointer">Recurring</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="expense_row_saved"
+                  checked={form.is_saved}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, is_saved: Boolean(checked) }))}
+                />
+                <label htmlFor="expense_row_saved" className="text-sm font-medium cursor-pointer">Saved</label>
+              </div>
+            </div>
+
+            {form.is_recurring && (
+              <div>
+                <label htmlFor="expense_row_months" className="block text-sm font-medium mb-1.5">
+                  Months limit
+                  {monthsLeft != null && (
+                    <span className="ml-1 font-normal text-muted-foreground">({monthsLeft} left)</span>
+                  )}
+                </label>
+                <Input
+                  id="expense_row_months"
+                  type="number"
+                  min="1"
+                  placeholder="No limit"
+                  value={form.recurring_months}
+                  onChange={(e) => setForm((f) => ({ ...f, recurring_months: e.target.value }))}
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
             {mode === 'edit' && onDelete && (
-              <Button variant="destructive" className="w-full" onClick={onDelete}>
+              <Button variant="destructive" onClick={onDelete}>
                 Delete
               </Button>
             )}
+            <Button className="flex-1" disabled={!canSave || isSaving} onClick={() => onSubmit(form)}>
+              {isSaving ? <Loader2 className="animate-spin" /> : 'Save'}
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -1045,13 +773,11 @@ function AddFormPmRow({
   partialAmount,
   onAmountChange,
   onRemove,
-  editable = true,
 }: {
   pmId: string
   partialAmount: string
   onAmountChange: (val: string) => void
   onRemove: () => void
-  editable?: boolean
 }) {
   const { data } = usePaymentMethods()
   const pm = data?.payment_methods.find((p) => String(p.id) === pmId)
@@ -1063,19 +789,15 @@ function AddFormPmRow({
           <span className="text-muted-foreground"> ({pm.origin})</span>
         ) : null}
       </span>
-      {editable ? (
-        <Input
-          type="number"
-          className="w-20 h-6 text-xs text-right px-1.5 py-0"
-          min="0"
-          step="0.01"
-          placeholder="amt"
-          value={partialAmount}
-          onChange={(e) => onAmountChange(e.target.value)}
-        />
-      ) : (
-        <span className="tabular-nums text-primary">{partialAmount || '—'}</span>
-      )}
+      <Input
+        type="number"
+        className="w-20 h-6 text-xs text-right px-1.5 py-0"
+        min="0"
+        step="0.01"
+        placeholder="amt"
+        value={partialAmount}
+        onChange={(e) => onAmountChange(e.target.value)}
+      />
       <button
         type="button"
         className="text-destructive hover:text-destructive/80 shrink-0"
@@ -1085,87 +807,5 @@ function AddFormPmRow({
         ✕
       </button>
     </div>
-  )
-}
-
-function ExpenseExtraTools({
-  expense,
-  onUpdate,
-}: {
-  expense: Expense
-  onUpdate: (updates: {
-    date: string
-    recurring_months: string
-  }) => void
-}) {
-  const { date: periodDate } = usePeriod()
-  const [open, setOpen] = useState(false)
-  const [localDraft, setLocalDraft] = useState({
-    date: expense.date,
-    recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
-  })
-
-  function handleOpen(o: boolean) {
-    if (o) {
-      setLocalDraft({
-        date: expense.date,
-        recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
-      })
-    }
-    setOpen(o)
-  }
-
-  const monthsLeft = remainingMonths(expense, periodDate)
-
-  return (
-    <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors px-2.5 py-1.5">
-        <MoreVertical className="h-4 w-4" />
-      </PopoverTrigger>
-      <PopoverContent align="end" className="bg-popover border border-border p-4 w-72 text-popover-foreground">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Date</label>
-            <Input
-              type="date"
-              value={localDraft.date}
-              onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
-              className="w-full"
-            />
-          </div>
-          {expense.is_recurring && (
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Remaining months limit
-                {monthsLeft != null && (
-                  <span className="ml-1 font-normal text-muted-foreground">({monthsLeft} left)</span>
-                )}
-              </label>
-              <Input
-                type="number"
-                min="1"
-                placeholder="∞"
-                value={localDraft.recurring_months}
-                onChange={(e) => setLocalDraft((f) => ({ ...f, recurring_months: e.target.value }))}
-                className="w-full"
-              />
-            </div>
-          )}
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={() => {
-              onUpdate({
-                date: localDraft.date,
-                recurring_months: localDraft.recurring_months,
-              })
-              setOpen(false)
-            }}
-          >
-            Save
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
   )
 }
