@@ -623,7 +623,6 @@ export interface operations {
                 "application/json": {
                     name: string;
                     origin: string;
-                    receiver?: string;
                 };
             };
         };
@@ -638,7 +637,6 @@ export interface operations {
                         id?: number;
                         name?: string;
                         origin?: string;
-                        receiver?: string | null;
                         user_id?: number;
                         /** Format: date-time */
                         created_at?: string;
@@ -681,13 +679,13 @@ export interface operations {
                     /** @description Optional filter — either a single condition or a group of conditions */
                     filters?: {
                         /**
-                         * @description name/origin → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | receiver → same + is_null, is_not_null | created_at/updated_at → is_equal, is_before, is_after, is_between
+                         * @description name/origin → is_equal, is_not_equal, is_contains, is_starts_with, is_ends_with | created_at/updated_at → is_equal, is_before, is_after, is_between
                          * @enum {string}
                          */
-                        field: "name" | "origin" | "receiver" | "created_at" | "updated_at";
+                        field: "name" | "origin" | "created_at" | "updated_at";
                         /** @enum {string} */
                         op: "is_equal" | "is_not_equal" | "is_contains" | "is_starts_with" | "is_ends_with" | "is_null" | "is_not_null" | "is_before" | "is_after" | "is_between";
-                        /** @description string for name/origin/receiver; ISO 8601 string for datetime; [ISO, ISO] tuple for is_between; omit for is_null/is_not_null */
+                        /** @description string for name/origin; ISO 8601 string for datetime; [ISO, ISO] tuple for is_between; omit for is_null/is_not_null */
                         value?: unknown;
                     } | {
                         /** @enum {string} */
@@ -710,7 +708,6 @@ export interface operations {
                             id?: number;
                             name?: string;
                             origin?: string;
-                            receiver?: string | null;
                             user_id?: number;
                             /** Format: date-time */
                             created_at?: string;
@@ -765,7 +762,6 @@ export interface operations {
                 "application/json": {
                     name?: string;
                     origin?: string;
-                    receiver?: string | null;
                 };
             };
         };
@@ -780,7 +776,6 @@ export interface operations {
                         id?: number;
                         name?: string;
                         origin?: string;
-                        receiver?: string | null;
                         user_id?: number;
                         /** Format: date-time */
                         created_at?: string;
@@ -812,10 +807,7 @@ export interface operations {
                     paid_period?: string | null;
                     is_saved?: boolean;
                     saving_location?: string | null;
-                    payment_methods?: {
-                        payment_method_id: string | number;
-                        partial_amount: number;
-                    }[];
+                    payment_method_id?: (string | number) | null;
                 };
             };
         };
@@ -837,13 +829,12 @@ export interface operations {
                         is_paid?: boolean;
                         is_saved?: boolean;
                         saving_location?: string | null;
-                        payment_methods?: {
-                            payment_method_id?: number;
-                            partial_amount?: number;
+                        payment_method_id?: number | null;
+                        payment_method?: {
+                            id?: number;
                             name?: string;
                             origin?: string;
-                            receiver?: string | null;
-                        }[];
+                        } | null;
                         /** Format: date-time */
                         created_at?: string;
                         /** Format: date-time */
@@ -931,13 +922,12 @@ export interface operations {
                             is_paid?: boolean;
                             is_saved?: boolean;
                             saving_location?: string | null;
-                            payment_methods?: {
-                                payment_method_id?: number;
-                                partial_amount?: number;
+                            payment_method_id?: number | null;
+                            payment_method?: {
+                                id?: number;
                                 name?: string;
                                 origin?: string;
-                                receiver?: string | null;
-                            }[];
+                            } | null;
                             /** Format: date-time */
                             created_at?: string;
                             /** Format: date-time */
@@ -1083,10 +1073,7 @@ export interface operations {
                     paid_period?: string | null;
                     is_saved?: boolean;
                     saving_location?: string | null;
-                    payment_methods?: {
-                        payment_method_id: string | number;
-                        partial_amount: number;
-                    }[];
+                    payment_method_id?: (string | number) | null;
                 };
             };
         };
@@ -1108,13 +1095,12 @@ export interface operations {
                         is_paid?: boolean;
                         is_saved?: boolean;
                         saving_location?: string | null;
-                        payment_methods?: {
-                            payment_method_id?: number;
-                            partial_amount?: number;
+                        payment_method_id?: number | null;
+                        payment_method?: {
+                            id?: number;
                             name?: string;
                             origin?: string;
-                            receiver?: string | null;
-                        }[];
+                        } | null;
                         /** Format: date-time */
                         created_at?: string;
                         /** Format: date-time */

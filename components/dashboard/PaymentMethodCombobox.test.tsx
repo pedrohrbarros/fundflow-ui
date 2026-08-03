@@ -22,30 +22,13 @@ describe('PaymentMethodCombobox', () => {
     expect(onChange).toHaveBeenCalledWith('pm-1')
   })
 
-  it('reveals an amount step after selecting a method, then commits on Add', async () => {
+  it('clears the selection when the no-payment-method row is chosen', async () => {
     const onChange = vi.fn()
-    const onAmountChange = vi.fn()
-    render(
-      <PaymentMethodCombobox
-        value=""
-        onChange={onChange}
-        amount=""
-        onAmountChange={onAmountChange}
-        placeholder="Credit Card"
-      />,
-    )
+    render(<PaymentMethodCombobox value="pm-1" onChange={onChange} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /credit card/i }))
-    fireEvent.click(await screen.findByText('Visa'))
+    fireEvent.click(screen.getByRole('button', { name: /visa/i }))
+    fireEvent.click(await screen.findByText('No payment method'))
 
-    // Selecting does not commit yet; an amount step appears instead.
-    expect(onChange).not.toHaveBeenCalled()
-    const amountInput = screen.getByPlaceholderText('0.00')
-    fireEvent.change(amountInput, { target: { value: '50' } })
-    expect(onAmountChange).toHaveBeenCalledWith('50')
-
-    // Confirming with Add commits the chosen method.
-    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
-    expect(onChange).toHaveBeenCalledWith('pm-1')
+    expect(onChange).toHaveBeenCalledWith('')
   })
 })

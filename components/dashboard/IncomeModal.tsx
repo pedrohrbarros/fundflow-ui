@@ -33,15 +33,14 @@ interface RowForm {
   category_id: string
   income: string
   currency: string
-  date: string
   is_recurring: boolean
 }
 
 const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'BRL', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR', 'MXN', 'KRW', 'SGD', 'HKD', 'NOK', 'SEK', 'DKK', 'NZD', 'ZAR', 'RUB'] as const
 
-const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD', date: '', is_recurring: true }
+const emptyForm: RowForm = { name: '', category_id: '', income: '', currency: 'USD', is_recurring: true }
 
-type EditField = 'name' | 'category' | 'income' | 'currency' | 'date'
+type EditField = 'name' | 'category' | 'income' | 'currency'
 
 function formFromSource(source: SourceOfIncome): RowForm {
   return {
@@ -49,7 +48,6 @@ function formFromSource(source: SourceOfIncome): RowForm {
     category_id: source.category_id ?? '',
     income: String(source.income),
     currency: source.currency ?? 'USD',
-    date: source.date,
     is_recurring: source.is_recurring,
   }
 }
@@ -60,12 +58,11 @@ function formHasChanges(source: SourceOfIncome, form: RowForm) {
     form.category_id !== (source.category_id ?? '') ||
     (parseFloat(form.income) || 0) !== source.income ||
     (form.currency || 'USD') !== (source.currency ?? 'USD') ||
-    form.date !== source.date ||
     form.is_recurring !== source.is_recurring
   )
 }
 
-type SavePayload = { id: string; name: string; category_id: number | null; income: number; currency: string; date: string; is_recurring: boolean }
+type SavePayload = { id: string; name: string; category_id: number | null; income: number; currency: string; is_recurring: boolean }
 
 export function IncomeModal({ open, onClose }: Props) {
   const qc = useQueryClient()
@@ -133,7 +130,7 @@ export function IncomeModal({ open, onClose }: Props) {
         category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
         income: parseFloat(addForm.income) || 0,
         currency: addForm.currency || 'USD',
-        date: addForm.date || periodDate,
+        date: periodDate,
         is_recurring: addForm.is_recurring,
       },
       {
@@ -164,7 +161,6 @@ export function IncomeModal({ open, onClose }: Props) {
               period_amount: payload.income,
               currency: payload.currency,
               category_id: newCatId,
-              date: payload.date,
               is_recurring: payload.is_recurring,
             }
           : s,
@@ -247,7 +243,6 @@ export function IncomeModal({ open, onClose }: Props) {
       category_id: newCategoryId ? parseInt(newCategoryId, 10) : null,
       income: parseFloat(updatedDraft.income) || 0,
       currency: updatedDraft.currency || 'USD',
-      date: updatedDraft.date,
       is_recurring: updatedDraft.is_recurring,
     })
   }
@@ -266,7 +261,6 @@ export function IncomeModal({ open, onClose }: Props) {
       category_id: draft.category_id ? parseInt(draft.category_id, 10) : null,
       income: parseFloat(draft.income) || 0,
       currency: draft.currency || 'USD',
-      date: draft.date,
       is_recurring: draft.is_recurring,
     })
   }
@@ -282,7 +276,6 @@ export function IncomeModal({ open, onClose }: Props) {
           category_id: form.category_id ? parseInt(form.category_id, 10) : null,
           income: parseFloat(form.income) || 0,
           currency: form.currency || 'USD',
-          date: form.date || source.date,
           is_recurring: form.is_recurring,
         }, {
           onSuccess: () => setRowForm(null),
@@ -298,7 +291,7 @@ export function IncomeModal({ open, onClose }: Props) {
           category_id: form.category_id ? parseInt(form.category_id, 10) : null,
           income: parseFloat(form.income) || 0,
           currency: form.currency || 'USD',
-          date: form.date || periodDate,
+          date: periodDate,
           is_recurring: form.is_recurring,
         },
         { onSuccess: () => setRowForm(null) },
@@ -494,7 +487,6 @@ export function IncomeModal({ open, onClose }: Props) {
                           category_id: source.category_id ? parseInt(source.category_id, 10) : null,
                           income: source.income,
                           currency: source.currency ?? 'USD',
-                          date: updates.date,
                           is_recurring: updates.is_recurring,
                         })
                       }} />
@@ -637,7 +629,6 @@ export function IncomeModal({ open, onClose }: Props) {
         mode={rowForm.mode}
         source={rowForm.mode === 'edit' ? rowForm.source : null}
         usedCategoryIds={usedCategoryIds}
-        periodDate={periodDate}
         isSaving={create.isPending}
         onDelete={
           rowForm.mode === 'edit'
@@ -661,7 +652,6 @@ function IncomeRowFormModal({
   mode,
   source,
   usedCategoryIds,
-  periodDate,
   isSaving,
   onDelete,
   onClose,
@@ -670,7 +660,6 @@ function IncomeRowFormModal({
   mode: 'add' | 'edit'
   source: SourceOfIncome | null
   usedCategoryIds: Set<string>
-  periodDate: string
   isSaving: boolean
   onDelete?: () => void
   onClose: () => void
@@ -679,7 +668,7 @@ function IncomeRowFormModal({
   const [form, setForm] = useState<RowForm>(
     source
       ? { ...formFromSource(source), category_id: String(source.category_id ?? '') }
-      : { ...emptyForm, date: periodDate },
+      : emptyForm,
   )
 
   const canSave = form.name.trim().length > 0
@@ -752,16 +741,6 @@ function IncomeRowFormModal({
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1.5">Date</label>
-            <Input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-              className="w-full"
-            />
-          </div>
-
           <div className="flex items-center gap-2">
             <Checkbox
               id="row_form_recurring"
@@ -794,14 +773,14 @@ function IncomeModalExtraTools({
   onUpdate,
 }: {
   source: SourceOfIncome
-  onUpdate: (updates: { date: string; is_recurring: boolean }) => void
+  onUpdate: (updates: { is_recurring: boolean }) => void
 }) {
   const [open, setOpen] = useState(false)
-  const [localDraft, setLocalDraft] = useState({ date: source.date, is_recurring: source.is_recurring })
+  const [localDraft, setLocalDraft] = useState({ is_recurring: source.is_recurring })
 
   return (
     <Popover open={open} onOpenChange={(o) => {
-      if (o) setLocalDraft({ date: source.date, is_recurring: source.is_recurring })
+      if (o) setLocalDraft({ is_recurring: source.is_recurring })
       setOpen(o)
     }}>
       <PopoverTrigger className="inline-flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors px-2.5 py-1.5">
@@ -809,15 +788,6 @@ function IncomeModalExtraTools({
       </PopoverTrigger>
       <PopoverContent align="end" className="bg-popover border border-border p-4 w-64 text-popover-foreground">
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Date</label>
-            <Input
-              type="date"
-              value={localDraft.date}
-              onChange={(e) => setLocalDraft((f) => ({ ...f, date: e.target.value }))}
-              className="w-full"
-            />
-          </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id={`is_recurring_modal_${source.id}`}
@@ -832,7 +802,7 @@ function IncomeModalExtraTools({
             size="sm"
             className="w-full"
             onClick={() => {
-              onUpdate({ date: localDraft.date, is_recurring: localDraft.is_recurring })
+              onUpdate({ is_recurring: localDraft.is_recurring })
               setOpen(false)
             }}
           >

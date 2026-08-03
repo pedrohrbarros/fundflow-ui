@@ -1,9 +1,7 @@
 export interface ExpensePaymentMethod {
-  payment_method_id: string
-  partial_amount: number
+  id: string
   name: string
   origin: string
-  receiver: string | null
 }
 
 export interface Expense {
@@ -18,7 +16,8 @@ export interface Expense {
   is_paid: boolean
   is_saved: boolean
   saving_location: string | null
-  payment_methods: ExpensePaymentMethod[]
+  payment_method_id: string | null
+  payment_method: ExpensePaymentMethod | null
   created_at: string
   updated_at: string
 }
@@ -39,7 +38,7 @@ export interface CreateExpenseBody {
   is_paid?: boolean
   is_saved?: boolean
   saving_location?: string | null
-  payment_methods?: { payment_method_id: number; partial_amount: number }[]
+  payment_method_id?: number | null
 }
 
 export interface UpdateExpenseBody {
@@ -53,7 +52,7 @@ export interface UpdateExpenseBody {
   paid_period?: string | null
   is_saved?: boolean
   saving_location?: string | null
-  payment_methods?: { payment_method_id: number; partial_amount: number }[]
+  payment_method_id?: number | null
 }
 
 export interface Category {
@@ -125,7 +124,6 @@ export interface PaymentMethod {
   id: string
   name: string
   origin: string
-  receiver: string | null
   user_id: string
   created_at: string
   updated_at: string
@@ -139,13 +137,11 @@ export interface PaymentMethodsResponse {
 export interface CreatePaymentMethodBody {
   name: string
   origin: string
-  receiver?: string
 }
 
 export interface UpdatePaymentMethodBody {
   name?: string
   origin?: string
-  receiver?: string | null
 }
 
 export interface ApiError {

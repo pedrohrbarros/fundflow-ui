@@ -46,7 +46,11 @@ vi.mock('@/components/dashboard/CategoryCombobox', () => ({
 }))
 
 vi.mock('@/components/dashboard/PaymentMethodCombobox', () => ({
-  PaymentMethodCombobox: () => <div>payment-method</div>,
+  PaymentMethodCombobox: ({ onChange }: { onChange: (id: string) => void }) => (
+    <button type="button" onClick={() => onChange('pm-1')}>
+      pick-payment-method
+    </button>
+  ),
 }))
 
 vi.mock('@/hooks/use-payment-methods', () => ({
@@ -60,24 +64,30 @@ const sampleExpense = {
   period_amount: 1200,
   date: '2026-06-01',
   is_recurring: false,
+  recurring_months: null,
   category_id: null,
   is_paid: false,
   is_saved: false,
   saving_location: null,
-  payment_methods: [],
+  payment_method_id: null,
+  payment_method: null,
   created_at: '2026-06-01',
   updated_at: '2026-06-01',
+}
+
+function mockExpenses(expenses: unknown[]) {
+  vi.mocked(useExpenses).mockReturnValue({
+    data: { expenses, total: 1200, pagination: { page: 1, limit: 20, total: expenses.length } },
+    isLoading: false,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any)
 }
 
 describe('ExpensesSection', () => {
   beforeEach(() => {
     createMutate.mockClear()
     deleteMutate.mockClear()
-    vi.mocked(useExpenses).mockReturnValue({
-      data: { expenses: [], total: 0, pagination: { page: 1, limit: 20, total: 0 } },
-      isLoading: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+    mockExpenses([])
     vi.mocked(useUpdateExpense).mockReturnValue({
       mutate: vi.fn(),
       mutateAsync: vi.fn(),
@@ -89,35 +99,30 @@ describe('ExpensesSection', () => {
     } as any)
   })
 
-  it('creates an expense without requiring a category', () => {
+  it('creates an expense from the inline add row, anchored to the period date', () => {
     render(<ExpensesSection />)
 
-    // Open the expense modal (empty-state round button has aria-label "Add expense")
     fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
 
     fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
-
-    // Save is enabled without choosing a category; date defaults to the period date
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(createMutate).toHaveBeenCalledTimes(1)
+    // No date input exists any more, so the period date is the anchor.
     expect(createMutate.mock.calls[0][0]).toMatchObject({
       name: 'Rent',
       amount: 1200,
       category_id: null,
       date: '2026-06-15',
       is_recurring: false,
+      payment_method_id: null,
     })
   })
 
   it('keeps an unsaved checkbox toggle visible after a refetch returns unchanged data', () => {
     // Server always returns the original unpaid expense, even after a refetch.
-    vi.mocked(useExpenses).mockReturnValue({
-      data: { expenses: [sampleExpense], total: 1200, pagination: { page: 1, limit: 20, total: 1 } },
-      isLoading: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+    mockExpenses([sampleExpense])
     // mutateAsync never resolves, so the edit must stay in the overlay (never committed/cleared).
     vi.mocked(useUpdateExpense).mockReturnValue({
       mutate: vi.fn(),
@@ -140,11 +145,7 @@ describe('ExpensesSection', () => {
 
   it('queues a checkbox toggle as a draft instead of saving immediately', () => {
     const mutateAsync = vi.fn(() => new Promise<void>(() => {}))
-    vi.mocked(useExpenses).mockReturnValue({
-      data: { expenses: [sampleExpense], total: 1200, pagination: { page: 1, limit: 20, total: 1 } },
-      isLoading: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+    mockExpenses([sampleExpense])
     vi.mocked(useUpdateExpense).mockReturnValue({
       mutate: vi.fn(),
       mutateAsync,
@@ -161,39 +162,40 @@ describe('ExpensesSection', () => {
     expect(paidCheckbox).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('opens the expense modal from a row, with every field and a delete button', () => {
-    vi.mocked(usePaymentMethods).mockReturnValue({
-      data: { payment_methods: [{ id: 'pm-1', name: 'Visa', origin: 'Bank' }] },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
-    vi.mocked(useExpenses).mockReturnValue({
-      data: {
-        expenses: [{
-          ...sampleExpense,
-          payment_methods: [{ payment_method_id: 'pm-1', partial_amount: 50, name: 'Visa', origin: 'Bank' }],
-        }],
-        total: 1200,
-        pagination: { page: 1, limit: 20, total: 1 },
-      },
-      isLoading: false,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any)
+  it('edits a name in place on desktop instead of opening a modal', () => {
+    mockExpenses([sampleExpense])
 
     render(<ExpensesSection />)
 
-    // The table has no delete control of its own — deletion lives in the modal.
-    expect(screen.queryByRole('button', { name: 'Delete expense' })).not.toBeInTheDocument()
-
-    // Clicking the row opens the full form modal.
     fireEvent.click(screen.getAllByRole('button', { name: 'Rent' })[0])
 
-    expect(screen.getByText('Edit expense')).toBeInTheDocument()
-    // The method's amount is editable inside the modal, prefilled from the expense.
-    expect(screen.getByDisplayValue('50')).toBeInTheDocument()
-    // Fields that used to live outside the modal are now part of it.
-    expect(screen.getByDisplayValue('2026-06-01')).toBeInTheDocument()
+    // The field becomes an input in the row; no edit dialog is mounted.
+    expect(screen.getByDisplayValue('Rent')).toBeInTheDocument()
+    expect(screen.queryByText('Edit expense')).not.toBeInTheDocument()
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
-    expect(deleteMutate).toHaveBeenCalledWith('e1')
+  it('deletes from the table row and toggles Saved there too', () => {
+    mockExpenses([sampleExpense])
+
+    render(<ExpensesSection />)
+
+    // Paid, Recurring and Saved are all inline toggles now.
+    expect(screen.getAllByRole('checkbox')).toHaveLength(3)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete expense' }))
+    expect(deleteMutate.mock.calls[0][0]).toBe('e1')
+  })
+
+  it('reveals the months-limit button only once an expense is recurring', () => {
+    mockExpenses([sampleExpense])
+
+    render(<ExpensesSection />)
+
+    expect(screen.queryByRole('button', { name: /months limit/i })).not.toBeInTheDocument()
+
+    const [, recurringCheckbox] = screen.getAllByRole('checkbox')
+    fireEvent.click(recurringCheckbox)
+
+    expect(screen.getByRole('button', { name: 'Set a months limit' })).toBeInTheDocument()
   })
 })
