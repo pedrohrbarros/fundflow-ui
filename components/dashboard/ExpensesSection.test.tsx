@@ -1,11 +1,39 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ExpensesSection } from './ExpensesSection'
 import { useExpenses, useUpdateExpense } from '@/hooks/use-expenses'
 import { usePaymentMethods } from '@/hooks/use-payment-methods'
 
 const createMutate = vi.fn()
+const createMutateAsync = vi.fn((_body: unknown) => Promise.resolve({}))
 const deleteMutate = vi.fn()
+
+// Capture what the shared toast renders so its Save/Discard can be driven
+// without mounting sonner's Toaster.
+let capturedToast: ((t: number) => ReactNode) | null = null
+
+vi.mock('sonner', () => ({
+  toast: {
+    custom: (renderToast: (t: number) => ReactNode) => {
+      capturedToast = renderToast
+      return 1
+    },
+    dismiss: vi.fn(),
+    error: vi.fn(),
+  },
+}))
+
+async function clickInToast(name: string) {
+  if (!capturedToast) throw new Error('no toast was shown')
+  const toastRender = render(<>{capturedToast(1)}</>)
+  await act(async () => {
+    fireEvent.click(toastRender.getByRole('button', { name }))
+  })
+}
+
+const saveFromToast = () => clickInToast('Save')
+const discardFromToast = () => clickInToast('Discard')
 
 vi.mock('@tanstack/react-query', async () => {
   const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query')
@@ -27,7 +55,7 @@ vi.mock('@/hooks/use-expenses', () => ({
     data: { expenses: [], total: 0, pagination: { page: 1, limit: 20, total: 0 } },
     isLoading: false,
   })),
-  useCreateExpense: () => ({ mutate: createMutate, isPending: false }),
+  useCreateExpense: () => ({ mutate: createMutate, mutateAsync: createMutateAsync, isPending: false }),
   useUpdateExpense: vi.fn(() => ({ mutate: vi.fn() })),
   useDeleteExpense: () => ({ mutate: deleteMutate }),
 }))
@@ -86,7 +114,9 @@ function mockExpenses(expenses: unknown[]) {
 describe('ExpensesSection', () => {
   beforeEach(() => {
     createMutate.mockClear()
+    createMutateAsync.mockClear()
     deleteMutate.mockClear()
+    capturedToast = null
     mockExpenses([])
     vi.mocked(useUpdateExpense).mockReturnValue({
       mutate: vi.fn(),
@@ -99,18 +129,23 @@ describe('ExpensesSection', () => {
     } as any)
   })
 
-  it('creates an expense from the inline add row, anchored to the period date', () => {
+  it('offers a new expense to the shared toast instead of its own Save button', async () => {
     render(<ExpensesSection />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
 
     fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect(createMutate).toHaveBeenCalledTimes(1)
+    // The add row only offers Cancel now; saving goes through the toast.
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+    expect(createMutateAsync).not.toHaveBeenCalled()
+
+    await saveFromToast()
+
+    expect(createMutateAsync).toHaveBeenCalledTimes(1)
     // No date input exists any more, so the period date is the anchor.
-    expect(createMutate.mock.calls[0][0]).toMatchObject({
+    expect(createMutateAsync.mock.calls[0][0]).toMatchObject({
       name: 'Rent',
       amount: 1200,
       category_id: null,
@@ -118,6 +153,19 @@ describe('ExpensesSection', () => {
       is_recurring: false,
       payment_method_id: null,
     })
+  })
+
+  it('discards the new expense when the toast is discarded', async () => {
+    render(<ExpensesSection />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
+    fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
+    fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
+
+    await discardFromToast()
+
+    expect(createMutateAsync).not.toHaveBeenCalled()
+    expect(screen.queryByPlaceholderText('Expense name')).not.toBeInTheDocument()
   })
 
   it('keeps an unsaved checkbox toggle visible after a refetch returns unchanged data', () => {

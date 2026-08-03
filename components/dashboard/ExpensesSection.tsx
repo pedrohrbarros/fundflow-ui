@@ -134,6 +134,21 @@ function buildPayload(id: string, form: RowForm, periodDate: string): ExpenseUpd
   }
 }
 
+function buildCreateBody(form: RowForm, periodDate: string) {
+  return {
+    name: form.name.trim(),
+    amount: parseFloat(form.amount) || 0,
+    category_id: form.category_id ? parseInt(form.category_id, 10) : null,
+    // The date input is gone; new expenses anchor to the selected period.
+    date: periodDate,
+    is_recurring: form.is_recurring,
+    recurring_months: form.is_recurring ? parseInt(form.recurring_months, 10) || null : null,
+    is_paid: form.is_paid,
+    is_saved: form.is_saved,
+    payment_method_id: form.payment_method_id ? parseInt(form.payment_method_id, 10) : null,
+  }
+}
+
 // Ids are declared as strings but arrive from the API as numbers, so anything
 // comparing or keying on them has to normalise first.
 function normalizeId(id: string | number | null | undefined): string | null {
@@ -258,25 +273,35 @@ export function ExpensesSection() {
     }
   }
 
-  function clearAllPending() {
+  function dismissSharedToast() {
     clearAutoSaveTimer()
-    setPendingEdits({})
     if (sharedToastId.current !== undefined) {
       toast.dismiss(sharedToastId.current)
       sharedToastId.current = undefined
     }
-    setDraft(emptyForm)
-    setEditing(null)
   }
 
-  async function performSave(payloads: ExpenseUpdatePayload[]) {
-    await Promise.all(payloads.map((p) => update.mutateAsync(p)))
+  function clearAllPending() {
+    dismissSharedToast()
+    setPendingEdits({})
+    setDraft(emptyForm)
+    setEditing(null)
+    setIsAdding(false)
+    setAddForm(emptyForm)
+  }
+
+  // A new expense is a pending change like any edit, so the toast persists both.
+  async function performSave(payloads: ExpenseUpdatePayload[], addDraft: RowForm | null) {
+    await Promise.all([
+      ...payloads.map((p) => update.mutateAsync(p)),
+      ...(addDraft ? [create.mutateAsync(buildCreateBody(addDraft, periodDate))] : []),
+    ])
     clearAllPending()
   }
 
-  function showSharedToast(payloads: ExpenseUpdatePayload[]) {
+  function showSharedToast(payloads: ExpenseUpdatePayload[], addDraft: RowForm | null) {
     if (sharedToastId.current !== undefined) toast.dismiss(sharedToastId.current)
-    const count = payloads.length
+    const count = payloads.length + (addDraft ? 1 : 0)
     const tid = toast.custom(
       (t) => (
         <SaveChangesToast
@@ -284,7 +309,7 @@ export function ExpensesSection() {
           successMessage={count === 1 ? 'Expense saved' : `${count} expenses saved`}
           onSave={async () => {
             clearAutoSaveTimer()
-            await performSave(payloads)
+            await performSave(payloads, addDraft)
           }}
           onRevert={() => clearAllPending()}
         />
@@ -298,8 +323,13 @@ export function ExpensesSection() {
     clearAutoSaveTimer()
     autoSaveTimer.current = setTimeout(() => {
       autoSaveTimer.current = undefined
-      performSave(payloads).catch(() => toast.error('Failed to save changes'))
+      performSave(payloads, addDraft).catch(() => toast.error('Failed to save changes'))
     }, AUTO_SAVE_DELAY_MS)
+  }
+
+  // The add row only counts as pending once it has the fields a create needs.
+  function addDraftOf(form: RowForm): RowForm | null {
+    return isAdding && form.name.trim() && form.amount ? form : null
   }
 
   function commitChanges(expense: Expense, form: RowForm) {
@@ -307,7 +337,26 @@ export function ExpensesSection() {
     const payload = buildPayload(expense.id, form, periodDate)
     const nextPending = { ...pendingEdits, [expense.id]: payload }
     setPendingEdits(nextPending)
-    showSharedToast(Object.values(nextPending))
+    showSharedToast(Object.values(nextPending), addDraftOf(addForm))
+  }
+
+  // Every add-row field routes through here so the toast always reflects the
+  // latest draft — it is the only way to save a new expense now.
+  function updateAddForm(patch: Partial<RowForm>) {
+    const next = { ...addForm, ...patch }
+    setAddForm(next)
+    const addDraft = addDraftOf(next)
+    const payloads = Object.values(pendingEdits)
+    if (addDraft || payloads.length > 0) showSharedToast(payloads, addDraft)
+    else dismissSharedToast()
+  }
+
+  function cancelAdd() {
+    setIsAdding(false)
+    setAddForm(emptyForm)
+    const payloads = Object.values(pendingEdits)
+    if (payloads.length > 0) showSharedToast(payloads, null)
+    else dismissSharedToast()
   }
 
   // Checkbox columns are drafts like any other field: queue the change and
@@ -333,31 +382,13 @@ export function ExpensesSection() {
     if (expense) commitChanges(expense, nextDraft)
   }
 
-  function handleAdd() {
-    if (!addForm.name.trim() || !addForm.amount) return
-    create.mutate(
-      {
-        name: addForm.name.trim(),
-        amount: parseFloat(addForm.amount),
-        category_id: addForm.category_id ? parseInt(addForm.category_id, 10) : null,
-        // The date input is gone; new expenses anchor to the selected period.
-        date: periodDate,
-        is_recurring: addForm.is_recurring,
-        recurring_months: addForm.is_recurring
-          ? parseInt(addForm.recurring_months, 10) || null
-          : null,
-        is_paid: addForm.is_paid,
-        is_saved: addForm.is_saved,
-        payment_method_id: addForm.payment_method_id
-          ? parseInt(addForm.payment_method_id, 10)
-          : null,
-      },
-      {
-        onSuccess: () => {
-          setAddForm(emptyForm)
-          setIsAdding(false)
-        },
-      }
+  // Enter skips the debounce and persists everything pending straight away.
+  function saveAddNow() {
+    const addDraft = addDraftOf(addForm)
+    if (!addDraft) return
+    clearAutoSaveTimer()
+    performSave(Object.values(pendingEdits), addDraft).catch(() =>
+      toast.error('Failed to save changes')
     )
   }
 
@@ -368,22 +399,7 @@ export function ExpensesSection() {
       })
     } else {
       if (!form.name.trim() || !form.amount) return
-      create.mutate(
-        {
-          name: form.name.trim(),
-          amount: parseFloat(form.amount),
-          category_id: form.category_id ? parseInt(form.category_id, 10) : null,
-          date: periodDate,
-          is_recurring: form.is_recurring,
-          recurring_months: form.is_recurring ? parseInt(form.recurring_months, 10) || null : null,
-          is_paid: form.is_paid,
-          is_saved: form.is_saved,
-          payment_method_id: form.payment_method_id
-            ? parseInt(form.payment_method_id, 10)
-            : null,
-        },
-        { onSuccess: () => setRowForm(null) }
-      )
+      create.mutate(buildCreateBody(form, periodDate), { onSuccess: () => setRowForm(null) })
     }
   }
 
@@ -735,13 +751,10 @@ export function ExpensesSection() {
                             className="min-w-0 text-[1rem]"
                             placeholder="Expense name"
                             value={addForm.name}
-                            onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+                            onChange={(e) => updateAddForm({ name: e.target.value })}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleAdd()
-                              if (e.key === 'Escape') {
-                                setIsAdding(false)
-                                setAddForm(emptyForm)
-                              }
+                              if (e.key === 'Enter') saveAddNow()
+                              if (e.key === 'Escape') cancelAdd()
                             }}
                             autoFocus
                           />
@@ -749,7 +762,7 @@ export function ExpensesSection() {
                         <TableCell className="py-5 px-5">
                           <CategoryCombobox
                             value={addForm.category_id}
-                            onChange={(v) => setAddForm((f) => ({ ...f, category_id: v }))}
+                            onChange={(v) => updateAddForm({ category_id: v })}
                             type="EXPENSE"
                             usedCategoryIds={usedCategoryIds}
                             autoOpen={false}
@@ -763,16 +776,14 @@ export function ExpensesSection() {
                             step="0.01"
                             placeholder="0.00"
                             value={addForm.amount}
-                            onChange={(e) =>
-                              setAddForm((f) => ({ ...f, amount: e.target.value.replace(',', '.') }))
-                            }
-                            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                            onChange={(e) => updateAddForm({ amount: e.target.value.replace(',', '.') })}
+                            onKeyDown={(e) => e.key === 'Enter' && saveAddNow()}
                           />
                         </TableCell>
                         <TableCell className="py-5 px-5">
                           <PaymentMethodCombobox
                             value={addForm.payment_method_id}
-                            onChange={(id) => setAddForm((f) => ({ ...f, payment_method_id: id }))}
+                            onChange={(id) => updateAddForm({ payment_method_id: id })}
                             placeholder="Payment method"
                           />
                         </TableCell>
@@ -781,7 +792,7 @@ export function ExpensesSection() {
                             <Checkbox
                               checked={addForm.is_paid}
                               onCheckedChange={(checked) =>
-                                setAddForm((f) => ({ ...f, is_paid: Boolean(checked) }))
+                                updateAddForm({ is_paid: Boolean(checked) })
                               }
                             />
                           </div>
@@ -791,19 +802,16 @@ export function ExpensesSection() {
                             <Checkbox
                               checked={addForm.is_recurring}
                               onCheckedChange={(checked) =>
-                                setAddForm((f) => ({
-                                  ...f,
+                                updateAddForm({
                                   is_recurring: Boolean(checked),
                                   recurring_months: '',
-                                }))
+                                })
                               }
                             />
                             <MonthsLimitPopover
                               disabled={!addForm.is_recurring}
                               value={addForm.recurring_months}
-                              onSave={(recurring_months) =>
-                                setAddForm((f) => ({ ...f, recurring_months }))
-                              }
+                              onSave={(recurring_months) => updateAddForm({ recurring_months })}
                             />
                           </div>
                         </TableCell>
@@ -812,25 +820,17 @@ export function ExpensesSection() {
                             <Checkbox
                               checked={addForm.is_saved}
                               onCheckedChange={(checked) =>
-                                setAddForm((f) => ({ ...f, is_saved: Boolean(checked) }))
+                                updateAddForm({ is_saved: Boolean(checked) })
                               }
                             />
                           </div>
                         </TableCell>
                         <TableCell className="py-5 pl-0 pr-3 text-right">
-                          <div className="flex gap-2 items-center justify-end">
-                            {addForm.name.trim() && addForm.amount && (
-                              <Button size="sm" onClick={handleAdd}>
-                                Save
-                              </Button>
-                            )}
+                          <div className="flex items-center justify-end">
                             <Button
                               variant="destructive"
-                              size="icon-sm"
-                              onClick={() => {
-                                setIsAdding(false)
-                                setAddForm(emptyForm)
-                              }}
+                              size="icon"
+                              onClick={cancelAdd}
                               aria-label="Cancel"
                             >
                               ✕
