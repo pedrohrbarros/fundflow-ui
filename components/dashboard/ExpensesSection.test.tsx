@@ -186,16 +186,17 @@ describe('ExpensesSection', () => {
     expect(deleteMutate.mock.calls[0][0]).toBe('e1')
   })
 
-  it('reveals the months-limit button only once an expense is recurring', () => {
+  it('keeps the months-limit button in place but disabled until an expense recurs', () => {
     mockExpenses([sampleExpense])
 
     render(<ExpensesSection />)
 
-    expect(screen.queryByRole('button', { name: /months limit/i })).not.toBeInTheDocument()
+    // It holds its slot so the recurring column stays aligned row to row.
+    expect(screen.getByRole('button', { name: 'Set a months limit' })).toBeDisabled()
 
     const [, recurringCheckbox] = screen.getAllByRole('checkbox')
     fireEvent.click(recurringCheckbox)
 
-    expect(screen.getByRole('button', { name: 'Set a months limit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Set a months limit' })).toBeEnabled()
   })
 })

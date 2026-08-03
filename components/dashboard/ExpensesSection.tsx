@@ -69,11 +69,11 @@ function ExpensesTableColgroup() {
       <col style={{ width: '24%' }} />
       <col style={{ width: '11%' }} />
       <col style={{ width: '13%' }} />
-      <col style={{ width: '18%' }} />
-      <col style={{ width: '7%' }} />
-      <col style={{ width: '12%' }} />
-      <col style={{ width: '7%' }} />
-      <col style={{ width: '8%' }} />
+      <col style={{ width: '24%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '10%' }} />
+      <col style={{ width: '6%' }} />
+      <col style={{ width: '6%' }} />
     </colgroup>
   )
 }
@@ -480,7 +480,7 @@ export function ExpensesSection() {
                           onSort={toggleSort}
                         />
                       </TableHead>
-                      <TableHead className="py-4 px-5 h-auto">
+                      <TableHead className="py-4 px-2 h-auto">
                         <ColumnHeader
                           label="Paid"
                           align="center"
@@ -489,7 +489,7 @@ export function ExpensesSection() {
                           onSort={toggleSort}
                         />
                       </TableHead>
-                      <TableHead className="py-4 px-5 h-auto text-center">
+                      <TableHead className="py-4 px-2 h-auto text-center">
                         <ColumnHeader
                           label="Recurring"
                           align="center"
@@ -498,7 +498,7 @@ export function ExpensesSection() {
                           onSort={toggleSort}
                         />
                       </TableHead>
-                      <TableHead className="py-4 px-5 h-auto text-center">
+                      <TableHead className="py-4 px-2 h-auto text-center">
                         <ColumnHeader
                           label="Saved"
                           align="center"
@@ -507,7 +507,7 @@ export function ExpensesSection() {
                           onSort={toggleSort}
                         />
                       </TableHead>
-                      <TableHead className="py-4 px-5 h-auto text-right" />
+                      <TableHead className="py-4 pl-0 pr-3 h-auto text-right" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -643,7 +643,7 @@ export function ExpensesSection() {
                               })()
                             )}
                           </TableCell>
-                          <TableCell className="py-5 px-5 text-center">
+                          <TableCell className="py-5 px-2 text-center">
                             <div className="flex justify-center">
                               <Checkbox
                                 checked={expense.is_paid}
@@ -653,7 +653,9 @@ export function ExpensesSection() {
                               />
                             </div>
                           </TableCell>
-                          <TableCell className="py-5 px-5">
+                          {/* The infinity button holds its place even when the
+                              expense does not recur, so the column stays aligned. */}
+                          <TableCell className="py-5 px-2">
                             <div className="flex items-center justify-center gap-1.5">
                               <Checkbox
                                 checked={expense.is_recurring}
@@ -666,22 +668,21 @@ export function ExpensesSection() {
                                   )
                                 }
                               />
-                              {expense.is_recurring && (
-                                <MonthsLimitPopover
-                                  value={
-                                    expense.recurring_months != null
-                                      ? String(expense.recurring_months)
-                                      : ''
-                                  }
-                                  monthsLeft={remainingMonths(expense, periodDate)}
-                                  onSave={(recurring_months) =>
-                                    toggleCheckboxColumn(expense, { recurring_months })
-                                  }
-                                />
-                              )}
+                              <MonthsLimitPopover
+                                disabled={!expense.is_recurring}
+                                value={
+                                  expense.recurring_months != null
+                                    ? String(expense.recurring_months)
+                                    : ''
+                                }
+                                monthsLeft={remainingMonths(expense, periodDate)}
+                                onSave={(recurring_months) =>
+                                  toggleCheckboxColumn(expense, { recurring_months })
+                                }
+                              />
                             </div>
                           </TableCell>
-                          <TableCell className="py-5 px-5 text-center">
+                          <TableCell className="py-5 px-2 text-center">
                             <div className="flex justify-center">
                               <Checkbox
                                 checked={expense.is_saved}
@@ -691,7 +692,7 @@ export function ExpensesSection() {
                               />
                             </div>
                           </TableCell>
-                          <TableCell className="py-5 px-5 text-right">
+                          <TableCell className="py-5 pl-0 pr-3 text-right">
                             <div className="flex items-center justify-end">
                               <Button
                                 variant="destructive"
@@ -764,7 +765,7 @@ export function ExpensesSection() {
                             placeholder="Payment method"
                           />
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
+                        <TableCell className="py-5 px-2 text-center">
                           <div className="flex justify-center">
                             <Checkbox
                               checked={addForm.is_paid}
@@ -774,7 +775,7 @@ export function ExpensesSection() {
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="py-5 px-5">
+                        <TableCell className="py-5 px-2">
                           <div className="flex items-center justify-center gap-1.5">
                             <Checkbox
                               checked={addForm.is_recurring}
@@ -786,17 +787,16 @@ export function ExpensesSection() {
                                 }))
                               }
                             />
-                            {addForm.is_recurring && (
-                              <MonthsLimitPopover
-                                value={addForm.recurring_months}
-                                onSave={(recurring_months) =>
-                                  setAddForm((f) => ({ ...f, recurring_months }))
-                                }
-                              />
-                            )}
+                            <MonthsLimitPopover
+                              disabled={!addForm.is_recurring}
+                              value={addForm.recurring_months}
+                              onSave={(recurring_months) =>
+                                setAddForm((f) => ({ ...f, recurring_months }))
+                              }
+                            />
                           </div>
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-center">
+                        <TableCell className="py-5 px-2 text-center">
                           <div className="flex justify-center">
                             <Checkbox
                               checked={addForm.is_saved}
@@ -806,7 +806,7 @@ export function ExpensesSection() {
                             />
                           </div>
                         </TableCell>
-                        <TableCell className="py-5 px-5 text-right">
+                        <TableCell className="py-5 pl-0 pr-3 text-right">
                           <div className="flex gap-2 items-center justify-end">
                             {addForm.name.trim() && addForm.amount && (
                               <Button size="default" onClick={handleAdd}>
@@ -921,10 +921,12 @@ function MonthsLimitPopover({
   value,
   onSave,
   monthsLeft,
+  disabled = false,
 }: {
   value: string
   onSave: (recurringMonths: string) => void
   monthsLeft?: number | null
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [localValue, setLocalValue] = useState(value)
@@ -943,15 +945,22 @@ function MonthsLimitPopover({
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger
+        disabled={disabled}
         aria-label={hasLimit ? 'Edit months limit' : 'Set a months limit'}
         title={
-          hasLimit
-            ? `Repeats ${value} month${value === '1' ? '' : 's'}`
-            : 'Repeats indefinitely — set a limit'
+          disabled
+            ? 'Only recurring expenses can have a months limit'
+            : hasLimit
+              ? `Repeats ${value} month${value === '1' ? '' : 's'}`
+              : 'Repeats indefinitely — set a limit'
         }
         onClick={(e) => e.stopPropagation()}
-        className={`inline-flex items-center justify-center rounded-md size-6 shrink-0 transition-colors hover:bg-accent ${
-          hasLimit ? 'text-primary' : 'text-muted-foreground/60 hover:text-foreground'
+        className={`inline-flex items-center justify-center rounded-md size-6 shrink-0 transition-colors ${
+          disabled
+            ? 'text-muted-foreground/25 cursor-not-allowed'
+            : hasLimit
+              ? 'text-primary hover:bg-accent'
+              : 'text-muted-foreground/60 hover:bg-accent hover:text-foreground'
         }`}
       >
         <InfinityIcon className="size-3.5" />
@@ -1100,13 +1109,12 @@ function ExpenseRowFormModal({
                 >
                   Recurring
                 </label>
-                {form.is_recurring && (
-                  <MonthsLimitPopover
-                    value={form.recurring_months}
-                    monthsLeft={monthsLeft}
-                    onSave={(recurring_months) => setForm((f) => ({ ...f, recurring_months }))}
-                  />
-                )}
+                <MonthsLimitPopover
+                  disabled={!form.is_recurring}
+                  value={form.recurring_months}
+                  monthsLeft={monthsLeft}
+                  onSave={(recurring_months) => setForm((f) => ({ ...f, recurring_months }))}
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox
