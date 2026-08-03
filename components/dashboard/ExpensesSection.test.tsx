@@ -186,6 +186,36 @@ describe('ExpensesSection', () => {
     expect(deleteMutate.mock.calls[0][0]).toBe('e1')
   })
 
+  it('keeps the payment method shown when another field is toggled', () => {
+    // Ids arrive from the API as numbers, and the methods query is paginated,
+    // so a row's method may be missing from it — the row's own embedded record
+    // has to survive an unrelated edit.
+    mockExpenses([
+      {
+        ...sampleExpense,
+        id: 1,
+        payment_method_id: 4,
+        payment_method: { id: 4, name: 'Nubank', origin: 'Bank' },
+      },
+    ])
+    vi.mocked(usePaymentMethods).mockReturnValue({
+      data: { payment_methods: [{ id: 99, name: 'Other', origin: 'Bank' }] },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+    vi.mocked(useUpdateExpense).mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn(() => new Promise<void>(() => {})),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    render(<ExpensesSection />)
+
+    const [, , savedCheckbox] = screen.getAllByRole('checkbox')
+    fireEvent.click(savedCheckbox)
+
+    expect(screen.getByText('Nubank')).toBeInTheDocument()
+  })
+
   it('keeps the months-limit button in place but disabled until an expense recurs', () => {
     mockExpenses([sampleExpense])
 

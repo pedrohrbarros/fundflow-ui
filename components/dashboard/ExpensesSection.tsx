@@ -67,9 +67,9 @@ function ExpensesTableColgroup() {
   return (
     <colgroup>
       <col style={{ width: '24%' }} />
-      <col style={{ width: '11%' }} />
+      <col style={{ width: '8%' }} />
       <col style={{ width: '13%' }} />
-      <col style={{ width: '24%' }} />
+      <col style={{ width: '27%' }} />
       <col style={{ width: '6%' }} />
       <col style={{ width: '10%' }} />
       <col style={{ width: '6%' }} />
@@ -96,7 +96,7 @@ function formFromExpense(expense: Expense): RowForm {
     category_id: String(expense.category_id ?? ''),
     is_paid: expense.is_paid,
     is_saved: expense.is_saved,
-    payment_method_id: expense.payment_method_id ?? '',
+    payment_method_id: normalizeId(expense.payment_method_id) ?? '',
     is_recurring: expense.is_recurring,
     recurring_months: expense.recurring_months != null ? String(expense.recurring_months) : '',
   }
@@ -114,7 +114,7 @@ function formHasChanges(expense: Expense, form: RowForm) {
     formRecurringMonths !== expense.recurring_months ||
     form.is_paid !== expense.is_paid ||
     form.is_saved !== expense.is_saved ||
-    form.payment_method_id !== (expense.payment_method_id ?? '')
+    form.payment_method_id !== (normalizeId(expense.payment_method_id) ?? '')
   )
 }
 
@@ -134,6 +134,12 @@ function buildPayload(id: string, form: RowForm, periodDate: string): ExpenseUpd
   }
 }
 
+// Ids are declared as strings but arrive from the API as numbers, so anything
+// comparing or keying on them has to normalise first.
+function normalizeId(id: string | number | null | undefined): string | null {
+  return id == null || id === '' ? null : String(id)
+}
+
 function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): Expense {
   const nextPaymentMethodId =
     payload.payment_method_id == null ? null : String(payload.payment_method_id)
@@ -148,10 +154,14 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
     is_paid: payload.is_paid,
     is_saved: payload.is_saved,
     payment_method_id: nextPaymentMethodId,
-    // The embedded record would contradict a newly picked id, and the table
-    // resolves names from the loaded methods anyway.
+    // Keep the row's own record whenever the method itself did not change —
+    // both sides must be normalised, since the API sends numeric ids and this
+    // payload carries strings. Only a genuinely new pick drops it, and its
+    // name then comes from the loaded methods or the refetch.
     payment_method:
-      nextPaymentMethodId === expense.payment_method_id ? expense.payment_method : null,
+      nextPaymentMethodId === normalizeId(expense.payment_method_id)
+        ? expense.payment_method
+        : null,
   }
 }
 
@@ -230,8 +240,9 @@ export function ExpensesSection() {
   )
 
   function paymentMethodFor(expense: Expense) {
-    if (!expense.payment_method_id) return null
-    return paymentMethodById.get(expense.payment_method_id) ?? expense.payment_method
+    const id = normalizeId(expense.payment_method_id)
+    if (!id) return null
+    return paymentMethodById.get(id) ?? expense.payment_method
   }
 
   useEffect(() => {
@@ -809,13 +820,13 @@ export function ExpensesSection() {
                         <TableCell className="py-5 pl-0 pr-3 text-right">
                           <div className="flex gap-2 items-center justify-end">
                             {addForm.name.trim() && addForm.amount && (
-                              <Button size="default" onClick={handleAdd}>
+                              <Button size="sm" onClick={handleAdd}>
                                 Save
                               </Button>
                             )}
                             <Button
                               variant="destructive"
-                              size="icon"
+                              size="icon-sm"
                               onClick={() => {
                                 setIsAdding(false)
                                 setAddForm(emptyForm)

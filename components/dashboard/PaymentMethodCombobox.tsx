@@ -18,6 +18,8 @@ interface Props {
   autoOpen?: boolean
 }
 
+const METHODS_PER_PAGE = 6
+
 export function PaymentMethodCombobox({
   value,
   onChange,
@@ -39,6 +41,24 @@ export function PaymentMethodCombobox({
   const [showNew, setShowNew] = useState(false)
   const [newName, setNewName] = useState('')
   const [newOrigin, setNewOrigin] = useState('')
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+
+  // Search covers name and origin, since a method is identified by both.
+  const query = search.trim().toLowerCase()
+  const matches = query
+    ? paymentMethods.filter(
+        (pm) =>
+          pm.name.toLowerCase().includes(query) || pm.origin.toLowerCase().includes(query)
+      )
+    : paymentMethods
+
+  const pageCount = Math.max(1, Math.ceil(matches.length / METHODS_PER_PAGE))
+  const currentPage = Math.min(page, pageCount)
+  const visibleMethods = matches.slice(
+    (currentPage - 1) * METHODS_PER_PAGE,
+    currentPage * METHODS_PER_PAGE
+  )
 
   function selectMethod(id: string) {
     setEditingId(null)
@@ -118,11 +138,27 @@ export function PaymentMethodCombobox({
           if (!o) {
             setShowNew(false)
             setEditingId(null)
+            setSearch('')
+            setPage(1)
           }
         }}
       >
         <DialogContent className="w-[min(94vw,20rem)] p-0 gap-0" showCloseButton={false}>
           <DialogTitle className="px-4 pt-4 pb-2">Select payment method</DialogTitle>
+
+          <div className="px-2 pb-2">
+            <Input
+              className="h-8 text-sm"
+              placeholder="Search by name or origin…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setPage(1)
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
+              aria-label="Search payment methods"
+            />
+          </div>
 
           <div className="max-h-72 overflow-y-auto">
             {paymentMethods.length === 0 && (
@@ -130,8 +166,13 @@ export function PaymentMethodCombobox({
                 No payment methods yet
               </p>
             )}
+            {paymentMethods.length > 0 && matches.length === 0 && (
+              <p className="text-muted-foreground text-xs italic px-3 py-3">
+                No payment method matches “{search.trim()}”
+              </p>
+            )}
             {/* An expense may have no payment method, so selecting one has to be undoable. */}
-            {value && (
+            {value && !query && (
               <div
                 className="flex items-center px-2 py-1.5 cursor-pointer transition-colors hover:bg-accent/60"
                 onClick={() => selectMethod('')}
@@ -139,7 +180,7 @@ export function PaymentMethodCombobox({
                 <span className="text-sm text-muted-foreground">No payment method</span>
               </div>
             )}
-            {paymentMethods.map((pm) => {
+            {visibleMethods.map((pm) => {
               const pmId = String(pm.id)
               return (
                 <div
@@ -228,6 +269,39 @@ export function PaymentMethodCombobox({
               )
             })}
           </div>
+
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-2 py-1.5">
+              <span className="text-xs text-muted-foreground">
+                {matches.length} method{matches.length === 1 ? '' : 's'}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="text-foreground"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >
+                  ‹
+                </Button>
+                <span className="text-xs text-muted-foreground px-1">
+                  {currentPage} / {pageCount}
+                </span>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="text-foreground"
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  disabled={currentPage === pageCount}
+                  aria-label="Next page"
+                >
+                  ›
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="border-t border-border">
             {showNew ? (
