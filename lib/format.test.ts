@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { fmtMoney } from './format'
+import { fmtMoney, normalizeAmountInput } from './format'
+
+describe('normalizeAmountInput', () => {
+  it('accepts a decimal comma, as mobile keyboards emit', () => {
+    expect(normalizeAmountInput('8,50')).toBe('8.50')
+  })
+})
 
 describe('fmtMoney', () => {
   it('formats a known currency amount', () => {

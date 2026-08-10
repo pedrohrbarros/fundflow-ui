@@ -36,7 +36,9 @@ export interface CreateExpenseBody {
   is_recurring?: boolean
   recurring_months?: number | null
   is_paid?: boolean
+  paid_period?: string | null
   is_saved?: boolean
+  saved_period?: string | null
   saving_location?: string | null
   payment_method_id?: number | null
 }
@@ -51,6 +53,7 @@ export interface UpdateExpenseBody {
   is_paid?: boolean
   paid_period?: string | null
   is_saved?: boolean
+  saved_period?: string | null
   saving_location?: string | null
   payment_method_id?: number | null
 }

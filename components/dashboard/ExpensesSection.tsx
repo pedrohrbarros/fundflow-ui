@@ -10,7 +10,7 @@ import {
   useDeleteExpense,
 } from '@/hooks/use-expenses'
 import { usePaymentMethods } from '@/hooks/use-payment-methods'
-import { fmtMoney } from '@/lib/format'
+import { fmtMoney, normalizeAmountInput } from '@/lib/format'
 import type { Expense } from '@/types'
 import { PaymentMethodCombobox } from '@/components/dashboard/PaymentMethodCombobox'
 import { CategoryCombobox } from '@/components/dashboard/CategoryCombobox'
@@ -49,6 +49,7 @@ type ExpenseUpdatePayload = {
   is_paid: boolean
   paid_period?: string | null
   is_saved: boolean
+  saved_period?: string | null
   payment_method_id: number | null
 }
 
@@ -118,6 +119,14 @@ function formHasChanges(expense: Expense, form: RowForm) {
   )
 }
 
+// Ticking Paid or Saved on a recurring expense only speaks for the month on screen,
+// so the payload stamps the period the tick happened in. A non-recurring expense
+// exists in one month only and leaves the periods alone.
+function periodStamp(isRecurring: boolean, flag: boolean, periodDate: string) {
+  if (!isRecurring) return undefined
+  return flag ? periodDate.slice(0, 7) : null
+}
+
 function buildPayload(id: string, form: RowForm, periodDate: string): ExpenseUpdatePayload {
   const nextIsRecurring = form.is_recurring
   return {
@@ -128,8 +137,9 @@ function buildPayload(id: string, form: RowForm, periodDate: string): ExpenseUpd
     is_recurring: nextIsRecurring,
     recurring_months: nextIsRecurring ? parseInt(form.recurring_months, 10) || null : null,
     is_paid: form.is_paid,
-    paid_period: nextIsRecurring ? (form.is_paid ? periodDate.slice(0, 7) : null) : undefined,
+    paid_period: periodStamp(nextIsRecurring, form.is_paid, periodDate),
     is_saved: form.is_saved,
+    saved_period: periodStamp(nextIsRecurring, form.is_saved, periodDate),
     payment_method_id: form.payment_method_id ? parseInt(form.payment_method_id, 10) : null,
   }
 }
@@ -144,7 +154,9 @@ function buildCreateBody(form: RowForm, periodDate: string) {
     is_recurring: form.is_recurring,
     recurring_months: form.is_recurring ? parseInt(form.recurring_months, 10) || null : null,
     is_paid: form.is_paid,
+    paid_period: periodStamp(form.is_recurring, form.is_paid, periodDate),
     is_saved: form.is_saved,
+    saved_period: periodStamp(form.is_recurring, form.is_saved, periodDate),
     payment_method_id: form.payment_method_id ? parseInt(form.payment_method_id, 10) : null,
   }
 }
@@ -598,13 +610,14 @@ export function ExpensesSection() {
                           <TableCell className="py-5 px-5 text-right">
                             {isEditing && editing.field === 'amount' ? (
                               <Input
-                                type="number"
+                                type="text"
+                                inputMode="decimal"
                                 className="min-w-0 text-right text-[1rem]"
                                 value={draft.amount}
                                 onChange={(e) =>
                                   setDraft((f) => ({
                                     ...f,
-                                    amount: e.target.value.replace(',', '.'),
+                                    amount: normalizeAmountInput(e.target.value),
                                   }))
                                 }
                                 onBlur={() => commitDraftField(expense.id)}
@@ -770,13 +783,14 @@ export function ExpensesSection() {
                         </TableCell>
                         <TableCell className="py-5 px-5">
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             className="min-w-0 text-right text-[1rem]"
-                            min="0"
-                            step="0.01"
                             placeholder="0.00"
                             value={addForm.amount}
-                            onChange={(e) => updateAddForm({ amount: e.target.value.replace(',', '.') })}
+                            onChange={(e) =>
+                              updateAddForm({ amount: normalizeAmountInput(e.target.value) })
+                            }
                             onKeyDown={(e) => e.key === 'Enter' && saveAddNow()}
                           />
                         </TableCell>
@@ -1056,13 +1070,11 @@ function ExpenseRowFormModal({
           <div>
             <label className="block text-sm font-medium mb-1.5">Amount</label>
             <Input
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
               inputMode="decimal"
               value={form.amount}
               onChange={(e) =>
-                setForm((f) => ({ ...f, amount: e.target.value.replace(',', '.') }))
+                setForm((f) => ({ ...f, amount: normalizeAmountInput(e.target.value) }))
               }
               placeholder="0.00"
               className="w-full text-left"
