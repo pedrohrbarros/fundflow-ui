@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Infinity as InfinityIcon, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -193,7 +193,6 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
 }
 
 const PAGE_LIMIT = 100
-const AUTO_SAVE_DELAY_MS = 2500
 
 export function ExpensesSection() {
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
@@ -240,7 +239,6 @@ export function ExpensesSection() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
   const sharedToastId = useRef<string | number | undefined>(undefined)
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // Mobile-only: tap a row (or add) to edit every field in one modal. The
   // desktop table edits each field in place instead.
   const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; expense: Expense } | null>(
@@ -272,21 +270,7 @@ export function ExpensesSection() {
     return paymentMethodById.get(id) ?? expense.payment_method
   }
 
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimer.current !== undefined) clearTimeout(autoSaveTimer.current)
-    }
-  }, [])
-
-  function clearAutoSaveTimer() {
-    if (autoSaveTimer.current !== undefined) {
-      clearTimeout(autoSaveTimer.current)
-      autoSaveTimer.current = undefined
-    }
-  }
-
   function dismissSharedToast() {
-    clearAutoSaveTimer()
     if (sharedToastId.current !== undefined) {
       toast.dismiss(sharedToastId.current)
       sharedToastId.current = undefined
@@ -311,32 +295,26 @@ export function ExpensesSection() {
     clearAllPending()
   }
 
+  // Every keystroke in the add row lands here, so the toast is re-rendered
+  // constantly. Passing the id it already has updates that toast in place;
+  // dismissing and re-creating it would replay the enter animation on every
+  // character. `undefined` on the first call lets sonner mint a fresh id.
   function showSharedToast(payloads: ExpenseUpdatePayload[], addDraft: RowForm | null) {
-    if (sharedToastId.current !== undefined) toast.dismiss(sharedToastId.current)
     const count = payloads.length + (addDraft ? 1 : 0)
-    const tid = toast.custom(
+    const toastId = toast.custom(
       (t) => (
         <SaveChangesToast
           t={t}
           successMessage={count === 1 ? 'Expense saved' : `${count} expenses saved`}
-          onSave={async () => {
-            clearAutoSaveTimer()
-            await performSave(payloads, addDraft)
-          }}
+          onSave={async () => await performSave(payloads, addDraft)}
           onRevert={() => clearAllPending()}
         />
       ),
-      { duration: Infinity }
+      // The toast waits for an answer rather than timing out: nothing here is
+      // saved until Save is pressed, so letting it fade would strand the draft.
+      { id: sharedToastId.current, duration: Infinity }
     )
-    sharedToastId.current = tid
-
-    // Debounce: keep pushing the auto-save out while the user keeps editing;
-    // once they pause, persist everything pending without needing a click.
-    clearAutoSaveTimer()
-    autoSaveTimer.current = setTimeout(() => {
-      autoSaveTimer.current = undefined
-      performSave(payloads, addDraft).catch(() => toast.error('Failed to save changes'))
-    }, AUTO_SAVE_DELAY_MS)
+    sharedToastId.current = toastId
   }
 
   // The add row only counts as pending once it has the fields a create needs.
@@ -394,11 +372,11 @@ export function ExpensesSection() {
     if (expense) commitChanges(expense, nextDraft)
   }
 
-  // Enter skips the debounce and persists everything pending straight away.
+  // Enter is an explicit save, so it persists everything pending straight away
+  // rather than waiting for the toast's Save button.
   function saveAddNow() {
     const addDraft = addDraftOf(addForm)
     if (!addDraft) return
-    clearAutoSaveTimer()
     performSave(Object.values(pendingEdits), addDraft).catch(() =>
       toast.error('Failed to save changes')
     )

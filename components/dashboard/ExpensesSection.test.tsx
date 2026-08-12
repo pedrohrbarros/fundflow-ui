@@ -13,13 +13,20 @@ const deleteMutate = vi.fn()
 // without mounting sonner's Toaster.
 let capturedToast: ((t: number) => ReactNode) | null = null
 
+// Stands in for sonner's own behaviour: an id it has already issued updates that
+// toast in place, anything else opens a new one.
+type ToastOptions = { id?: number | string; duration?: number }
+const toastCustom = vi.fn((renderToast: (t: number) => ReactNode, options?: ToastOptions) => {
+  capturedToast = renderToast
+  return options?.id ?? 1
+})
+const toastDismiss = vi.fn()
+
 vi.mock('sonner', () => ({
   toast: {
-    custom: (renderToast: (t: number) => ReactNode) => {
-      capturedToast = renderToast
-      return 1
-    },
-    dismiss: vi.fn(),
+    custom: (renderToast: (t: number) => ReactNode, options?: ToastOptions) =>
+      toastCustom(renderToast, options),
+    dismiss: (id?: number | string) => toastDismiss(id),
     error: vi.fn(),
   },
 }))
@@ -116,6 +123,8 @@ describe('ExpensesSection', () => {
     createMutate.mockClear()
     createMutateAsync.mockClear()
     deleteMutate.mockClear()
+    toastCustom.mockClear()
+    toastDismiss.mockClear()
     capturedToast = null
     mockExpenses([])
     vi.mocked(useUpdateExpense).mockReturnValue({
@@ -153,6 +162,49 @@ describe('ExpensesSection', () => {
       is_recurring: false,
       payment_method_id: null,
     })
+  })
+
+  it('updates the open toast in place while typing instead of reopening it', () => {
+    render(<ExpensesSection />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
+    fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
+
+    const amountField = screen.getByPlaceholderText('0.00')
+    // The draft becomes saveable here, which is what opens the toast.
+    fireEvent.change(amountField, { target: { value: '1' } })
+    const openedId = toastCustom.mock.results.at(-1)?.value
+    toastDismiss.mockClear()
+
+    fireEvent.change(amountField, { target: { value: '12' } })
+    fireEvent.change(amountField, { target: { value: '120' } })
+
+    // Each further character must address the toast already on screen. Omitting
+    // the id would open a second toast, replaying the enter animation per keystroke.
+    const laterCalls = toastCustom.mock.calls.slice(-2)
+    expect(laterCalls.map(([, options]) => options?.id)).toEqual([openedId, openedId])
+    expect(toastDismiss).not.toHaveBeenCalled()
+  })
+
+  it('never saves the new expense on its own, however long the user pauses', () => {
+    vi.useFakeTimers()
+    try {
+      render(<ExpensesSection />)
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add expense' }))
+      fireEvent.change(screen.getByPlaceholderText('Expense name'), { target: { value: 'Rent' } })
+      fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '1200' } })
+
+      act(() => {
+        vi.advanceTimersByTime(60_000)
+      })
+
+      // Saving is the Save button's job alone; pausing must not persist anything.
+      expect(createMutateAsync).not.toHaveBeenCalled()
+      expect(toastDismiss).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('discards the new expense when the toast is discarded', async () => {
