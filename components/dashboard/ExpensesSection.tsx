@@ -194,6 +194,14 @@ function mergePendingExpense(expense: Expense, payload: ExpenseUpdatePayload): E
 
 const PAGE_LIMIT = 100
 
+// Naming the toast ourselves is what makes it dismissable. Letting sonner mint
+// the id does not work here: `toast.custom` computes one and then spreads the
+// options over it, so passing `id: undefined` (which is what an unopened toast
+// would pass) overwrites it and the toast is filed under a second, private id.
+// The id we get back then dismisses nothing, and the next keystroke opens a
+// duplicate that stays on screen for good.
+const SHARED_TOAST_ID = 'expenses-save-changes'
+
 export function ExpensesSection() {
   const [filters, setFilters] = useState<Record<string, ExpenseFilter>>({})
   const [sort, setSort] = useState<{ key: string; dir: 'asc' | 'desc' } | null>({
@@ -238,7 +246,7 @@ export function ExpensesSection() {
   const [draft, setDraft] = useState<RowForm>(emptyForm)
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
   const [pendingEdits, setPendingEdits] = useState<Record<string, ExpenseUpdatePayload>>({})
-  const sharedToastId = useRef<string | number | undefined>(undefined)
+  const sharedToastOpen = useRef(false)
   // Mobile-only: tap a row (or add) to edit every field in one modal. The
   // desktop table edits each field in place instead.
   const [rowForm, setRowForm] = useState<{ mode: 'add' } | { mode: 'edit'; expense: Expense } | null>(
@@ -270,11 +278,13 @@ export function ExpensesSection() {
     return paymentMethodById.get(id) ?? expense.payment_method
   }
 
+  // Sonner defers a dismiss to the next frame but applies a new toast right
+  // away, so dismissing one that is not on screen can reach forward and close
+  // the toast the next keystroke opens. Only ever dismiss what is actually up.
   function dismissSharedToast() {
-    if (sharedToastId.current !== undefined) {
-      toast.dismiss(sharedToastId.current)
-      sharedToastId.current = undefined
-    }
+    if (!sharedToastOpen.current) return
+    sharedToastOpen.current = false
+    toast.dismiss(SHARED_TOAST_ID)
   }
 
   function clearAllPending() {
@@ -296,12 +306,13 @@ export function ExpensesSection() {
   }
 
   // Every keystroke in the add row lands here, so the toast is re-rendered
-  // constantly. Passing the id it already has updates that toast in place;
+  // constantly. Always addressing the same id updates that toast in place;
   // dismissing and re-creating it would replay the enter animation on every
-  // character. `undefined` on the first call lets sonner mint a fresh id.
+  // character.
   function showSharedToast(payloads: ExpenseUpdatePayload[], addDraft: RowForm | null) {
     const count = payloads.length + (addDraft ? 1 : 0)
-    const toastId = toast.custom(
+    sharedToastOpen.current = true
+    toast.custom(
       (t) => (
         <SaveChangesToast
           t={t}
@@ -312,9 +323,8 @@ export function ExpensesSection() {
       ),
       // The toast waits for an answer rather than timing out: nothing here is
       // saved until Save is pressed, so letting it fade would strand the draft.
-      { id: sharedToastId.current, duration: Infinity }
+      { id: SHARED_TOAST_ID, duration: Infinity }
     )
-    sharedToastId.current = toastId
   }
 
   // The add row only counts as pending once it has the fields a create needs.
